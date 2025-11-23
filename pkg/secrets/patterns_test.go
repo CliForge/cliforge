@@ -60,7 +60,7 @@ func TestDefaultValuePatterns(t *testing.T) {
 		{"AWS Access Key ID", "AKIAIOSFODNN7EXAMPLE", true},
 		{"Generic API Key (sk_ prefix)", "sk_test_abc123def456", true},
 		{"JWT Token", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0In0.abc123", true},
-		{"GitHub Personal Access Token", "ghp_1234567890abcdefghijklmnopqrstuv", true},
+		{"GitHub Personal Access Token", "ghp_1234567890abcdefghijklmnopqrstuv1234", true},
 		{"Stripe API Key", "sk_live_abc123def456ghi789jkl012", true},
 		{"Google API Key", "AIzaSyDaGmWKa4JsXZ-HjGw7ISLn_3namBGewQe", true},
 	}
