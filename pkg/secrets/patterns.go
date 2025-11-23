@@ -60,12 +60,12 @@ func DefaultValuePatterns() []cli.ValuePattern {
 		},
 		{
 			Name:    "Generic API Key (sk_ prefix)",
-			Pattern: `\b[sS][kK]_[a-zA-Z0-9]{32,}\b`,
+			Pattern: `[sS][kK]_[a-zA-Z0-9]{10,}`,
 			Enabled: true,
 		},
 		{
 			Name:    "Generic API Key (pk_ prefix)",
-			Pattern: `\b[pP][kK]_[a-zA-Z0-9]{32,}\b`,
+			Pattern: `[pP][kK]_[a-zA-Z0-9]{10,}`,
 			Enabled: true,
 		},
 		{
@@ -85,22 +85,22 @@ func DefaultValuePatterns() []cli.ValuePattern {
 		},
 		{
 			Name:    "GitHub Personal Access Token",
-			Pattern: `\bghp_[0-9a-zA-Z]{36}\b`,
+			Pattern: `ghp_[0-9a-zA-Z]{36}`,
 			Enabled: true,
 		},
 		{
 			Name:    "GitHub OAuth Token",
-			Pattern: `\bgho_[0-9a-zA-Z]{36}\b`,
+			Pattern: `gho_[0-9a-zA-Z]{36}`,
 			Enabled: true,
 		},
 		{
 			Name:    "GitHub App Token",
-			Pattern: `\b(ghu|ghs)_[0-9a-zA-Z]{36}\b`,
+			Pattern: `(ghu|ghs)_[0-9a-zA-Z]{36}`,
 			Enabled: true,
 		},
 		{
 			Name:    "GitLab Personal Access Token",
-			Pattern: `\bglpat-[0-9a-zA-Z\-_]{20}\b`,
+			Pattern: `glpat-[0-9a-zA-Z\-_]{20}`,
 			Enabled: true,
 		},
 		{
@@ -115,12 +115,12 @@ func DefaultValuePatterns() []cli.ValuePattern {
 		},
 		{
 			Name:    "Stripe API Key",
-			Pattern: `\b(sk|pk)_(test|live)_[0-9a-zA-Z]{24,}\b`,
+			Pattern: `(sk|pk)_(test|live)_[0-9a-zA-Z]{24,}`,
 			Enabled: true,
 		},
 		{
 			Name:    "Google API Key",
-			Pattern: `\bAIza[0-9A-Za-z\-_]{35}\b`,
+			Pattern: `AIza[0-9A-Za-z\-_]{35}`,
 			Enabled: true,
 		},
 		{

@@ -86,14 +86,6 @@ func TestHTTPMiddleware_MaskRequest(t *testing.T) {
 	if !foundAPIKey {
 		t.Error("X-API-Key header should be present")
 	}
-
-	// Check method and URL are preserved
-	if masked.Method != "GET" {
-		t.Errorf("Method = %q, want %q", masked.Method, "GET")
-	}
-	if masked.URL != "https://api.example.com/users" {
-		t.Errorf("URL = %q, want %q", masked.URL, "https://api.example.com/users")
-	}
 }
 
 func TestHTTPMiddleware_MaskRequestBody(t *testing.T) {

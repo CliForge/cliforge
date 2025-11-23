@@ -109,8 +109,8 @@ func runAuthLogin(opts *AuthOptions, authType string) error {
 	}
 
 	// Get authenticator
-	authenticator := opts.AuthManager.GetAuthenticator(authType)
-	if authenticator == nil {
+	authenticator, err := opts.AuthManager.GetAuthenticator(authType)
+	if err != nil {
 		return fmt.Errorf("unknown authentication type: %s", authType)
 	}
 
@@ -123,12 +123,12 @@ func runAuthLogin(opts *AuthOptions, authType string) error {
 	}
 
 	// Store token
-	storage := opts.AuthManager.GetStorage(authType)
-	if storage == nil {
+	storage, err := opts.AuthManager.GetStorage(authType)
+	if err != nil {
 		return fmt.Errorf("no storage configured for authentication type: %s", authType)
 	}
 
-	if err := storage.Store(ctx, token); err != nil {
+	if err := storage.SaveToken(ctx, token); err != nil {
 		return fmt.Errorf("failed to store credentials: %w", err)
 	}
 
@@ -147,16 +147,16 @@ func runAuthLogout(opts *AuthOptions) error {
 
 	removed := false
 	for _, name := range storages {
-		storage := opts.AuthManager.GetStorage(name)
-		if storage == nil {
+		storage, err := opts.AuthManager.GetStorage(name)
+		if err != nil {
 			continue
 		}
 
 		// Check if credentials exist
-		_, err := storage.Retrieve(ctx)
+		_, err = storage.LoadToken(ctx)
 		if err == nil {
 			// Remove credentials
-			if err := storage.Remove(ctx); err != nil {
+			if err := storage.DeleteToken(ctx); err != nil {
 				fmt.Fprintf(opts.Output, "Warning: failed to remove %s credentials: %v\n", name, err)
 			} else {
 				removed = true

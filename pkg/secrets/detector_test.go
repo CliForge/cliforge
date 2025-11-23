@@ -475,7 +475,7 @@ func TestGlobToRegex(t *testing.T) {
 		{"*password*", "PASSWORD", true}, // case insensitive
 		{"*password*", "username", false},
 		{"*key", "api_key", true},
-		{"*key", "apikey", false},
+		{"*key", "apikey", true}, // *key matches anything ending in "key"
 		{"auth", "auth", true},
 		{"auth", "oauth", false},
 		{"*token*", "refresh_token", true},

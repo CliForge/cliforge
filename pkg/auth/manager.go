@@ -292,3 +292,21 @@ func (n *NoneAuth) GetHeaders(token *Token) map[string]string {
 func (n *NoneAuth) Validate() error {
 	return nil
 }
+
+// ListAuthenticators returns the names of all registered authenticators.
+func (m *Manager) ListAuthenticators() []string {
+	names := make([]string, 0, len(m.authenticators))
+	for name := range m.authenticators {
+		names = append(names, name)
+	}
+	return names
+}
+
+// ListStorages returns the names of all registered storages.
+func (m *Manager) ListStorages() []string {
+	names := make([]string, 0, len(m.storages))
+	for name := range m.storages {
+		names = append(names, name)
+	}
+	return names
+}
