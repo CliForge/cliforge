@@ -186,13 +186,13 @@ func runAuthStatus(opts *AuthOptions) error {
 	authenticated := false
 
 	for _, name := range storages {
-		storage := opts.AuthManager.GetStorage(name)
-		if storage == nil {
+		storage, err := opts.AuthManager.GetStorage(name)
+		if err != nil {
 			continue
 		}
 
 		// Check if credentials exist
-		token, err := storage.Retrieve(ctx)
+		token, err := storage.LoadToken(ctx)
 		if err == nil && token != nil {
 			authenticated = true
 			fmt.Fprintf(opts.Output, "  %s: ✓ Authenticated\n", name)
@@ -233,32 +233,32 @@ func runAuthRefresh(opts *AuthOptions) error {
 
 	refreshed := false
 	for _, name := range authenticators {
-		authenticator := opts.AuthManager.GetAuthenticator(name)
-		if authenticator == nil {
+		authenticator, err := opts.AuthManager.GetAuthenticator(name)
+		if err != nil {
 			continue
 		}
 
 		// Check if authenticator supports refresh
-		storage := opts.AuthManager.GetStorage(name)
-		if storage == nil {
+		storage, err := opts.AuthManager.GetStorage(name)
+		if err != nil {
 			continue
 		}
 
 		// Get current token
-		token, err := storage.Retrieve(ctx)
+		token, err := storage.LoadToken(ctx)
 		if err != nil || token == nil {
 			continue
 		}
 
 		// Try to refresh
-		newToken, err := authenticator.Refresh(ctx, token)
+		newToken, err := authenticator.RefreshToken(ctx, token)
 		if err != nil {
 			fmt.Fprintf(opts.Output, "Warning: failed to refresh %s: %v\n", name, err)
 			continue
 		}
 
 		// Store new token
-		if err := storage.Store(ctx, newToken); err != nil {
+		if err := storage.SaveToken(ctx, newToken); err != nil {
 			fmt.Fprintf(opts.Output, "Warning: failed to store refreshed %s token: %v\n", name, err)
 			continue
 		}
