@@ -1,0 +1,78 @@
+site_name: CliForge
+site_description: Dynamic CLI generation from OpenAPI specifications
+site_url: https://cliforge.readthedocs.io
+repo_url: https://github.com/CliForge/cliforge
+repo_name: CliForge/cliforge
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: deep orange
+      accent: orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: deep orange
+      accent: orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.tracking
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Home: README.md
+  - Documentation:
+      - Technical Specification: technical-specification.md
+      - Configuration DSL: configuration-dsl.md
+  - Design:
+      - Overview: ../design/README.md
+      - Architecture:
+          - Built-in Commands: ../design/architecture/builtin-commands-design.md
+          - Configuration Override: ../design/architecture/configuration-override-matrix.md
+          - Deprecation Strategy: ../design/architecture/deprecation-strategy.md
+          - Secrets Handling: ../design/architecture/secrets-handling-design.md
+      - Decisions:
+          - ADRs: ../design/decisions/README.md
+          - ADR-000: ../design/decisions/000-use-architecture-decision-records.md
+          - ADR-100: ../design/decisions/100-use-cobra-cli-framework.md
+          - ADR-101: ../design/decisions/101-use-expr-templating-language.md
+
+plugins:
+  - search
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/CliForge/cliforge
