@@ -129,13 +129,25 @@ DSL. Update all config files accordingly.
 
 ## Development Workflow
 
+### Fork Setup
+
+CliForge uses a fork-based workflow:
+
+```bash
+# One-time setup: Fork the repository on GitHub, then:
+git clone git@github.com:YOUR_USERNAME/cliforge.git
+cd cliforge
+git remote add upstream git@github.com:CliForge/cliforge.git
+
+# Verify remotes
+git remote -v
+# origin    git@github.com:YOUR_USERNAME/cliforge.git
+# upstream  git@github.com:CliForge/cliforge.git
+```
+
 ### Standard Go Development
 
 ```bash
-# Clone the repository
-git clone https://github.com/cliforge/cliforge.git
-cd cliforge
-
 # Run tests
 go test ./...
 
@@ -144,31 +156,65 @@ go build ./...
 
 # Run linter
 golangci-lint run
+
+# Install pre-commit hooks
+pip install pre-commit
+pre-commit install
 ```
 
 ### Feature Development
 
-1. **Create feature branch:**
+1. **Sync with upstream:**
+   ```bash
+   git checkout main
+   git pull upstream main
+   git push origin main
+   ```
+
+2. **Create feature branch:**
    ```bash
    git checkout -b feat/my-feature
    ```
 
-2. **Make changes with atomic commits:**
+3. **Make changes with atomic commits:**
    - Follow commit message guidelines
    - One logical change per commit
    - Test each commit
 
-3. **Push and create PR:**
+4. **Push to your fork:**
    ```bash
    git push origin feat/my-feature
    ```
 
-4. **After PR is merged:**
+5. **Create PR to upstream:**
+   ```bash
+   gh pr create --repo CliForge/cliforge \
+     --base main \
+     --head YOUR_USERNAME:feat/my-feature \
+     --title "feat(scope): description" \
+     --body "PR description"
+   ```
+
+   Or visit: https://github.com/CliForge/cliforge/compare
+
+6. **After PR is merged:**
    ```bash
    git checkout main
-   git pull origin main
+   git pull upstream main
+   git push origin main
    git branch -D feat/my-feature
    ```
+
+### Direct Commits (Maintainers Only)
+
+For documentation-only changes or minor fixes, maintainers may commit directly:
+```bash
+# Make changes on main
+git checkout main
+git add [files]
+git commit -m "docs: description"
+git push upstream main
+```
 
 ## Code Style
 
