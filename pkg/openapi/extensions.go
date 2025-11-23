@@ -270,16 +270,48 @@ type CLIFileInput struct {
 
 // CLIWatch represents the x-cli-watch extension.
 type CLIWatch struct {
-	Enabled  bool   `json:"enabled"`
-	Interval int    `json:"interval"` // seconds
-	Endpoint string `json:"endpoint"`
+	Enabled        bool              `json:"enabled"`
+	Type           string            `json:"type"` // sse, websocket, polling
+	Endpoint       string            `json:"endpoint"`
+	Events         []string          `json:"events"`
+	ExitConditions []*ExitCondition  `json:"exit-on"`
+	Reconnect      *ReconnectConfig  `json:"reconnect"`
+}
+
+// ExitCondition defines when to exit watch mode.
+type ExitCondition struct {
+	Event     string `json:"event"`
+	Condition string `json:"condition"`
+	Message   string `json:"message"`
+}
+
+// ReconnectConfig defines reconnection behavior.
+type ReconnectConfig struct {
+	Enabled      bool `json:"enabled"`
+	MaxAttempts  int  `json:"max-attempts"`
+	IntervalSecs int  `json:"interval"`
+}
+
+// CLIProgress represents the x-cli-progress extension.
+type CLIProgress struct {
+	Enabled              *bool  `json:"enabled"`
+	Type                 string `json:"type"` // spinner, bar, steps
+	ShowStepDescriptions *bool  `json:"show-step-descriptions"`
+	ShowTimestamps       *bool  `json:"show-timestamps"`
+	Color                string `json:"color"` // auto, always, never
 }
 
 // ChangelogEntry represents a single x-cli-changelog entry.
 type ChangelogEntry struct {
-	Date     string    `json:"date"`
-	Version  string    `json:"version"`
-	Changes  []*Change `json:"changes"`
+	Date        string    `json:"date"`
+	Version     string    `json:"version"`
+	Changes     []*Change `json:"changes"`
+	Added       []string  `json:"added,omitempty"`
+	Changed     []string  `json:"changed,omitempty"`
+	Deprecated  []string  `json:"deprecated,omitempty"`
+	Removed     []string  `json:"removed,omitempty"`
+	Breaking    []string  `json:"breaking,omitempty"`
+	IsCurrent   bool      `json:"is_current,omitempty"`
 }
 
 // Change represents a single change in the changelog.
@@ -896,4 +928,17 @@ func parseCLIWorkflow(data map[string]interface{}) (*CLIWorkflow, error) {
 	}
 
 	return workflow, nil
+}
+
+// Deprecation represents a deprecated API endpoint or parameter.
+type Deprecation struct {
+	OperationID string    `json:"operation_id"`
+	Method      string    `json:"method"`
+	Path        string    `json:"path"`
+	Parameter   string    `json:"parameter,omitempty"`
+	Sunset      time.Time `json:"sunset,omitempty"`
+	Replacement string    `json:"replacement,omitempty"`
+	Message     string    `json:"message,omitempty"`
+	DocsURL     string    `json:"docs_url,omitempty"`
+	Severity    string    `json:"severity"` // warning, critical
 }
