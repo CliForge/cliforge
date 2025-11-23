@@ -97,6 +97,55 @@ with documentation and user expectations.
 (Concise - explains why, brief technical detail, no file listing)
 ```
 
+### Commit Body Best Practices
+
+The commit body should explain **why** the change was made, not **what** changed (the diff shows that).
+
+**Too Verbose (BAD)**:
+```
+docs(design): add comprehensive architecture designs for ROSA requirements
+
+Add six new architecture design documents addressing gaps identified
+in ROSA CLI analysis:
+
+1. gap-analysis-rosa-requirements.md
+   - Comprehensive gap analysis (6 critical, 6 important gaps)
+   - Priority matrix and phased implementation plan
+   - 40% requirements covered, 60% needs work
+
+2. plugin-architecture.md
+   - Plugin system for external tool integration
+   - Three plugin types: built-in, binary, WASM
+   - Security model with permissions and sandboxing
+   - x-cli-plugin extension specification
+
+3. workflow-orchestration.md
+   - Multi-step workflow execution engine
+   - Six step types: api-call, plugin, conditional, loop, wait, parallel
+   - DAG-based execution with dependencies
+   - Rollback support and error handling
+
+(Lists every file and details - this is what the diff is for!)
+```
+
+**Concise (GOOD)**:
+```
+docs(design): complete architecture for ROSA-like functionality
+
+Add comprehensive design documents addressing gaps identified in ROSA
+CLI analysis: plugin architecture, workflow orchestration, file
+operations, progress/streaming, and state management.
+
+Gap analysis shows 40% requirements already covered, 60% needs new
+architectural components. Phased implementation plan targets v0.8-1.0.
+```
+
+**Why the second is better:**
+- Explains the impact (complete architecture, identifies gaps)
+- Provides context (40/60 split, phased plan)
+- 3-4 lines, not 20+ lines
+- Doesn't enumerate files (visible in diff)
+
 ### Guidelines
 
 **DO:**
@@ -104,6 +153,8 @@ with documentation and user expectations.
 - Be concise in description (50 chars or less)
 - Use body for detailed explanation if needed
 - Reference issues: "Closes #123"
+- Focus on WHY, not WHAT (the diff shows what changed)
+- Keep body to 3-4 lines maximum
 
 **DON'T:**
 - Use emojis in commit messages
@@ -115,6 +166,7 @@ with documentation and user expectations.
 - Include irrelevant context (stars, contributors, popularity metrics)
 - Enumerate what changed (the diff shows this)
 - Explain file-by-file changes (git diff does this)
+- Write multi-paragraph essays in commit bodies
 
 ### Breaking Changes
 
