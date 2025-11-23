@@ -1,0 +1,140 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Swagger 2.0 Example",
+    "version": "1.0.0",
+    "description": "Example Swagger 2.0 spec for testing compatibility"
+  },
+  "host": "api.example.com",
+  "basePath": "/v1",
+  "schemes": ["https"],
+  "paths": {
+    "/users": {
+      "get": {
+        "operationId": "listUsers",
+        "summary": "List users",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "integer",
+            "default": 100
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of users",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/User"
+              }
+            }
+          }
+        },
+        "x-cli-command": "list users",
+        "x-cli-aliases": ["ls users", "users"]
+      },
+      "post": {
+        "operationId": "createUser",
+        "summary": "Create user",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "User created"
+          }
+        },
+        "x-cli-command": "create user",
+        "x-cli-flags": [
+          {
+            "name": "username",
+            "source": "username",
+            "flag": "--username",
+            "aliases": ["-u"],
+            "required": true,
+            "type": "string",
+            "description": "Username"
+          },
+          {
+            "name": "email",
+            "source": "email",
+            "flag": "--email",
+            "aliases": ["-e"],
+            "required": true,
+            "type": "string",
+            "description": "Email address"
+          }
+        ]
+      }
+    },
+    "/users/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "get": {
+        "operationId": "getUser",
+        "summary": "Get user",
+        "responses": {
+          "200": {
+            "description": "User details",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        },
+        "x-cli-command": "describe user"
+      },
+      "delete": {
+        "operationId": "deleteUser",
+        "summary": "Delete user",
+        "responses": {
+          "204": {
+            "description": "User deleted"
+          }
+        },
+        "x-cli-command": "delete user",
+        "x-cli-confirmation": {
+          "enabled": true,
+          "message": "Are you sure you want to delete user '{id}'?",
+          "flag": "--yes"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "User": {
+      "type": "object",
+      "required": ["username", "email"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

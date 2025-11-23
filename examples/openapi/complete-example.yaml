@@ -1,0 +1,384 @@
+openapi: 3.0.0
+info:
+  title: Complete CLI Extensions Example
+  version: 2.1.0
+  description: Demonstrates all x-cli-* extensions
+  x-cli-version: "2024.11.23.1"
+  x-cli-min-version: "1.0.0"
+  x-cli-changelog:
+    - date: "2024-11-23"
+      version: "2.1.0"
+      changes:
+        - type: added
+          severity: safe
+          description: "New analytics endpoint"
+          path: "/analytics"
+        - type: deprecated
+          severity: dangerous
+          description: "GET /v1/users is deprecated"
+          path: "/v1/users"
+          migration: "Use GET /v2/users instead"
+          sunset: "2025-12-31"
+        - type: modified
+          severity: breaking
+          description: "POST /clusters now requires 'region' field"
+          path: "/clusters"
+          migration: "Add 'region' to request body"
+
+x-cli-config:
+  name: "example-cli"
+  version: "2.1.0"
+  description: "Example CLI with all extensions"
+  branding:
+    ascii-art: |
+      ███████╗██╗  ██╗ █████╗ ███╗   ███╗██████╗ ██╗     ███████╗
+      ██╔════╝╚██╗██╔╝██╔══██╗████╗ ████║██╔══██╗██║     ██╔════╝
+      █████╗   ╚███╔╝ ███████║██╔████╔██║██████╔╝██║     █████╗
+      ██╔══╝   ██╔██╗ ██╔══██║██║╚██╔╝██║██╔═══╝ ██║     ██╔══╝
+      ███████╗██╔╝ ██╗██║  ██║██║ ╚═╝ ██║██║     ███████╗███████╗
+      ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝╚═╝     ╚══════╝╚══════╝
+    colors:
+      primary: "#0066CC"
+      secondary: "#FF6600"
+  auth:
+    type: oauth2
+    storage: keyring
+    auto-refresh: true
+  output:
+    default-format: table
+    supported-formats: [table, json, yaml, csv]
+  features:
+    interactive-mode: true
+    auto-complete: true
+    self-update: true
+    telemetry: false
+  cache:
+    enabled: true
+    ttl: 300
+    location: "~/.cache/example-cli"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      x-auth-config:
+        flows:
+          authorizationCode:
+            authorizationUrl: https://auth.example.com/authorize
+            tokenUrl: https://auth.example.com/token
+            refreshUrl: https://auth.example.com/token
+            scopes:
+              read: Read access
+              write: Write access
+              admin: Admin access
+        token-storage:
+          - type: keyring
+            service: "example-cli"
+            keyring-backends:
+              darwin: keychain
+              linux: secret-service
+              windows: wincred
+
+  schemas:
+    Cluster:
+      type: object
+      required:
+        - name
+        - region
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        region:
+          type: string
+        multi_az:
+          type: boolean
+        state:
+          type: string
+          enum: [pending, ready, error, deleting, deleted]
+        created_at:
+          type: string
+          format: date-time
+
+paths:
+  /clusters:
+    get:
+      operationId: listClusters
+      summary: List clusters
+      tags:
+        - Clusters
+      x-cli-command: "list clusters"
+      x-cli-aliases: ["ls clusters", "clusters"]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+          x-cli-flag: "--limit"
+          x-cli-aliases: ["-l"]
+        - name: region
+          in: query
+          schema:
+            type: string
+          x-cli-flag: "--region"
+          x-cli-env-var: "AWS_REGION"
+      responses:
+        '200':
+          description: List of clusters
+      x-cli-output:
+        table:
+          columns:
+            - field: id
+              header: ID
+              width: 20
+            - field: name
+              header: NAME
+            - field: state
+              header: STATE
+              transform: uppercase
+            - field: region
+              header: REGION
+
+    post:
+      operationId: createCluster
+      summary: Create cluster
+      tags:
+        - Clusters
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Cluster'
+      responses:
+        '201':
+          description: Cluster created
+        '400':
+          description: Bad request
+
+      # All CLI extensions
+      x-cli-command: "create cluster"
+      x-cli-aliases: ["new cluster"]
+
+      # CLI Flags
+      x-cli-flags:
+        - name: cluster-name
+          source: name
+          flag: "--cluster-name"
+          aliases: ["-n"]
+          required: true
+          type: string
+          description: "Cluster name"
+        - name: region
+          source: region
+          flag: "--region"
+          required: true
+          type: string
+          description: "AWS region"
+        - name: multi-az
+          source: multi_az
+          flag: "--multi-az"
+          type: boolean
+          default: false
+          description: "Multi-AZ deployment"
+
+      # Interactive Mode
+      x-cli-interactive:
+        enabled: true
+        prompts:
+          - parameter: name
+            type: text
+            message: "Cluster name:"
+            validation: "^[a-z][a-z0-9-]{0,53}$"
+            validation-message: "Must be lowercase alphanumeric, max 54 chars"
+          - parameter: region
+            type: select
+            message: "Select region:"
+            source:
+              endpoint: "/regions"
+              value-field: "id"
+              display-field: "display_name"
+          - parameter: multi_az
+            type: confirm
+            message: "Deploy to multiple AZs?"
+            default: false
+
+      # Pre-flight Checks
+      x-cli-preflight:
+        - name: verify-credentials
+          description: "Verifying AWS credentials..."
+          endpoint: "/credentials/verify"
+          method: POST
+          required: true
+        - name: check-quota
+          description: "Checking AWS quotas..."
+          endpoint: "/quotas/verify"
+          method: POST
+          required: false
+          skip-flag: "--skip-quota-check"
+
+      # Output Configuration
+      x-cli-output:
+        success-message: "Cluster '{name}' is being created"
+        watch-status: true
+
+      # Async polling
+      x-cli-async:
+        enabled: true
+        status-field: "state"
+        status-endpoint: "/clusters/{id}"
+        terminal-states: [ready, error]
+        polling:
+          interval: 30
+          timeout: 3600
+          backoff:
+            enabled: true
+            multiplier: 1.5
+            max-interval: 300
+
+  /clusters/{cluster_id}:
+    parameters:
+      - name: cluster_id
+        in: path
+        required: true
+        schema:
+          type: string
+        x-cli-flag: "--cluster"
+        x-cli-aliases: ["-c"]
+
+    get:
+      operationId: describeCluster
+      summary: Describe cluster
+      tags:
+        - Clusters
+      x-cli-command: "describe cluster"
+      responses:
+        '200':
+          description: Cluster details
+
+    delete:
+      operationId: deleteCluster
+      summary: Delete cluster
+      tags:
+        - Clusters
+      x-cli-command: "delete cluster"
+      responses:
+        '202':
+          description: Deletion initiated
+        '404':
+          description: Not found
+
+      # Confirmation required
+      x-cli-confirmation:
+        enabled: true
+        message: "Are you sure you want to delete cluster '{cluster_id}'?"
+        flag: "--yes"
+
+      # Async deletion
+      x-cli-async:
+        enabled: true
+        status-field: "state"
+        status-endpoint: "/clusters/{cluster_id}"
+        terminal-states: [deleted, error]
+        polling:
+          interval: 30
+          timeout: 3600
+
+  /deploy:
+    post:
+      operationId: deployApplication
+      summary: Deploy application with multi-step workflow
+      tags:
+        - Deployments
+      x-cli-command: "deploy app"
+      parameters:
+        - name: app_id
+          in: query
+          required: true
+          schema:
+            type: string
+          x-cli-flag: "--app-id"
+        - name: version
+          in: query
+          required: true
+          schema:
+            type: string
+          x-cli-flag: "--version"
+      responses:
+        '201':
+          description: Deployment created
+
+      # Multi-step workflow
+      x-cli-workflow:
+        steps:
+          # Step 1: Check deployment readiness
+          - id: check-readiness
+            request:
+              method: GET
+              url: "{base_url}/deployments/readiness"
+
+          # Step 2: Create deployment (only if ready)
+          - id: create-deployment
+            request:
+              method: POST
+              url: "{base_url}/deployments"
+              body:
+                app_id: "{args.app_id}"
+                version: "{args.version}"
+            condition: "check-readiness.body.ready == true"
+
+          # Step 3: Get deployment status
+          - id: get-status
+            request:
+              method: GET
+              url: "{base_url}/deployments/{create-deployment.body.id}"
+            condition: "create-deployment.status == 201"
+
+        output:
+          format: json
+          transform: |
+            {
+              "deployment_id": create-deployment.body.id,
+              "status": get-status.body.status,
+              "url": create-deployment.body.url,
+              "ready": check-readiness.body.ready
+            }
+
+  /regions:
+    get:
+      operationId: listRegions
+      summary: List available regions
+      tags:
+        - Regions
+      x-cli-command: "list regions"
+      responses:
+        '200':
+          description: List of regions
+
+  /credentials/verify:
+    post:
+      operationId: verifyCredentials
+      summary: Verify AWS credentials
+      tags:
+        - Internal
+      x-cli-hidden: true
+      responses:
+        '200':
+          description: Credentials valid
+
+  /quotas/verify:
+    post:
+      operationId: verifyQuotas
+      summary: Verify AWS quotas
+      tags:
+        - Internal
+      x-cli-hidden: true
+      responses:
+        '200':
+          description: Quotas sufficient
+
+security:
+  - BearerAuth: []
