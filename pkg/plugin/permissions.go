@@ -105,7 +105,11 @@ func (pm *PermissionManager) CheckPermissions(pluginName string, permissions []P
 func (pm *PermissionManager) GrantPermissions(pluginName string, permissions []Permission, version string) error {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
+	return pm.grantPermissionsLocked(pluginName, permissions, version)
+}
 
+// grantPermissionsLocked grants permissions without acquiring lock (caller must hold lock).
+func (pm *PermissionManager) grantPermissionsLocked(pluginName string, permissions []Permission, version string) error {
 	approved, exists := pm.store.Plugins[pluginName]
 	if !exists {
 		approved = &ApprovedPlugin{
@@ -165,7 +169,7 @@ func (pm *PermissionManager) GetApprovedPermissions(pluginName string) ([]string
 	return approved.ApprovedPermissions, true
 }
 
-// requestApproval requests user approval for permissions.
+// requestApproval requests user approval for permissions (caller must hold lock).
 func (pm *PermissionManager) requestApproval(pluginName string, permissions []Permission) error {
 	if pm.approver == nil {
 		return fmt.Errorf("no permission approver configured")
@@ -180,8 +184,8 @@ func (pm *PermissionManager) requestApproval(pluginName string, permissions []Pe
 		return fmt.Errorf("permission denied by user")
 	}
 
-	// Store approved permissions
-	return pm.GrantPermissions(pluginName, permissions, "")
+	// Store approved permissions (use locked version since we already hold lock)
+	return pm.grantPermissionsLocked(pluginName, permissions, "")
 }
 
 // findMissingPermissions returns permissions that are not approved.
@@ -278,7 +282,6 @@ func ValidatePermission(permStr string) error {
 		return fmt.Errorf("empty permission string")
 	}
 
-	permType := PermissionType(parts[0])
 	validTypes := []PermissionType{
 		PermissionExecute,
 		PermissionReadEnv,
@@ -289,19 +292,21 @@ func ValidatePermission(permStr string) error {
 		PermissionCredential,
 	}
 
+	// Check if permission string starts with a valid type
 	valid := false
 	for _, vt := range validTypes {
-		if permType == vt {
+		if permStr == string(vt) || strings.HasPrefix(permStr, string(vt)+":") {
 			valid = true
 			break
 		}
 	}
 
 	if !valid {
-		return fmt.Errorf("invalid permission type: %s", parts[0])
+		return fmt.Errorf("invalid permission type in: %s", permStr)
 	}
 
 	// Some permissions require a resource
+	// For types that include colons (like "read:file"), resource is after the second colon
 	requiresResource := []PermissionType{
 		PermissionExecute,
 		PermissionReadEnv,
@@ -312,15 +317,22 @@ func ValidatePermission(permStr string) error {
 	}
 
 	needsResource := false
+	var matchedType PermissionType
 	for _, rt := range requiresResource {
-		if permType == rt {
+		if permStr == string(rt) || strings.HasPrefix(permStr, string(rt)+":") {
 			needsResource = true
+			matchedType = rt
 			break
 		}
 	}
 
-	if needsResource && len(parts) < 2 {
-		return fmt.Errorf("permission type %s requires a resource", permType)
+	// Extract resource part based on permission type
+	if needsResource {
+		typeStr := string(matchedType)
+		if permStr == typeStr {
+			// Permission has no resource (e.g., just "execute")
+			return fmt.Errorf("permission type %s requires a resource", typeStr)
+		}
 	}
 
 	return nil

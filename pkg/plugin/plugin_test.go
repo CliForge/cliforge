@@ -290,7 +290,7 @@ func TestValidatePermission(t *testing.T) {
 		{
 			name:    "valid credential permission",
 			permStr: "credential",
-			wantErr: true, // credential doesn't require resource in this impl
+			wantErr: false, // credential doesn't require resource
 		},
 		{
 			name:    "invalid permission type",

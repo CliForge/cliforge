@@ -146,10 +146,11 @@ func (p *FileOpsPlugin) readFile(input *plugin.PluginInput) (map[string]interfac
 
 // parseFile parses a file in various formats.
 func (p *FileOpsPlugin) parseFile(input *plugin.PluginInput) (map[string]interface{}, error) {
-	_, ok := input.Data["file"].(string)
+	filePath, ok := input.Data["file"].(string)
 	if !ok {
 		return nil, fmt.Errorf("file path is required")
 	}
+	_ = filePath
 
 	format, ok := input.Data["format"].(string)
 	if !ok {
