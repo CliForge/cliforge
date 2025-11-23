@@ -21,7 +21,7 @@ func TestExecutor_BuildURL(t *testing.T) {
 
 	// Create executor
 	config := &ExecutorConfig{
-		BaseURL: "https://api.example.com",
+		BaseURL: "https://api.example.com/v1",
 	}
 	executor, err := NewExecutor(spec, config)
 	if err != nil {
@@ -70,7 +70,7 @@ func TestExecutor_BuildURLWithPathParams(t *testing.T) {
 	}
 
 	config := &ExecutorConfig{
-		BaseURL: "https://api.example.com",
+		BaseURL: "https://api.example.com/v1",
 	}
 	executor, err := NewExecutor(spec, config)
 	if err != nil {
@@ -159,10 +159,13 @@ func TestExecutor_ExecuteHTTPOperation(t *testing.T) {
 	}
 
 	// Create executor
+	authMgr := auth.NewManager("test")
+	authMgr.RegisterAuthenticator("default", &auth.NoneAuth{})
+
 	config := &ExecutorConfig{
 		BaseURL:       server.URL,
 		OutputManager: output.NewManager(),
-		AuthManager:   auth.NewManager("test"),
+		AuthManager:   authMgr,
 	}
 	executor, err := NewExecutor(spec, config)
 	if err != nil {

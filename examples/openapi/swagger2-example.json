@@ -13,6 +13,7 @@
       "get": {
         "operationId": "listUsers",
         "summary": "List users",
+        "tags": ["users"],
         "parameters": [
           {
             "name": "limit",
@@ -38,6 +39,7 @@
       "post": {
         "operationId": "createUser",
         "summary": "Create user",
+        "tags": ["users"],
         "parameters": [
           {
             "name": "body",
@@ -88,6 +90,7 @@
       "get": {
         "operationId": "getUser",
         "summary": "Get user",
+        "tags": ["users"],
         "responses": {
           "200": {
             "description": "User details",
@@ -101,6 +104,7 @@
       "delete": {
         "operationId": "deleteUser",
         "summary": "Delete user",
+        "tags": ["users"],
         "responses": {
           "204": {
             "description": "User deleted"
