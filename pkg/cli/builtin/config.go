@@ -219,7 +219,11 @@ func getConfigValue(config *cli.UserConfig, key string) (string, error) {
 	parts := strings.Split(key, ".")
 
 	// Handle preferences
-	if parts[0] == "preferences" && config.Preferences != nil {
+	if parts[0] == "preferences" {
+		if config.Preferences == nil {
+			return "", fmt.Errorf("preferences not configured")
+		}
+
 		if len(parts) == 1 {
 			// Return all preferences as YAML
 			data, err := yaml.Marshal(config.Preferences)
@@ -229,8 +233,14 @@ func getConfigValue(config *cli.UserConfig, key string) (string, error) {
 			return strings.TrimSpace(string(data)), nil
 		}
 
-		// Navigate through nested structure
-		return getNestedValue(config.Preferences, parts[1:])
+		// For simplicity, serialize to map and navigate
+		var prefsMap map[string]interface{}
+		data, _ := yaml.Marshal(config.Preferences)
+		if err := yaml.Unmarshal(data, &prefsMap); err != nil {
+			return "", err
+		}
+
+		return getNestedValue(prefsMap, parts[1:])
 	}
 
 	return "", fmt.Errorf("key not found: %s", key)
@@ -269,14 +279,27 @@ func setConfigValue(config *cli.UserConfig, key, value string) error {
 	// Handle preferences
 	if parts[0] == "preferences" {
 		if config.Preferences == nil {
-			config.Preferences = make(map[string]interface{})
+			config.Preferences = &cli.UserPreferences{}
 		}
 
 		if len(parts) == 1 {
 			return fmt.Errorf("cannot set entire preferences section, use a specific key")
 		}
 
-		return setNestedValue(config.Preferences, parts[1:], value)
+		// Convert to map, modify, then convert back
+		var prefsMap map[string]interface{}
+		data, _ := yaml.Marshal(config.Preferences)
+		if err := yaml.Unmarshal(data, &prefsMap); err != nil {
+			prefsMap = make(map[string]interface{})
+		}
+
+		if err := setNestedValue(prefsMap, parts[1:], value); err != nil {
+			return err
+		}
+
+		// Convert back to UserPreferences
+		data, _ = yaml.Marshal(prefsMap)
+		return yaml.Unmarshal(data, config.Preferences)
 	}
 
 	return fmt.Errorf("invalid key: %s", key)
@@ -325,7 +348,20 @@ func unsetConfigValue(config *cli.UserConfig, key string) error {
 			return nil
 		}
 
-		return unsetNestedValue(config.Preferences, parts[1:])
+		// Convert to map, modify, then convert back
+		var prefsMap map[string]interface{}
+		data, _ := yaml.Marshal(config.Preferences)
+		if err := yaml.Unmarshal(data, &prefsMap); err != nil {
+			return nil // Already empty
+		}
+
+		if err := unsetNestedValue(prefsMap, parts[1:]); err != nil {
+			return err
+		}
+
+		// Convert back to UserPreferences
+		data, _ = yaml.Marshal(prefsMap)
+		return yaml.Unmarshal(data, config.Preferences)
 	}
 
 	return fmt.Errorf("invalid key: %s", key)
