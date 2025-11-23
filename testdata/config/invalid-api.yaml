@@ -1,0 +1,10 @@
+# Invalid configuration - bad API settings
+metadata:
+  name: test-cli
+  version: 1.0.0
+  description: Test CLI for validation
+
+api:
+  openapi_url: ""  # Invalid: missing
+  base_url: not-a-url  # Invalid: not a URL
+  telemetry_url: also-not-a-url  # Invalid: not a URL

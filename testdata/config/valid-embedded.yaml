@@ -1,0 +1,77 @@
+# Valid embedded configuration for testing
+metadata:
+  name: test-cli
+  version: 1.0.0
+  description: Test CLI for configuration testing
+  author:
+    name: Test Author
+    email: test@example.com
+  debug: false
+
+branding:
+  colors:
+    primary: "#FF6B6B"
+    secondary: "#4ECDC4"
+    success: "#51CF66"
+    warning: "#FFC078"
+    error: "#FF6B6B"
+    info: "#74C0FC"
+
+api:
+  openapi_url: https://api.example.com/openapi.yaml
+  base_url: https://api.example.com
+  telemetry_url: https://telemetry.example.com/events
+
+defaults:
+  http:
+    timeout: 30s
+  caching:
+    enabled: true
+  pagination:
+    limit: 20
+  output:
+    format: json
+    pretty_print: true
+    color: auto
+    paging: true
+  deprecations:
+    always_show: false
+    min_severity: info
+  retry:
+    max_attempts: 3
+
+updates:
+  enabled: true
+  update_url: https://releases.example.com/test-cli
+  check_interval: 24h
+
+behaviors:
+  auth:
+    type: api_key
+    api_key:
+      header: X-API-Key
+      env_var: TEST_API_KEY
+  caching:
+    spec_ttl: 5m
+    response_ttl: 1m
+    directory: ~/.cache/test-cli
+    max_size: 100MB
+  retry:
+    enabled: true
+    initial_delay: 1s
+    max_delay: 30s
+    backoff_multiplier: 2.0
+    retry_on_status: [429, 500, 502, 503, 504]
+  pagination:
+    max_limit: 100
+    delay: 100ms
+  secrets:
+    enabled: true
+    masking:
+      style: partial
+      partial_show_chars: 6
+      replacement: "***"
+
+features:
+  config_file: true
+  interactive_mode: false

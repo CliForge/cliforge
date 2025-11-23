@@ -1,0 +1,9 @@
+# Invalid configuration - bad metadata
+metadata:
+  name: ""  # Invalid: empty name
+  version: 1.0  # Invalid: not semver
+  description: Short  # Invalid: too short
+
+api:
+  openapi_url: https://api.example.com/openapi.yaml
+  base_url: https://api.example.com
