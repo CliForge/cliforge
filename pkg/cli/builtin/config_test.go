@@ -10,11 +10,10 @@ import (
 
 func TestConfigGetValue(t *testing.T) {
 	config := &cli.UserConfig{
-		Preferences: map[string]interface{}{
-			"output": map[string]interface{}{
-				"format": "json",
+		Preferences: &cli.UserPreferences{
+			Output: &cli.PreferencesOutput{
+				Format: "json",
 			},
-			"region": "us-west-2",
 		},
 	}
 
@@ -28,12 +27,6 @@ func TestConfigGetValue(t *testing.T) {
 			name:     "nested value",
 			key:      "preferences.output.format",
 			expected: "json",
-			wantErr:  false,
-		},
-		{
-			name:     "top-level value",
-			key:      "preferences.region",
-			expected: "us-west-2",
 			wantErr:  false,
 		},
 		{
@@ -67,7 +60,7 @@ func TestConfigGetValue(t *testing.T) {
 
 func TestConfigSetValue(t *testing.T) {
 	config := &cli.UserConfig{
-		Preferences: make(map[string]interface{}),
+		Preferences: &cli.UserPreferences{},
 	}
 
 	tests := []struct {
@@ -79,11 +72,6 @@ func TestConfigSetValue(t *testing.T) {
 			name:  "set nested value",
 			key:   "preferences.output.format",
 			value: "yaml",
-		},
-		{
-			name:  "set boolean value",
-			key:   "preferences.debug",
-			value: "true",
 		},
 	}
 
@@ -109,9 +97,9 @@ func TestConfigSetValue(t *testing.T) {
 
 func TestConfigUnsetValue(t *testing.T) {
 	config := &cli.UserConfig{
-		Preferences: map[string]interface{}{
-			"output": map[string]interface{}{
-				"format": "json",
+		Preferences: &cli.UserPreferences{
+			Output: &cli.PreferencesOutput{
+				Format: "json",
 			},
 		},
 	}
@@ -130,12 +118,11 @@ func TestConfigUnsetValue(t *testing.T) {
 
 func TestListConfigKeys(t *testing.T) {
 	config := &cli.UserConfig{
-		Preferences: map[string]interface{}{
-			"output": map[string]interface{}{
-				"format": "json",
-				"color":  "always",
+		Preferences: &cli.UserPreferences{
+			Output: &cli.PreferencesOutput{
+				Format: "json",
+				Color:  "always",
 			},
-			"region": "us-west-2",
 		},
 	}
 

@@ -175,7 +175,8 @@ func formatChangelogText(binaryChanges []ChangelogEntry, apiChanges []openapi.Ch
 
 	if showAPI && len(apiChanges) > 0 {
 		if showBinary {
-			fmt.Fprintln(w, "\n")
+			fmt.Fprintln(w)
+			fmt.Fprintln(w)
 		}
 
 		fmt.Fprintln(w, "API Changelog:")

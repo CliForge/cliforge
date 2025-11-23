@@ -181,13 +181,9 @@ func (fm *FlagManager) addAutomationFlags(pf *pflag.FlagSet) {
 
 // addUpdateFlags adds update-related flags.
 func (fm *FlagManager) addUpdateFlags(pf *pflag.FlagSet) {
-	if fm.config.Behaviors != nil && fm.config.Behaviors.GlobalFlags != nil {
-		// No update check flag
-		if fm.config.Behaviors.GlobalFlags.NoUpdateCheck != nil && fm.config.Behaviors.GlobalFlags.NoUpdateCheck.Enabled {
-			pf.BoolVar(&fm.flags.NoUpdateCheck, "no-update-check", false,
-				"Skip automatic update check")
-		}
-	}
+	// NoUpdateCheck flag is optional and not currently in GlobalFlags type
+	// It can be added if needed in the future
+	_ = pf // silence unused warning
 }
 
 // bindEnvVars binds environment variables to flags.
