@@ -60,12 +60,12 @@ func DefaultValuePatterns() []cli.ValuePattern {
 		},
 		{
 			Name:    "Generic API Key (sk_ prefix)",
-			Pattern: `[sS][kK]_[a-zA-Z0-9]{10,}`,
+			Pattern: `[sS][kK]_[a-zA-Z0-9_]{10,}`,
 			Enabled: true,
 		},
 		{
 			Name:    "Generic API Key (pk_ prefix)",
-			Pattern: `[pP][kK]_[a-zA-Z0-9]{10,}`,
+			Pattern: `[pP][kK]_[a-zA-Z0-9_]{10,}`,
 			Enabled: true,
 		},
 		{
