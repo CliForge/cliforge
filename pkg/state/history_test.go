@@ -348,6 +348,7 @@ func TestHistorySaveLoad(t *testing.T) {
 
 	// Create and save
 	h1, _ := NewHistory(uniqueCLI, 100)
+	h1.Clear() // Clear any previously loaded data
 	h1.Add(&HistoryEntry{Command: "cmd1", ExitCode: 0})
 	h1.Add(&HistoryEntry{Command: "cmd2", ExitCode: 1})
 

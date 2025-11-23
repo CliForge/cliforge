@@ -359,12 +359,33 @@ func unsetConfigValue(config *cli.UserConfig, key string) error {
 			return err
 		}
 
+		// Clean up empty parent objects
+		cleanEmptyMaps(prefsMap)
+
+		// If map is now empty, unset preferences entirely
+		if len(prefsMap) == 0 {
+			config.Preferences = nil
+			return nil
+		}
+
 		// Convert back to UserPreferences
 		data, _ = yaml.Marshal(prefsMap)
 		return yaml.Unmarshal(data, config.Preferences)
 	}
 
 	return fmt.Errorf("invalid key: %s", key)
+}
+
+// cleanEmptyMaps removes empty maps recursively.
+func cleanEmptyMaps(data map[string]interface{}) {
+	for key, value := range data {
+		if nested, ok := value.(map[string]interface{}); ok {
+			cleanEmptyMaps(nested)
+			if len(nested) == 0 {
+				delete(data, key)
+			}
+		}
+	}
 }
 
 // unsetNestedValue removes a nested value from a map.
@@ -387,7 +408,12 @@ func ListConfigKeys(config *cli.UserConfig) []string {
 	keys := []string{}
 
 	if config.Preferences != nil {
-		collectKeys("preferences", config.Preferences, &keys)
+		// Convert struct to map for traversal
+		var prefsMap map[string]interface{}
+		data, _ := yaml.Marshal(config.Preferences)
+		if err := yaml.Unmarshal(data, &prefsMap); err == nil {
+			collectKeys("preferences", prefsMap, &keys)
+		}
 	}
 
 	sort.Strings(keys)
