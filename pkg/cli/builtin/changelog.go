@@ -139,7 +139,15 @@ func formatChangelogText(binaryChanges []ChangelogEntry, apiChanges []openapi.Ch
 			if entry.IsCurrent {
 				current = " - Current"
 			}
-			fmt.Fprintf(w, "%s (%s)%s\n", entry.Version, entry.Date.Format("2006-01-02"), current)
+
+			// Parse date if it's a time.Time
+			dateStr := ""
+			if !entry.Date.IsZero() {
+				dateStr = entry.Date.Format("2006-01-02")
+			} else {
+				dateStr = "unknown"
+			}
+			fmt.Fprintf(w, "%s (%s)%s\n", entry.Version, dateStr, current)
 
 			if len(entry.Breaking) > 0 {
 				fmt.Fprintln(w, "  Breaking Changes:")
@@ -178,7 +186,7 @@ func formatChangelogText(binaryChanges []ChangelogEntry, apiChanges []openapi.Ch
 			if entry.IsCurrent {
 				current = " - Current"
 			}
-			fmt.Fprintf(w, "%s (%s)%s\n", entry.Version, entry.Date.Format("2006-01-02"), current)
+			fmt.Fprintf(w, "%s (%s)%s\n", entry.Version, entry.Date, current)
 
 			if len(entry.Breaking) > 0 {
 				fmt.Fprintln(w, "  Breaking Changes:")
@@ -258,7 +266,7 @@ func formatChangelogYAML(binaryChanges []ChangelogEntry, apiChanges []openapi.Ch
 		fmt.Fprintln(w, "api_changelog:")
 		for _, entry := range apiChanges {
 			fmt.Fprintf(w, "  - version: %s\n", entry.Version)
-			fmt.Fprintf(w, "    date: %s\n", entry.Date.Format("2006-01-02"))
+			fmt.Fprintf(w, "    date: %s\n", entry.Date)
 			if len(entry.Added) > 0 {
 				fmt.Fprintln(w, "    added:")
 				for _, add := range entry.Added {

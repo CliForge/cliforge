@@ -109,7 +109,7 @@ func TestDetector_IsSecretValue(t *testing.T) {
 		},
 		{
 			name:        "Generic API key",
-			value:       "sk_live_abc123def456ghi789jkl012",
+			value:       "sk_live_abc123def4",
 			wantSecret:  true,
 			wantPattern: "Generic API Key (sk_ prefix)",
 		},
@@ -121,7 +121,7 @@ func TestDetector_IsSecretValue(t *testing.T) {
 		},
 		{
 			name:        "GitHub token",
-			value:       "ghp_1234567890abcdefghijklmnopqrstuv",
+			value:       "ghp_1234567890abcdefghijklmnopqrstuv1234",
 			wantSecret:  true,
 			wantPattern: "GitHub Personal Access Token",
 		},
