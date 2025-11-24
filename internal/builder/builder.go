@@ -1,4 +1,67 @@
 // Package builder converts OpenAPI specs to Cobra command trees.
+//
+// The builder package generates Cobra command hierarchies from OpenAPI
+// specifications, applying CLI extensions to customize command structure,
+// names, flags, and behavior. It supports multiple command organization
+// strategies including tag-based and path-based grouping.
+//
+// # Command Organization
+//
+//   - Tag-based: Group commands by OpenAPI tags (recommended)
+//   - Path-based: Build hierarchy from URL path structure
+//   - Flat: All commands at root level (simple APIs)
+//
+// # Example Usage
+//
+//	// Create builder
+//	config := &builder.BuilderConfig{
+//	    RootName: "mycli",
+//	    GroupByTags: true,
+//	}
+//	b := builder.NewBuilder(spec, config)
+//
+//	// Build command tree
+//	rootCmd, _ := b.Build()
+//
+//	// Execute
+//	rootCmd.Execute()
+//
+// # Tag-Based Grouping
+//
+// OpenAPI operations with the same tag are grouped together:
+//
+//	paths:
+//	  /users:
+//	    get:
+//	      tags: [users]
+//	  /users/{id}:
+//	    get:
+//	      tags: [users]
+//
+// Generates:
+//
+//	mycli users list
+//	mycli users get <id>
+//
+// # Command Customization
+//
+// Use x-cli-command to override generated command names:
+//
+//	paths:
+//	  /users:
+//	    get:
+//	      operationId: listUsers
+//	      x-cli-command: list
+//	      x-cli-aliases: [ls]
+//
+// # Path-Based Hierarchy
+//
+// Path structure determines command nesting:
+//
+//	/api/v1/clusters/{id}/nodes -> mycli api v1 clusters nodes
+//
+// The builder automatically extracts path parameters, generates flags
+// from operation parameters, and wires up execution handlers.
 package builder
 
 import (

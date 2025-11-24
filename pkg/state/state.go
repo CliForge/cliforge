@@ -1,4 +1,55 @@
 // Package state manages CLI state, contexts, history, and recent values.
+//
+// The state package provides persistent storage for CLI runtime state including
+// named contexts (like kubectl contexts), command history, recently used values,
+// resource preferences, and session data. All state is stored in XDG-compliant
+// directories and uses YAML format for human readability.
+//
+// # State Components
+//
+//   - Contexts: Named configuration sets (API endpoints, auth, preferences)
+//   - Recent Values: Recently used IDs/names for autocomplete suggestions
+//   - Resource Preferences: Per-resource metadata (last used, favorites, counts)
+//   - Session Data: Current session info (last command, working directory)
+//   - History: Command execution history with timestamps
+//
+// # Example Usage
+//
+//	// Create state manager
+//	mgr, _ := state.NewManager("mycli")
+//
+//	// Work with contexts
+//	mgr.CreateContext("prod", &state.Context{
+//	    APIEndpoint: "https://api.prod.example.com",
+//	})
+//	mgr.SetCurrentContext("prod")
+//
+//	// Track recent values for autocomplete
+//	mgr.AddRecentValue("cluster-ids", "cluster-abc-123")
+//	suggestions := mgr.GetRecentValues("cluster-ids")
+//
+//	// Mark resources as used
+//	mgr.MarkResourceUsed("clusters", "cluster-abc-123")
+//
+//	// Save state
+//	mgr.Save()
+//
+// # Context Management
+//
+// Contexts allow users to switch between different API environments:
+//
+//	mycli context create staging --endpoint https://staging.api.example.com
+//	mycli context use staging
+//	mycli context list
+//
+// # State Location
+//
+//   - Linux: ~/.local/state/mycli/state.yaml
+//   - macOS: ~/Library/Application Support/mycli/state.yaml
+//   - Windows: %LOCALAPPDATA%\mycli\state\state.yaml
+//
+// The Manager is thread-safe and uses atomic file writes to prevent
+// corruption during concurrent access.
 package state
 
 import (

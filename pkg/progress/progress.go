@@ -1,3 +1,34 @@
+// Package progress provides visual progress indicators for long-running CLI operations.
+//
+// The progress package supports multiple indicator types including spinners,
+// progress bars, and multi-step displays. All indicators are thread-safe and
+// can be disabled for non-interactive environments.
+//
+// # Indicator Types
+//
+//   - Spinner: Simple spinning indicator for unknown duration tasks
+//   - ProgressBar: Percentage-based bar for tasks with known total
+//   - MultiStep: Tree-based display for multi-step workflows
+//   - NoopProgress: Silent indicator for non-interactive environments
+//
+// # Example Usage
+//
+//	config := progress.DefaultConfig()
+//	spinner := progress.NewSpinner(config)
+//	spinner.Start("Processing...")
+//	// ... do work ...
+//	spinner.Success("Done!")
+//
+// # Multi-Step Example
+//
+//	steps := progress.NewMultiStep(config)
+//	steps.Start("Running workflow")
+//	steps.AddStep(&progress.StepInfo{ID: "step1", Description: "Build"})
+//	steps.UpdateStep("step1", progress.StepStatusCompleted, "Built")
+//	steps.Success("Workflow complete")
+//
+// Progress indicators automatically detect TTY environments and disable
+// themselves when stdout is not a terminal.
 package progress
 
 import (

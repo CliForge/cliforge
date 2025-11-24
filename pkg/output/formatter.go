@@ -1,3 +1,30 @@
+// Package output provides output formatting for CLI command responses.
+//
+// The output package supports multiple format types including JSON, YAML,
+// tables, CSV, and custom templates with Go template expressions. Formatters
+// can be configured through OpenAPI x-cli-output extensions or runtime flags.
+//
+// # Key Features
+//
+//   - Multiple output formats (JSON, YAML, table, CSV, template)
+//   - Pretty-printing and colored output support
+//   - Data transformation via JQ-like expressions
+//   - Field selection and column configuration
+//   - Template-based custom formatting
+//
+// # Example Usage
+//
+//	manager := output.NewManager()
+//	err := manager.Format(os.Stdout, data, "json")
+//
+// # OpenAPI Integration
+//
+// Output behavior can be controlled via x-cli-output extensions:
+//
+//	x-cli-output:
+//	  format: table
+//	  fields: [id, name, status]
+//	  transform: .results[]
 package output
 
 import (

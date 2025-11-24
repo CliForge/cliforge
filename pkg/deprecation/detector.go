@@ -1,4 +1,65 @@
 // Package deprecation provides deprecation detection and management for CliForge.
+//
+// The deprecation package detects deprecated API operations, parameters, and
+// schemas from multiple sources including OpenAPI spec fields, x-cli-deprecation
+// extensions, x-cli-changelog entries, and HTTP Sunset/Deprecation headers (RFC 8594).
+//
+// # Detection Sources
+//
+//   - OpenAPI deprecated field: Standard OpenAPI 3.x deprecated boolean
+//   - x-cli-deprecation extension: Rich deprecation metadata with sunset dates
+//   - x-cli-changelog entries: Historical deprecation tracking
+//   - Sunset HTTP header: Runtime deprecation detection (RFC 8594)
+//   - Deprecation HTTP header: Indicates deprecated resources
+//
+// # Deprecation Severity Levels
+//
+//   - Info: Informational, future deprecation planned
+//   - Warning: Deprecated, replacement available
+//   - Breaking: Will be removed soon, migration required
+//
+// # Warning Levels (Based on Days Until Sunset)
+//
+//   - Info: 180+ days remaining
+//   - Warning: 90-179 days remaining
+//   - Urgent: 30-89 days remaining
+//   - Critical: 1-29 days remaining
+//   - Removed: Already sunset
+//
+// # Example Usage
+//
+//	detector := deprecation.NewDetector()
+//
+//	// Detect from OpenAPI spec
+//	deprecations, _ := detector.DetectFromSpec(spec)
+//
+//	// Filter by severity
+//	breaking := deprecation.FilterBySeverity(deprecations, deprecation.SeverityBreaking)
+//
+//	// Get most urgent
+//	urgent := deprecation.GetMostUrgent(deprecations)
+//
+//	// Check HTTP response for Sunset header
+//	if info := detector.DetectFromSunsetHeader(resp, opID, method, path); info != nil {
+//	    fmt.Printf("Warning: This endpoint will sunset on %s\n", info.Sunset)
+//	}
+//
+// # x-cli-deprecation Extension Example
+//
+//	paths:
+//	  /api/v1/users:
+//	    get:
+//	      deprecated: true
+//	      x-cli-deprecation:
+//	        severity: breaking
+//	        sunset: "2024-12-31"
+//	        replacement:
+//	          path: /api/v2/users
+//	          migration: "See migration guide at docs.example.com/v2"
+//	        message: "v1 API will be removed. Use v2 API."
+//
+// The package provides formatted output with color-coded warnings,
+// migration guidance, and links to documentation.
 package deprecation
 
 import (

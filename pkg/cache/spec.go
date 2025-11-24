@@ -1,4 +1,43 @@
 // Package cache provides XDG-compliant caching for OpenAPI specifications.
+//
+// The cache package implements efficient caching of OpenAPI specs with support
+// for ETags, Last-Modified headers, TTL-based expiration, and automatic cache
+// invalidation. All cache files are stored in XDG-compliant directories.
+//
+// # Features
+//
+//   - XDG Base Directory specification compliance
+//   - HTTP ETag and Last-Modified support for conditional requests
+//   - Configurable TTL (time-to-live) per cache entry
+//   - Automatic cache pruning of expired entries
+//   - Cache statistics and management commands
+//   - Thread-safe concurrent access
+//
+// # Example Usage
+//
+//	// Create cache
+//	cache, _ := cache.NewSpecCache("mycli")
+//
+//	// Check cache
+//	cached, err := cache.Get(ctx, "https://api.example.com/openapi.yaml")
+//	if err == cache.ErrCacheMiss || !cache.IsValid(cached, 5*time.Minute) {
+//	    // Fetch fresh spec
+//	    spec := fetchSpec(url)
+//	    cache.Set(ctx, url, &cache.CachedSpec{
+//	        Data: spec,
+//	        ETag: etag,
+//	        FetchedAt: time.Now(),
+//	    })
+//	}
+//
+// # Cache Locations
+//
+//   - Linux: ~/.cache/mycli/
+//   - macOS: ~/Library/Caches/mycli/
+//   - Windows: %LOCALAPPDATA%\mycli\cache\
+//
+// Cache entries are stored as JSON files with SHA-256 hash-based filenames
+// to avoid filesystem naming conflicts.
 package cache
 
 import (

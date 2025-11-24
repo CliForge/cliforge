@@ -1,4 +1,66 @@
 // Package update provides self-update capabilities for CliForge-generated CLIs.
+//
+// The update package implements semantic version parsing, comparison, and
+// CLI self-update functionality with cryptographic signature verification.
+// It supports background update checks, automatic updates, and manual update
+// commands.
+//
+// # Features
+//
+//   - Semantic version parsing (semver 2.0.0 compatible)
+//   - Version comparison with prerelease support
+//   - Background update checks with configurable intervals
+//   - Cryptographic signature verification (Ed25519)
+//   - Platform-specific binary downloads
+//   - In-place binary replacement with rollback support
+//   - Update notifications with changelog display
+//
+// # Version Parsing
+//
+//	v, _ := update.ParseVersion("1.2.3-beta.1+build.123")
+//	fmt.Println(v.Major)      // 1
+//	fmt.Println(v.Minor)      // 2
+//	fmt.Println(v.Patch)      // 3
+//	fmt.Println(v.Prerelease) // "beta.1"
+//	fmt.Println(v.Metadata)   // "build.123"
+//
+// # Version Comparison
+//
+//	v1, _ := update.ParseVersion("1.2.3")
+//	v2, _ := update.ParseVersion("1.2.4")
+//
+//	if v2.IsNewer(v1) {
+//	    fmt.Println("Update available!")
+//	}
+//
+// # Update Check
+//
+//	checker := update.NewChecker(&update.Config{
+//	    UpdateURL: "https://releases.example.com/mycli",
+//	    CurrentVersion: "1.0.0",
+//	    PublicKey: publicKeyPEM,
+//	})
+//
+//	latest, available, _ := checker.CheckForUpdate(ctx)
+//	if available {
+//	    fmt.Printf("New version %s available\n", latest.Version)
+//	}
+//
+// # Automatic Updates
+//
+// Configure in cli-config.yaml:
+//
+//	updates:
+//	  enabled: true
+//	  update_url: https://releases.example.com/mycli
+//	  check_interval: 24h
+//	  public_key: |
+//	    -----BEGIN PUBLIC KEY-----
+//	    ...
+//	    -----END PUBLIC KEY-----
+//
+// Updates can be triggered manually or automatically in the background.
+// All downloads are verified against Ed25519 signatures before installation.
 package update
 
 import (

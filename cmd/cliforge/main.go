@@ -1,4 +1,33 @@
 // Package main implements the CliForge generator CLI.
+//
+// CliForge is a powerful tool that generates production-ready, branded CLIs
+// from OpenAPI specifications. It provides a complete CLI generation workflow
+// including initialization, validation, and binary building.
+//
+// # Commands
+//
+//   - init: Initialize a new CLI project with configuration templates
+//   - build: Generate and compile a CLI binary from config and spec
+//   - validate: Validate OpenAPI spec and CLI configuration
+//
+// # Example Usage
+//
+//	# Initialize a new CLI project
+//	cliforge init --name mycli --spec api.yaml
+//
+//	# Validate configuration and spec
+//	cliforge validate
+//
+//	# Build the CLI binary
+//	cliforge build --output ./bin/mycli
+//
+// # Configuration
+//
+// CliForge uses a cli-config.yaml file that defines CLI metadata, branding,
+// authentication, behaviors, and features. The configuration is embedded
+// into the generated binary and controls all runtime behavior.
+//
+// For more information, visit: https://github.com/CliForge/cliforge
 package main
 
 import (

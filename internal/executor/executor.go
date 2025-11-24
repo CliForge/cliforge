@@ -1,4 +1,65 @@
 // Package executor handles execution of OpenAPI operations from Cobra commands.
+//
+// The executor package implements the runtime execution engine for generated
+// CLIs, handling HTTP requests, authentication, response formatting, async
+// operations, workflows, and error handling. It bridges Cobra commands with
+// OpenAPI operations.
+//
+// # Execution Flow
+//
+//	1. Extract operation metadata from command annotations
+//	2. Build HTTP request from command flags and args
+//	3. Apply authentication headers
+//	4. Execute HTTP request
+//	5. Handle response (sync, async, workflow)
+//	6. Format and display output
+//	7. Update state and history
+//
+// # Features
+//
+//   - Automatic request building from OpenAPI specs
+//   - Authentication injection (API key, OAuth2, Basic)
+//   - Path/query/header parameter mapping
+//   - Request body construction from flags
+//   - Async operation polling with progress display
+//   - Multi-step workflow execution
+//   - Response formatting (JSON, YAML, table, etc.)
+//   - Error handling with helpful messages
+//
+// # Example Usage
+//
+//	// Create executor
+//	executor, _ := executor.NewExecutor(spec, &executor.ExecutorConfig{
+//	    BaseURL: "https://api.example.com",
+//	    AuthManager: authManager,
+//	    OutputManager: outputManager,
+//	})
+//
+//	// Wire to command
+//	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+//	    return executor.Execute(cmd, args)
+//	}
+//
+// # Async Operations
+//
+// For operations marked with x-cli-async, the executor automatically
+// polls for completion:
+//
+//	x-cli-async:
+//	  enabled: true
+//	  status-field: status
+//	  terminal-states: [completed, failed]
+//	  polling:
+//	    interval: 5
+//	    timeout: 300
+//
+// # Workflow Execution
+//
+// For x-cli-workflow operations, the executor delegates to the workflow
+// engine for multi-step execution with dependencies, retries, and rollback.
+//
+// The executor integrates with progress indicators, state management,
+// and secrets masking for a complete CLI execution experience.
 package executor
 
 import (

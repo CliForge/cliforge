@@ -1,4 +1,48 @@
 // Package auth provides authentication mechanisms for CLI applications.
+//
+// The auth package supports multiple authentication strategies including
+// API keys, OAuth2 (multiple flows), and HTTP Basic authentication. It handles
+// token acquisition, refresh, storage, and automatic injection into HTTP requests.
+//
+// # Supported Authentication Types
+//
+//   - API Key: Header or query parameter based authentication
+//   - OAuth2: Authorization code, client credentials, password, device code flows
+//   - Basic: HTTP Basic authentication with username/password
+//   - None: No authentication (for public APIs)
+//
+// # Storage Options
+//
+//   - File: Store tokens in XDG-compliant filesystem locations
+//   - Keyring: Store tokens in system keyring (macOS Keychain, etc.)
+//   - Memory: Store tokens in-memory only (not persisted)
+//
+// # Example Usage
+//
+//	// Create API key authenticator
+//	config := &auth.APIKeyConfig{
+//	    Key: "sk-...",
+//	    Location: auth.APIKeyLocationHeader,
+//	    Name: "Authorization",
+//	    Prefix: "Bearer ",
+//	}
+//	authenticator, _ := auth.NewAPIKeyAuth(config)
+//
+//	// Use with HTTP client
+//	client := auth.NewAuthenticatedClient(http.DefaultClient, authenticator, storage)
+//	resp, _ := client.Do(req)
+//
+// # OAuth2 Example
+//
+//	oauth2Config := &auth.OAuth2Config{
+//	    ClientID: "client-id",
+//	    TokenURL: "https://oauth.example.com/token",
+//	    Flow: auth.OAuth2FlowClientCredentials,
+//	}
+//	authenticator, _ := auth.NewOAuth2Auth(oauth2Config)
+//
+// The package automatically handles token refresh when tokens expire and
+// stores credentials securely based on the configured storage backend.
 package auth
 
 import (

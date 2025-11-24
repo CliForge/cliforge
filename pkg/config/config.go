@@ -1,4 +1,55 @@
 // Package config handles loading, merging, and validation of CLI configurations.
+//
+// The config package implements the complete configuration loading system for
+// CliForge-generated CLIs, including embedded configurations, user overrides,
+// environment variables, and debug mode. All configuration follows XDG Base
+// Directory specifications.
+//
+// # Configuration Sources
+//
+// The Loader merges configuration from multiple sources with this priority:
+//
+//	1. Environment Variables (highest precedence)
+//	2. CLI Flags
+//	3. User Config File (~/.config/mycli/config.yaml)
+//	4. Debug Override Section (debug builds only)
+//	5. Embedded Configuration (in binary)
+//	6. Hardcoded Defaults (lowest precedence)
+//
+// # Debug Mode
+//
+// Debug builds (metadata.debug: true) enable the debug_override section
+// in user config files, allowing complete override of embedded configuration.
+// Production builds ignore this section for security. Debug builds display
+// prominent warnings when debug overrides are active.
+//
+// # Example Usage
+//
+//	// Create loader
+//	loader := config.NewLoader("mycli", &embeddedFS, "config.yaml")
+//
+//	// Load and merge all configs
+//	loaded, err := loader.LoadConfig()
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//
+//	// Show warnings (debug mode, invalid configs, etc.)
+//	loader.ShowWarnings(loaded)
+//
+//	// Access merged configuration
+//	finalConfig := loaded.Final
+//
+// # Environment Variable Mapping
+//
+// Environment variables follow the pattern: {CLI_NAME}_{CONFIG_PATH}
+//
+//	MYCLI_OUTPUT_FORMAT=json        -> defaults.output.format
+//	MYCLI_TIMEOUT=30s               -> defaults.http.timeout
+//	MYCLI_NO_COLOR=1                -> defaults.output.color=never
+//
+// The package automatically creates all necessary XDG directories
+// (config, cache, data, state) on first use.
 package config
 
 import (

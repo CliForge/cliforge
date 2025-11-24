@@ -1,4 +1,75 @@
 // Package openapi provides OpenAPI 3.x and Swagger 2.0 specification parsing with CLI extensions support.
+//
+// The openapi package parses and validates OpenAPI/Swagger specifications,
+// automatically converting Swagger 2.0 to OpenAPI 3.0, and extracts all
+// x-cli-* extensions for CLI generation. It supports loading specs from files,
+// URLs, and embedded resources.
+//
+// # Supported Formats
+//
+//   - OpenAPI 3.0.x (JSON/YAML)
+//   - OpenAPI 3.1.x (JSON/YAML)
+//   - Swagger 2.0 (auto-converted to OpenAPI 3.0)
+//
+// # CLI Extensions
+//
+// The parser extracts all x-cli-* extensions:
+//
+//   - x-cli-command: Override command name
+//   - x-cli-aliases: Command aliases
+//   - x-cli-hidden: Hide from help output
+//   - x-cli-examples: Usage examples
+//   - x-cli-auth: Authentication requirements
+//   - x-cli-workflow: Multi-step workflows
+//   - x-cli-async: Async operation polling
+//   - x-cli-output: Output formatting
+//   - x-cli-confirmation: Confirm before execution
+//   - x-cli-preflight: Pre-execution checks
+//   - x-cli-secret: Mark field as sensitive
+//   - x-cli-deprecation: Deprecation metadata
+//
+// # Example Usage
+//
+//	// Create parser
+//	parser := openapi.NewParser()
+//
+//	// Parse from file
+//	spec, err := parser.ParseFile(ctx, "openapi.yaml")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//
+//	// Get API info
+//	info := spec.GetInfo()
+//	fmt.Printf("API: %s v%s\n", info.Title, info.Version)
+//
+//	// Get operations
+//	operations, _ := spec.GetOperations()
+//	for _, op := range operations {
+//	    fmt.Printf("%s %s - %s\n", op.Method, op.Path, op.Summary)
+//	}
+//
+// # Swagger 2.0 Conversion
+//
+// Swagger 2.0 specs are automatically detected and converted:
+//
+//	spec, _ := parser.Parse(ctx, swaggerData)
+//	// Returns OpenAPI 3.0 ParsedSpec
+//	fmt.Println(spec.OriginalVersion) // "2.0"
+//
+// # Validation
+//
+// By default, specs are validated during parsing. Disable with:
+//
+//	parser := openapi.NewParser()
+//	parser.DisableValidation = true
+//
+// The parser supports remote $ref resolution when enabled:
+//
+//	parser.AllowRemoteRefs = true
+//
+// All extensions are fully documented at:
+// https://github.com/CliForge/cliforge/blob/main/docs/openapi-extensions.md
 package openapi
 
 import (

@@ -1,4 +1,53 @@
 // Package cli defines the core types for CliForge CLI generation system.
+//
+// The cli package contains all type definitions for CLI configuration, including
+// metadata, branding, authentication, behaviors, and features. These types
+// represent the structure of cli-config.yaml and control all aspects of
+// generated CLI behavior.
+//
+// # Configuration Hierarchy
+//
+//   - Metadata: CLI name, version, description, author, license
+//   - Branding: Colors, ASCII art, themes, custom prompts
+//   - API: OpenAPI spec location, base URL, environments
+//   - Defaults: User-configurable default values
+//   - Behaviors: Locked runtime behaviors (auth, caching, retry, etc.)
+//   - Features: Optional feature flags
+//
+// # Configuration Sources
+//
+// Configuration is loaded and merged from multiple sources with this precedence:
+//
+//	Environment Variables (highest)
+//	  ↓
+//	CLI Flags
+//	  ↓
+//	User Config (~/.config/mycli/config.yaml)
+//	  ↓
+//	Debug Override (if debug build)
+//	  ↓
+//	Embedded Config (in binary)
+//	  ↓
+//	Defaults (lowest)
+//
+// # Example Configuration
+//
+//	metadata:
+//	  name: mycli
+//	  version: 1.0.0
+//	  description: My awesome CLI
+//	api:
+//	  openapi_url: https://api.example.com/openapi.yaml
+//	  base_url: https://api.example.com
+//	behaviors:
+//	  auth:
+//	    type: oauth2
+//	    oauth2:
+//	      client_id: my-client
+//	      token_url: https://oauth.example.com/token
+//
+// All types in this package support YAML and JSON marshaling for
+// configuration file processing.
 package cli
 
 import "time"

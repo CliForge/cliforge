@@ -1,4 +1,55 @@
 // Package embed handles embedding configuration into generated CLI binaries.
+//
+// The embed package generates Go code to embed CLI configuration files into
+// binary executables using Go's embed package. This allows self-contained
+// binaries that don't require external configuration files at runtime.
+//
+// # Embedding Process
+//
+//	1. Write configuration to config_embedded.yaml
+//	2. Generate Go code with //go:embed directive
+//	3. Generate main.go template that loads embedded config
+//	4. Build binary with embedded configuration
+//
+// # Example Usage
+//
+//	embedder := embed.NewEmbedder()
+//
+//	// Write config for embedding
+//	embedder.WriteEmbeddedConfig(configData, "config_embedded.yaml")
+//
+//	// Generate embed code
+//	embedCode, _ := embedder.GenerateEmbedCode(configData)
+//
+//	// Generate main.go
+//	mainCode, _ := embedder.GenerateMainTemplate("mycli", "1.0.0", configData)
+//
+// # Generated Code Structure
+//
+// The embedder generates code like:
+//
+//	//go:embed config_embedded.yaml
+//	var embeddedConfig []byte
+//
+//	func main() {
+//	    rt, _ := runtime.NewRuntime(embeddedConfig, version, debug)
+//	    rt.Execute()
+//	}
+//
+// # Build Flags
+//
+// The generated code includes build flags for version and debug mode:
+//
+//	go build -ldflags "-X main.version=1.0.0 -X main.debug=false"
+//
+// # Debug Builds
+//
+// Debug builds (debug=true) enable the debug_override section in user
+// configuration files, allowing complete override of embedded configuration
+// for development and testing.
+//
+// Production builds ignore debug_override for security, ensuring embedded
+// configuration cannot be overridden at runtime.
 package embed
 
 import (

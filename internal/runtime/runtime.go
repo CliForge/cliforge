@@ -1,4 +1,73 @@
 // Package runtime provides the runtime environment for generated CLIs.
+//
+// The runtime package initializes and manages the complete runtime environment
+// for CliForge-generated CLIs. It loads embedded configuration, initializes all
+// subsystems (auth, cache, state, output), builds the command tree, and
+// orchestrates command execution.
+//
+// # Initialization Flow
+//
+//	1. Parse embedded configuration
+//	2. Initialize subsystems:
+//	   - Output manager
+//	   - State manager (contexts, history)
+//	   - Cache (OpenAPI specs)
+//	   - Auth manager
+//	3. Load OpenAPI specification
+//	4. Build Cobra command tree
+//	5. Add global flags
+//	6. Add built-in commands
+//	7. Execute CLI
+//
+// # Example Usage
+//
+// This is typically used in generated main.go files:
+//
+//	//go:embed config.yaml
+//	var embeddedConfig []byte
+//
+//	func main() {
+//	    rt, err := runtime.NewRuntime(embeddedConfig, version, debug)
+//	    if err != nil {
+//	        log.Fatal(err)
+//	    }
+//	    rt.Execute()
+//	}
+//
+// # Subsystems
+//
+//   - AuthManager: Handles authentication flows and token storage
+//   - StateManager: Manages contexts, history, and recent values
+//   - SpecCache: Caches OpenAPI specs with ETag support
+//	OutputManager: Formats command output in multiple formats
+//   - ProgressManager: Displays progress for long operations
+//
+// # Global Flags
+//
+// The runtime adds global flags based on configuration:
+//
+//	--output, -o     Output format (json, yaml, table)
+//	--verbose, -v    Enable verbose output
+//	--debug          Enable debug mode
+//	--no-color       Disable colored output
+//	--config         Path to config file
+//	--profile        Named profile to use
+//
+// # Built-in Commands
+//
+// Built-in commands are added based on cli-config.yaml:
+//
+//	version      Show version information
+//	help         Help about any command
+//	completion   Generate shell completion
+//	config       Manage configuration
+//	context      Manage contexts
+//	cache        Manage cache
+//	update       Check for updates
+//	auth         Manage authentication
+//
+// The runtime package provides the complete scaffolding needed for
+// production-ready CLI applications generated from OpenAPI specs.
 package runtime
 
 import (

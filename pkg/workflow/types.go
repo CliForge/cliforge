@@ -1,3 +1,48 @@
+// Package workflow provides multi-step API workflow orchestration for CliForge.
+//
+// The workflow package enables complex multi-step operations that go beyond
+// simple HTTP requests, including sequential and parallel execution, conditional
+// branching, loops, polling, and automatic rollback on failures.
+//
+// # Step Types
+//
+//   - api-call: Execute HTTP API requests
+//   - plugin: Invoke external tools or plugins
+//   - conditional: Branch execution based on conditions
+//   - loop: Iterate over collections
+//   - wait: Delay or poll for status changes
+//   - parallel: Execute multiple steps concurrently
+//
+// # Workflow Features
+//
+//   - DAG-based dependency resolution
+//   - Automatic retry with exponential backoff
+//   - Rollback actions for failed steps
+//   - Output mapping between steps
+//   - Expression evaluation for conditions and data transformation
+//
+// # Example Workflow Definition
+//
+//	workflow:
+//	  steps:
+//	    - id: create-resource
+//	      type: api-call
+//	      api-call:
+//	        method: POST
+//	        endpoint: /api/resources
+//	    - id: wait-ready
+//	      type: wait
+//	      depends-on: [create-resource]
+//	      wait:
+//	        polling:
+//	          endpoint: /api/resources/{id}/status
+//	          interval: 5
+//	          terminal-states: [ready, failed]
+//
+// # OpenAPI Integration
+//
+// Workflows are defined via x-cli-workflow extensions in OpenAPI specs
+// and executed automatically when a command is invoked.
 package workflow
 
 import (
