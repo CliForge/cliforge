@@ -51,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Plugin, workflow, file ops, progress, and state management design docs
 
 ### Test Coverage
-- 14/17 packages passing tests
+- 17/17 packages passing all tests
 - Average coverage: 51.8%
 - High coverage: state (87%), auth (81%), output (76%), secrets (75%)
 

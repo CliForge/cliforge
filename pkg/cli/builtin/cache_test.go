@@ -212,13 +212,8 @@ func TestClearCache_FullCache(t *testing.T) {
 		t.Fatalf("failed to create test file: %v", err)
 	}
 
-	// Set XDG_CACHE_HOME to our temp dir
-	originalXDGCache := os.Getenv("XDG_CACHE_HOME")
-	os.Setenv("XDG_CACHE_HOME", tempDir)
-	defer os.Setenv("XDG_CACHE_HOME", originalXDGCache)
-
 	output := &bytes.Buffer{}
-	err := clearCache("testcli", false, output)
+	err := clearCacheWithDir(tempDir, "testcli", false, output)
 	if err != nil {
 		t.Fatalf("clearCache failed: %v", err)
 	}
@@ -228,12 +223,21 @@ func TestClearCache_FullCache(t *testing.T) {
 		t.Errorf("expected 'Cache cleared' in output, got: %s", result)
 	}
 
-	// Verify cache was deleted (may still exist as empty dir)
-	if _, err := os.Stat(cacheDir); err == nil {
-		// Check if it's empty
+	// Verify cache was cleared - directory should not exist
+	if _, err := os.Stat(cacheDir); !os.IsNotExist(err) {
+		// Check what remains
 		entries, _ := os.ReadDir(cacheDir)
-		if len(entries) > 0 {
-			t.Errorf("expected cache directory to be empty or deleted, has %d entries", len(entries))
+		// Filter out macOS .DS_Store and tempDir artifacts
+		userFiles := 0
+		for _, e := range entries {
+			name := e.Name()
+			if name != ".DS_Store" && !strings.HasPrefix(name, ".") {
+				t.Logf("Found file: %s", name)
+				userFiles++
+			}
+		}
+		if userFiles > 0 {
+			t.Errorf("expected cache directory to be deleted, has %d user files", userFiles)
 		}
 	}
 }
@@ -259,13 +263,8 @@ func TestClearCache_SpecOnly(t *testing.T) {
 		t.Fatalf("failed to create other file: %v", err)
 	}
 
-	// Set XDG_CACHE_HOME to our temp dir
-	originalXDGCache := os.Getenv("XDG_CACHE_HOME")
-	os.Setenv("XDG_CACHE_HOME", tempDir)
-	defer os.Setenv("XDG_CACHE_HOME", originalXDGCache)
-
 	output := &bytes.Buffer{}
-	err := clearCache("testcli", true, output)
+	err := clearCacheWithDir(tempDir, "testcli", true, output)
 	if err != nil {
 		t.Fatalf("clearCache failed: %v", err)
 	}
@@ -275,11 +274,20 @@ func TestClearCache_SpecOnly(t *testing.T) {
 		t.Errorf("expected 'Spec cache cleared' in output, got: %s", result)
 	}
 
-	// Verify spec directory was deleted (may still exist as empty dir)
-	if _, err := os.Stat(specDir); err == nil {
+	// Verify spec directory was cleared
+	if _, err := os.Stat(specDir); !os.IsNotExist(err) {
 		entries, _ := os.ReadDir(specDir)
-		if len(entries) > 0 {
-			t.Errorf("expected spec directory to be empty or deleted, has %d entries", len(entries))
+		// Filter out macOS .DS_Store and hidden files
+		userFiles := 0
+		for _, e := range entries {
+			name := e.Name()
+			if name != ".DS_Store" && !strings.HasPrefix(name, ".") {
+				t.Logf("Found file: %s", name)
+				userFiles++
+			}
+		}
+		if userFiles > 0 {
+			t.Errorf("expected spec directory to be deleted, has %d user files", userFiles)
 		}
 	}
 

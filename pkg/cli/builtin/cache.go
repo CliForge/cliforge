@@ -206,18 +206,23 @@ func formatSize(bytes int64) string {
 
 // clearCache clears the cache.
 func clearCache(cliName string, specOnly bool, w io.Writer) error {
-	cacheDir := filepath.Join(xdg.CacheHome, cliName)
+	return clearCacheWithDir(xdg.CacheHome, cliName, specOnly, w)
+}
+
+// clearCacheWithDir clears the cache using a specific cache home (for testing).
+func clearCacheWithDir(cacheHome, cliName string, specOnly bool, w io.Writer) error {
+	cacheDir := filepath.Join(cacheHome, cliName)
 
 	if specOnly {
 		// Clear only spec cache
 		specCacheDir := filepath.Join(cacheDir, "specs")
-		if err := os.RemoveAll(specCacheDir); err != nil {
+		if err := os.RemoveAll(specCacheDir); err != nil && !os.IsNotExist(err) {
 			return fmt.Errorf("failed to clear spec cache: %w", err)
 		}
 		fmt.Fprintln(w, "✓ Spec cache cleared")
 	} else {
 		// Clear entire cache
-		if err := os.RemoveAll(cacheDir); err != nil {
+		if err := os.RemoveAll(cacheDir); err != nil && !os.IsNotExist(err) {
 			return fmt.Errorf("failed to clear cache: %w", err)
 		}
 		fmt.Fprintln(w, "✓ Cache cleared")
