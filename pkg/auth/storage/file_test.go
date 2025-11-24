@@ -223,3 +223,52 @@ func contains(s, substr string) bool {
 		(s[:len(substr)] == substr || s[len(s)-len(substr):] == substr ||
 		len(s) > len(substr)+1 && s[1:len(substr)+1] == substr))
 }
+
+func TestFileStorage_LoadInvalidJSON(t *testing.T) {
+	tmpDir := t.TempDir()
+	tokenPath := filepath.Join(tmpDir, "auth.json")
+
+	// Write invalid JSON to file
+	err := os.WriteFile(tokenPath, []byte("invalid json"), 0600)
+	if err != nil {
+		t.Fatalf("Failed to write invalid JSON: %v", err)
+	}
+
+	config := &types.StorageConfig{
+		Type: types.StorageTypeFile,
+		Path: tokenPath,
+	}
+
+	storage, err := NewFileStorage(config, "test-cli")
+	if err != nil {
+		t.Fatalf("NewFileStorage() failed: %v", err)
+	}
+
+	ctx := context.Background()
+	_, err = storage.LoadToken(ctx)
+	if err == nil {
+		t.Error("LoadToken() should return error for invalid JSON")
+	}
+}
+
+func TestFileStorage_DeleteNonexistent(t *testing.T) {
+	tmpDir := t.TempDir()
+	tokenPath := filepath.Join(tmpDir, "nonexistent.json")
+
+	config := &types.StorageConfig{
+		Type: types.StorageTypeFile,
+		Path: tokenPath,
+	}
+
+	storage, err := NewFileStorage(config, "test-cli")
+	if err != nil {
+		t.Fatalf("NewFileStorage() failed: %v", err)
+	}
+
+	ctx := context.Background()
+	// Deleting non-existent file should not error (or should handle gracefully)
+	err = storage.DeleteToken(ctx)
+	// Some implementations may not error on deleting non-existent files
+	// Just verify it completes
+	_ = err
+}

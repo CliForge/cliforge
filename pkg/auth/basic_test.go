@@ -252,3 +252,195 @@ func TestBasicAuth_Type(t *testing.T) {
 		t.Errorf("Type() = %v, want %v", auth.Type(), AuthTypeBasic)
 	}
 }
+
+func TestBasicAuth_GetHeaders_NilToken(t *testing.T) {
+	config := &BasicConfig{
+		Username: "user",
+		Password: "pass",
+	}
+
+	auth, err := NewBasicAuth(config)
+	if err != nil {
+		t.Fatalf("NewBasicAuth() failed: %v", err)
+	}
+
+	headers := auth.GetHeaders(nil)
+	if headers != nil {
+		t.Error("GetHeaders(nil) should return nil")
+	}
+}
+
+func TestBasicAuth_GetHeaders_EmptyToken(t *testing.T) {
+	config := &BasicConfig{
+		Username: "user",
+		Password: "pass",
+	}
+
+	auth, err := NewBasicAuth(config)
+	if err != nil {
+		t.Fatalf("NewBasicAuth() failed: %v", err)
+	}
+
+	headers := auth.GetHeaders(&Token{AccessToken: ""})
+	if headers != nil {
+		t.Error("GetHeaders(empty token) should return nil")
+	}
+}
+
+func TestBasicAuth_UsernameEnvVarReference(t *testing.T) {
+	os.Setenv("MY_USERNAME", "refuser")
+	defer os.Unsetenv("MY_USERNAME")
+
+	config := &BasicConfig{
+		Username: "$MY_USERNAME",
+		Password: "testpass",
+	}
+
+	auth, err := NewBasicAuth(config)
+	if err != nil {
+		t.Fatalf("NewBasicAuth() failed: %v", err)
+	}
+
+	if auth.GetUsername() != "refuser" {
+		t.Errorf("username = %v, want refuser", auth.GetUsername())
+	}
+}
+
+func TestBasicAuth_PasswordEnvVarReference(t *testing.T) {
+	os.Setenv("MY_PASSWORD", "refpass")
+	defer os.Unsetenv("MY_PASSWORD")
+
+	config := &BasicConfig{
+		Username: "testuser",
+		Password: "$MY_PASSWORD",
+	}
+
+	auth, err := NewBasicAuth(config)
+	if err != nil {
+		t.Fatalf("NewBasicAuth() failed: %v", err)
+	}
+
+	ctx := context.Background()
+	token, err := auth.Authenticate(ctx)
+	if err != nil {
+		t.Fatalf("Authenticate() failed: %v", err)
+	}
+
+	decoded, _ := base64.StdEncoding.DecodeString(token.AccessToken)
+	if string(decoded) != "testuser:refpass" {
+		t.Errorf("credentials = %v, want testuser:refpass", string(decoded))
+	}
+}
+
+func TestBasicAuth_UsernameEnvVarReferenceMissing(t *testing.T) {
+	config := &BasicConfig{
+		Username: "$NONEXISTENT_USER",
+		Password: "testpass",
+	}
+
+	_, err := NewBasicAuth(config)
+	if err == nil {
+		t.Error("NewBasicAuth() should fail with missing username env var reference")
+	}
+}
+
+func TestBasicAuth_PasswordEnvVarReferenceMissing(t *testing.T) {
+	config := &BasicConfig{
+		Username: "testuser",
+		Password: "$NONEXISTENT_PASS",
+	}
+
+	_, err := NewBasicAuth(config)
+	if err == nil {
+		t.Error("NewBasicAuth() should fail with missing password env var reference")
+	}
+}
+
+func TestBasicAuth_EnvUsernamePreferredOverUsername(t *testing.T) {
+	os.Setenv("PREFERRED_USER", "env-user")
+	defer os.Unsetenv("PREFERRED_USER")
+
+	config := &BasicConfig{
+		Username:    "direct-user",
+		EnvUsername: "PREFERRED_USER",
+		Password:    "testpass",
+	}
+
+	auth, err := NewBasicAuth(config)
+	if err != nil {
+		t.Fatalf("NewBasicAuth() failed: %v", err)
+	}
+
+	if auth.GetUsername() != "env-user" {
+		t.Errorf("username = %v, want env-user (EnvUsername should be preferred)", auth.GetUsername())
+	}
+}
+
+func TestBasicAuth_EnvPasswordPreferredOverPassword(t *testing.T) {
+	os.Setenv("PREFERRED_PASS", "env-pass")
+	defer os.Unsetenv("PREFERRED_PASS")
+
+	config := &BasicConfig{
+		Username:    "testuser",
+		Password:    "direct-pass",
+		EnvPassword: "PREFERRED_PASS",
+	}
+
+	auth, err := NewBasicAuth(config)
+	if err != nil {
+		t.Fatalf("NewBasicAuth() failed: %v", err)
+	}
+
+	ctx := context.Background()
+	token, err := auth.Authenticate(ctx)
+	if err != nil {
+		t.Fatalf("Authenticate() failed: %v", err)
+	}
+
+	decoded, _ := base64.StdEncoding.DecodeString(token.AccessToken)
+	if string(decoded) != "testuser:env-pass" {
+		t.Errorf("credentials = %v, want testuser:env-pass (EnvPassword should be preferred)", string(decoded))
+	}
+}
+
+func TestBasicAuth_Authenticate_EmptyCredentials(t *testing.T) {
+	auth := &BasicAuth{
+		config:   &BasicConfig{},
+		username: "",
+		password: "",
+	}
+
+	ctx := context.Background()
+	_, err := auth.Authenticate(ctx)
+	if err == nil {
+		t.Error("Authenticate() should fail with empty credentials")
+	}
+}
+
+func TestBasicAuth_Authenticate_EmptyUsername(t *testing.T) {
+	auth := &BasicAuth{
+		config:   &BasicConfig{},
+		username: "",
+		password: "pass",
+	}
+
+	ctx := context.Background()
+	_, err := auth.Authenticate(ctx)
+	if err == nil {
+		t.Error("Authenticate() should fail with empty username")
+	}
+}
+
+func TestBasicAuth_Authenticate_EmptyPassword(t *testing.T) {
+	auth := &BasicAuth{
+		config:   &BasicConfig{},
+		username: "user",
+		password: "",
+	}
+
+	ctx := context.Background()
+	_, err := auth.Authenticate(ctx)
+	if err == nil {
+		t.Error("Authenticate() should fail with empty password")
+	}
+}

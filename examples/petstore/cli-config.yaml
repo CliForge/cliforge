@@ -1,0 +1,349 @@
+metadata:
+  name: petstore
+  version: 1.0.0
+  description: Petstore CLI - Complete CliForge v0.9.0 Example
+  author: CliForge Examples
+  homepage: https://github.com/cliforge/cliforge
+  license: MIT
+
+branding:
+  colors:
+    primary: "#FF6B35"
+    secondary: "#004E89"
+    success: "#06D6A0"
+    warning: "#F4A261"
+    error: "#E76F51"
+    info: "#2A9D8F"
+
+  ascii_art: |
+    ██████╗ ███████╗████████╗███████╗████████╗ ██████╗ ██████╗ ███████╗
+    ██╔══██╗██╔════╝╚══██╔══╝██╔════╝╚══██╔══╝██╔═══██╗██╔══██╗██╔════╝
+    ██████╔╝█████╗     ██║   ███████╗   ██║   ██║   ██║██████╔╝█████╗
+    ██╔═══╝ ██╔══╝     ██║   ╚════██║   ██║   ██║   ██║██╔══██╗██╔══╝
+    ██║     ███████╗   ██║   ███████║   ██║   ╚██████╔╝██║  ██║███████╗
+    ╚═╝     ╚══════╝   ╚═╝   ╚══════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝
+
+  tagline: "Manage your petstore from the command line"
+
+  banner:
+    show_on_start: true
+    show_version: true
+    show_update_check: true
+
+  themes:
+    default: "petstore"
+    available:
+      - petstore
+      - minimal
+      - dark
+
+api:
+  # OpenAPI spec location
+  openapi_url: http://localhost:8080/openapi.yaml
+  base_url: http://localhost:8080
+
+  # Spec caching
+  cache:
+    enabled: true
+    ttl: 300  # 5 minutes
+    location: "~/.cache/petstore/spec.yaml"
+
+  # API versioning
+  version:
+    header: "X-API-Version"
+    value: "1.0"
+
+updates:
+  enabled: true
+  auto_check: true
+  check_interval: 86400  # 24 hours
+  update_url: https://releases.petstore.example.com/cli
+  channels:
+    - stable
+    - beta
+  current_channel: stable
+
+  notification:
+    style: banner
+    message: "A new version is available: {version}"
+
+behaviors:
+  # Authentication configuration
+  auth:
+    type: oauth2
+    oauth2:
+      client_id: petstore-cli
+      scopes:
+        - read:pets
+        - write:pets
+      flow: authorization_code
+      authorization_url: https://auth.petstore.example.com/authorize
+      token_url: https://auth.petstore.example.com/token
+      redirect_url: http://localhost:8085/callback
+
+      # Token storage
+      storage:
+        primary: keyring
+        fallback: file
+
+      keyring:
+        service: petstore-cli
+        username: default
+
+      file:
+        path: "~/.petstore/credentials.json"
+        permissions: "0600"
+
+      # Auto-refresh tokens
+      auto_refresh: true
+      refresh_threshold: 300  # Refresh when < 5min remaining
+
+  # Output formatting
+  output:
+    default_format: table
+    supported_formats:
+      - table
+      - json
+      - yaml
+      - csv
+      - text
+
+    pretty_print: true
+    color: true
+    pager: auto  # auto, always, never
+
+    table:
+      style: unicode  # unicode, ascii, minimal
+      max_width: auto
+      truncate: true
+      wrap: false
+
+    json:
+      indent: 2
+      color_scheme: monokai
+
+    yaml:
+      indent: 2
+
+  # Rate limiting
+  rate_limit:
+    enabled: true
+    requests_per_minute: 60
+    burst: 10
+    retry:
+      enabled: true
+      max_attempts: 3
+      backoff: exponential
+      initial_delay: 1000  # ms
+
+  # Request/Response handling
+  http:
+    timeout: 30  # seconds
+    keep_alive: true
+    user_agent: "petstore-cli/1.0.0"
+
+    retries:
+      enabled: true
+      max_attempts: 3
+      retry_codes: [408, 429, 500, 502, 503, 504]
+
+    headers:
+      X-Client: "petstore-cli"
+      X-Client-Version: "1.0.0"
+
+  # Error handling
+  errors:
+    verbose: false
+    show_stack_trace: false
+
+    suggestions: true
+
+    messages:
+      404: "Resource not found. Use 'petstore list {resource}' to see available items."
+      401: "Authentication required. Run 'petstore login' first."
+      403: "Permission denied. Check your access rights."
+
+  # Telemetry (disabled by default)
+  telemetry:
+    enabled: false
+    endpoint: https://telemetry.petstore.example.com/events
+    anonymous: true
+    events:
+      - command_usage
+      - errors
+      - performance
+
+features:
+  # Interactive mode
+  interactive_mode:
+    enabled: true
+    prompt_style: survey
+    multiselect: true
+    search: true
+
+  # Auto-completion
+  auto_complete:
+    enabled: true
+    cache: true
+
+  # Context switching
+  context_switching:
+    enabled: true
+    default_context: production
+    show_in_prompt: true
+
+  # Workflow support
+  workflows:
+    enabled: true
+    max_steps: 50
+    timeout: 3600
+
+  # Plugin support
+  plugins:
+    enabled: true
+    auto_install: false
+    search_paths:
+      - "~/.petstore/plugins"
+      - "/usr/local/lib/petstore/plugins"
+
+    allow_external: true
+    verify_signatures: true
+
+  # Watch mode
+  watch:
+    enabled: true
+    default_interval: 5
+    highlight_changes: true
+
+  # Dry-run mode
+  dry_run:
+    enabled: true
+    flag: "--dry-run"
+    show_request: true
+
+  # Diff mode
+  diff:
+    enabled: true
+    tool: auto  # auto, diff, git, colordiff
+
+  # Shell integration
+  shell:
+    aliases:
+      enabled: true
+      file: "~/.petstore/aliases.sh"
+
+    completion:
+      bash: "~/.petstore/completion.bash"
+      zsh: "~/.petstore/completion.zsh"
+      fish: "~/.petstore/completion.fish"
+
+cache:
+  enabled: true
+  location: "~/.cache/petstore"
+
+  spec:
+    ttl: 300  # 5 minutes
+
+  responses:
+    enabled: true
+    ttl: 60
+    max_size: 100MB
+
+  auth:
+    ttl: 3600  # 1 hour
+
+paths:
+  config_dir: "~/.config/petstore"
+  cache_dir: "~/.cache/petstore"
+  data_dir: "~/.local/share/petstore"
+  state_file: "~/.local/state/petstore/state.json"
+
+  # XDG compliance
+  xdg_compliant: true
+
+logging:
+  enabled: true
+  level: info  # debug, info, warn, error
+  file: "~/.local/share/petstore/petstore.log"
+
+  format: text  # text, json
+  rotation:
+    enabled: true
+    max_size: 10MB
+    max_age: 30  # days
+    max_backups: 5
+
+secrets:
+  detection:
+    enabled: true
+    patterns:
+      - "(?i)(password|passwd|pwd)[:=]\\s*['\"]?\\S+['\"]?"
+      - "(?i)(api[_-]?key|apikey)[:=]\\s*['\"]?\\S+['\"]?"
+      - "(?i)(secret|token)[:=]\\s*['\"]?\\S+['\"]?"
+      - "(?i)(access[_-]?key)[:=]\\s*['\"]?\\S+['\"]?"
+
+  masking:
+    enabled: true
+    character: "*"
+    show_last: 4
+
+  prevention:
+    enabled: true
+    warn_on_file: true
+    warn_on_log: true
+
+deprecation:
+  warnings:
+    enabled: true
+    style: banner  # banner, inline, silent
+
+  tracking:
+    enabled: true
+    file: "~/.local/share/petstore/deprecations.json"
+
+contexts:
+  default: production
+
+  available:
+    development:
+      api_url: http://localhost:8080
+      base_url: http://localhost:8080
+      auth:
+        type: none
+      color: yellow
+
+    staging:
+      api_url: https://staging-api.petstore.example.com
+      base_url: https://staging-api.petstore.example.com
+      auth:
+        type: oauth2
+      color: cyan
+
+    production:
+      api_url: https://api.petstore.example.com
+      base_url: https://api.petstore.example.com
+      auth:
+        type: oauth2
+      color: green
+
+advanced:
+  # Performance optimization
+  performance:
+    parallel_requests: 5
+    connection_pool_size: 10
+    dns_cache: true
+
+  # Debug options
+  debug:
+    enabled: false
+    http_trace: false
+    save_requests: false
+    save_dir: "~/.local/share/petstore/debug"
+
+  # Experimental features
+  experimental:
+    enabled: false
+    features:
+      - graphql_support
+      - grpc_support
+      - ai_suggestions

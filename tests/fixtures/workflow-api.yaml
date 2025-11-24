@@ -1,0 +1,241 @@
+openapi: 3.0.0
+info:
+  title: Workflow Test API
+  description: API with workflow capabilities for testing
+  version: 1.0.0
+  x-cli-name: workflowcli
+  x-cli-description: CLI with workflow support
+
+servers:
+  - url: http://localhost:8082
+    description: Workflow test server
+
+x-cli-auth:
+  type: apiKey
+  in: header
+  name: X-API-Key
+
+x-cli-workflows:
+  deploy-app:
+    description: Deploy application with validation and rollback
+    steps:
+      - type: api-call
+        id: validate
+        operation: validateApp
+        description: Validate application configuration
+
+      - type: conditional
+        id: check-validation
+        condition: "validate.success == true"
+        then:
+          - type: api-call
+            id: deploy
+            operation: deployApp
+            description: Deploy the application
+        else:
+          - type: api-call
+            id: log-error
+            operation: logError
+            input:
+              message: "Validation failed"
+
+      - type: api-call
+        id: health-check
+        operation: healthCheck
+        description: Verify deployment health
+        retry:
+          max_attempts: 3
+          delay: 2s
+
+      - type: conditional
+        id: check-health
+        condition: "health_check.status == 'healthy'"
+        then:
+          - type: api-call
+            id: notify-success
+            operation: sendNotification
+            input:
+              message: "Deployment successful"
+        else:
+          - type: api-call
+            id: rollback
+            operation: rollbackApp
+            description: Rollback failed deployment
+
+  parallel-check:
+    description: Run multiple checks in parallel
+    steps:
+      - type: parallel
+        id: run-checks
+        steps:
+          - type: api-call
+            id: check-api
+            operation: healthCheck
+          - type: api-call
+            id: check-database
+            operation: checkDatabase
+          - type: plugin
+            id: check-disk
+            plugin: system-check
+            command: check-disk
+
+      - type: conditional
+        id: evaluate
+        condition: "check_api.success && check_database.success && check_disk.success"
+        then:
+          - type: api-call
+            id: mark-ready
+            operation: markReady
+
+paths:
+  /apps/{id}/validate:
+    post:
+      operationId: validateApp
+      summary: Validate application
+      x-cli-command: apps validate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                config:
+                  type: object
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  errors:
+                    type: array
+                    items:
+                      type: string
+
+  /apps/{id}/deploy:
+    post:
+      operationId: deployApp
+      summary: Deploy application
+      x-cli-command: apps deploy
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deployment initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deployment_id:
+                    type: string
+                  status:
+                    type: string
+
+  /apps/{id}/rollback:
+    post:
+      operationId: rollbackApp
+      summary: Rollback application
+      x-cli-command: apps rollback
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Rollback initiated
+
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Health check
+      x-cli-command: health
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  timestamp:
+                    type: string
+
+  /database/check:
+    get:
+      operationId: checkDatabase
+      summary: Check database connection
+      x-cli-command: database check
+      responses:
+        '200':
+          description: Database status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  latency_ms:
+                    type: number
+
+  /system/ready:
+    post:
+      operationId: markReady
+      summary: Mark system as ready
+      x-cli-command: system ready
+      responses:
+        '200':
+          description: System marked as ready
+
+  /notifications:
+    post:
+      operationId: sendNotification
+      summary: Send notification
+      x-cli-command: notify send
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+      responses:
+        '200':
+          description: Notification sent
+
+  /logs/error:
+    post:
+      operationId: logError
+      summary: Log error
+      x-cli-command: logs error
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+      responses:
+        '200':
+          description: Error logged

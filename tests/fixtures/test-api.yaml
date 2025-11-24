@@ -1,0 +1,185 @@
+openapi: 3.0.0
+info:
+  title: Test API
+  description: A simple test API for CliForge integration tests
+  version: 1.0.0
+  x-cli-name: testcli
+  x-cli-description: Test CLI for integration testing
+
+servers:
+  - url: http://localhost:8080
+    description: Test server
+
+x-cli-auth:
+  type: oauth2
+  flows:
+    authorizationCode:
+      authorizationUrl: http://localhost:8081/oauth/authorize
+      tokenUrl: http://localhost:8081/oauth/token
+      scopes:
+        read: Read access
+        write: Write access
+
+paths:
+  /users:
+    get:
+      operationId: listUsers
+      summary: List users
+      description: Retrieve a list of users
+      x-cli-command: users list
+      security:
+        - oauth2: [read]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+    post:
+      operationId: createUser
+      summary: Create user
+      description: Create a new user
+      x-cli-command: users create
+      security:
+        - oauth2: [write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      summary: Get user
+      description: Retrieve a specific user
+      x-cli-command: users get
+      security:
+        - oauth2: [read]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+
+    delete:
+      operationId: deleteUser
+      summary: Delete user
+      description: Delete a user
+      x-cli-command: users delete
+      security:
+        - oauth2: [write]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: User deleted
+        '404':
+          description: User not found
+
+  /stream/events:
+    get:
+      operationId: streamEvents
+      summary: Stream events
+      description: Stream server-sent events
+      x-cli-command: stream events
+      x-cli-streaming:
+        type: sse
+        format: json
+      responses:
+        '200':
+          description: Event stream
+          content:
+            text/event-stream:
+              schema:
+                type: object
+
+  /websocket/updates:
+    get:
+      operationId: websocketUpdates
+      summary: WebSocket updates
+      description: Connect to WebSocket for real-time updates
+      x-cli-command: websocket updates
+      x-cli-streaming:
+        type: websocket
+        format: json
+      responses:
+        '101':
+          description: WebSocket connection established
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+
+    UserCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+      required:
+        - name
+        - email
+
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: http://localhost:8081/oauth/authorize
+          tokenUrl: http://localhost:8081/oauth/token
+          scopes:
+            read: Read access
+            write: Write access
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key

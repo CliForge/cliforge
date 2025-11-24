@@ -291,3 +291,222 @@ func TestAPIKeyAuth_Type(t *testing.T) {
 		t.Errorf("Type() = %v, want %v", auth.Type(), AuthTypeAPIKey)
 	}
 }
+
+func TestAPIKeyAuth_SetKey(t *testing.T) {
+	config := &APIKeyConfig{
+		Key:      "initial-key",
+		Name:     "X-API-Key",
+		Location: APIKeyLocationHeader,
+	}
+
+	auth, err := NewAPIKeyAuth(config)
+	if err != nil {
+		t.Fatalf("NewAPIKeyAuth() failed: %v", err)
+	}
+
+	// Change the key
+	auth.SetKey("new-key")
+
+	ctx := context.Background()
+	token, err := auth.Authenticate(ctx)
+	if err != nil {
+		t.Fatalf("Authenticate() failed: %v", err)
+	}
+
+	if token.AccessToken != "new-key" {
+		t.Errorf("token.AccessToken = %v, want new-key", token.AccessToken)
+	}
+}
+
+func TestAPIKeyAuth_GetHeaders_NilToken(t *testing.T) {
+	config := &APIKeyConfig{
+		Key:      "test-key",
+		Name:     "X-API-Key",
+		Location: APIKeyLocationHeader,
+	}
+
+	auth, err := NewAPIKeyAuth(config)
+	if err != nil {
+		t.Fatalf("NewAPIKeyAuth() failed: %v", err)
+	}
+
+	headers := auth.GetHeaders(nil)
+	if headers != nil {
+		t.Error("GetHeaders(nil) should return nil")
+	}
+}
+
+func TestAPIKeyAuth_GetHeaders_EmptyToken(t *testing.T) {
+	config := &APIKeyConfig{
+		Key:      "test-key",
+		Name:     "X-API-Key",
+		Location: APIKeyLocationHeader,
+	}
+
+	auth, err := NewAPIKeyAuth(config)
+	if err != nil {
+		t.Fatalf("NewAPIKeyAuth() failed: %v", err)
+	}
+
+	headers := auth.GetHeaders(&Token{AccessToken: ""})
+	if headers != nil {
+		t.Error("GetHeaders(empty token) should return nil")
+	}
+}
+
+func TestAPIKeyAuth_GetQueryParams_NilToken(t *testing.T) {
+	config := &APIKeyConfig{
+		Key:      "test-key",
+		Name:     "api_key",
+		Location: APIKeyLocationQuery,
+	}
+
+	auth, err := NewAPIKeyAuth(config)
+	if err != nil {
+		t.Fatalf("NewAPIKeyAuth() failed: %v", err)
+	}
+
+	params := auth.GetQueryParams(nil)
+	if params != nil {
+		t.Error("GetQueryParams(nil) should return nil")
+	}
+}
+
+func TestAPIKeyAuth_GetQueryParams_EmptyToken(t *testing.T) {
+	config := &APIKeyConfig{
+		Key:      "test-key",
+		Name:     "api_key",
+		Location: APIKeyLocationQuery,
+	}
+
+	auth, err := NewAPIKeyAuth(config)
+	if err != nil {
+		t.Fatalf("NewAPIKeyAuth() failed: %v", err)
+	}
+
+	params := auth.GetQueryParams(&Token{AccessToken: ""})
+	if params != nil {
+		t.Error("GetQueryParams(empty token) should return nil")
+	}
+}
+
+func TestAPIKeyAuth_GetQueryParams_HeaderLocation(t *testing.T) {
+	config := &APIKeyConfig{
+		Key:      "test-key",
+		Name:     "X-API-Key",
+		Location: APIKeyLocationHeader,
+	}
+
+	auth, err := NewAPIKeyAuth(config)
+	if err != nil {
+		t.Fatalf("NewAPIKeyAuth() failed: %v", err)
+	}
+
+	token := &Token{AccessToken: "test-key"}
+	params := auth.GetQueryParams(token)
+	if params != nil {
+		t.Error("GetQueryParams() should return nil for header location")
+	}
+}
+
+func TestAPIKeyAuth_GetHeaders_QueryLocation(t *testing.T) {
+	config := &APIKeyConfig{
+		Key:      "test-key",
+		Name:     "api_key",
+		Location: APIKeyLocationQuery,
+	}
+
+	auth, err := NewAPIKeyAuth(config)
+	if err != nil {
+		t.Fatalf("NewAPIKeyAuth() failed: %v", err)
+	}
+
+	token := &Token{AccessToken: "test-key"}
+	headers := auth.GetHeaders(token)
+	if len(headers) != 0 {
+		t.Error("GetHeaders() should return empty map for query location")
+	}
+}
+
+func TestAPIKeyAuth_EnvVarReference(t *testing.T) {
+	// Set environment variable
+	os.Setenv("MY_SECRET_KEY", "secret-from-env")
+	defer os.Unsetenv("MY_SECRET_KEY")
+
+	config := &APIKeyConfig{
+		Key:      "$MY_SECRET_KEY",
+		Name:     "X-API-Key",
+		Location: APIKeyLocationHeader,
+	}
+
+	auth, err := NewAPIKeyAuth(config)
+	if err != nil {
+		t.Fatalf("NewAPIKeyAuth() failed: %v", err)
+	}
+
+	ctx := context.Background()
+	token, err := auth.Authenticate(ctx)
+	if err != nil {
+		t.Fatalf("Authenticate() failed: %v", err)
+	}
+
+	if token.AccessToken != "secret-from-env" {
+		t.Errorf("token.AccessToken = %v, want secret-from-env", token.AccessToken)
+	}
+}
+
+func TestAPIKeyAuth_EnvVarReferenceMissing(t *testing.T) {
+	config := &APIKeyConfig{
+		Key:      "$NONEXISTENT_VAR",
+		Name:     "X-API-Key",
+		Location: APIKeyLocationHeader,
+	}
+
+	_, err := NewAPIKeyAuth(config)
+	if err == nil {
+		t.Error("NewAPIKeyAuth() should fail with missing env var reference")
+	}
+}
+
+func TestAPIKeyAuth_EnvVarPreferredOverKey(t *testing.T) {
+	os.Setenv("PREFERRED_KEY", "env-key")
+	defer os.Unsetenv("PREFERRED_KEY")
+
+	config := &APIKeyConfig{
+		Key:      "direct-key",
+		EnvVar:   "PREFERRED_KEY",
+		Name:     "X-API-Key",
+		Location: APIKeyLocationHeader,
+	}
+
+	auth, err := NewAPIKeyAuth(config)
+	if err != nil {
+		t.Fatalf("NewAPIKeyAuth() failed: %v", err)
+	}
+
+	ctx := context.Background()
+	token, err := auth.Authenticate(ctx)
+	if err != nil {
+		t.Fatalf("Authenticate() failed: %v", err)
+	}
+
+	if token.AccessToken != "env-key" {
+		t.Errorf("token.AccessToken = %v, want env-key (EnvVar should be preferred)", token.AccessToken)
+	}
+}
+
+func TestAPIKeyAuth_Authenticate_EmptyKey(t *testing.T) {
+	auth := &APIKeyAuth{
+		config: &APIKeyConfig{
+			Name:     "X-API-Key",
+			Location: APIKeyLocationHeader,
+		},
+		key: "",
+	}
+
+	ctx := context.Background()
+	_, err := auth.Authenticate(ctx)
+	if err == nil {
+		t.Error("Authenticate() should fail with empty key")
+	}
+}
