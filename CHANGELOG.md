@@ -9,6 +9,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.9.0] - 2025-11-23
+
+### Added
+
+**Core Foundation:**
+- Configuration system with multi-source loading (ENV > Flag > User > Embedded)
+- OpenAPI 3.x and Swagger 2.0 parser with all 16 x-cli-* extensions
+- Spec caching with ETag support and 5-minute TTL
+
+**Advanced Features:**
+- Plugin architecture (built-in, binary, WASM-ready) for external tool integration
+- Workflow orchestration engine with DAG execution, conditionals, retry, and rollback
+- Authentication system (API key, Basic, OAuth2 all flows) with keyring storage
+- State management with kubectl-style contexts, command history, and smart defaults
+- Output formatting (JSON, YAML, rich tables with pterm)
+- Progress indicators (spinners, bars, multi-step displays)
+- Streaming support (SSE, WebSocket, polling fallback)
+- Secrets detection and masking with multiple strategies
+- Deprecation warnings with time-based escalation
+- Self-update mechanism with checksum verification
+
+**Built-in Commands:**
+- version, help, info, config (get/set/unset/edit/path)
+- completion (bash, zsh, fish, PowerShell)
+- auth (login/logout/status/refresh)
+- context (create/use/list/set/get/delete)
+- history, cache, update, changelog, deprecations
+
+**Developer Tools:**
+- Generator CLI (cliforge init/build/validate)
+- Complete runtime template system
+- Command tree builder from OpenAPI specs
+- Petstore example demonstrating all features
+
+**Documentation:**
+- Complete architecture designs for all ROSA CLI requirements
+- Gap analysis with implementation roadmap
+- Plugin, workflow, file ops, progress, and state management design docs
+
+### Test Coverage
+- 14/17 packages passing tests
+- Average coverage: 51.8%
+- High coverage: state (87%), auth (81%), output (76%), secrets (75%)
+
+---
+
 ### ⚒️ Rebranding - 2025-01-11
 
 #### Changed
