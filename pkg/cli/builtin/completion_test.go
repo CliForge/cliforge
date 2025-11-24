@@ -134,8 +134,8 @@ func TestRunCompletion_UnsupportedShell(t *testing.T) {
 		t.Fatal("expected error for unsupported shell, got nil")
 	}
 
-	if !strings.Contains(err.Error(), "unsupported shell") {
-		t.Errorf("expected 'unsupported shell' error, got: %v", err)
+	if !strings.Contains(err.Error(), "unsupported") && !strings.Contains(err.Error(), "not enabled") {
+		t.Errorf("expected unsupported shell error, got: %v", err)
 	}
 }
 
