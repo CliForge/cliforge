@@ -4,6 +4,7 @@ package helpers
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -163,14 +164,15 @@ func DelayedResponse(delay time.Duration, handler http.HandlerFunc) http.Handler
 
 // readBody reads request body and restores it.
 func readBody(r *http.Request) ([]byte, error) {
-	body := make([]byte, 0)
-	if r.Body != nil {
-		var err error
-		body, err = http.NewRequest(r.Method, r.URL.String(), r.Body)
-		if err != nil {
-			return nil, err
-		}
+	if r.Body == nil {
+		return []byte{}, nil
 	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+
 	return body, nil
 }
 
