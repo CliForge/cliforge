@@ -61,15 +61,22 @@ nav:
       - Authentication: user-guide-authentication.md
       - Workflows: user-guide-workflows.md
       - Examples & Recipes: examples-and-recipes.md
+  - Tutorials:
+      - Building a REST API CLI: tutorials/tutorial-rest-api.md
+      - Cloud Infrastructure Management: tutorials/tutorial-cloud-management.md
+      - CI/CD Integration: tutorials/tutorial-ci-cd-integration.md
   - Reference:
       - OpenAPI Extensions: openapi-extensions-reference.md
       - Configuration DSL: configuration-dsl.md
       - Technical Specification: technical-specification.md
   - Developer Guide:
       - Plugin Development: developer-guide-plugins.md
+  - Security:
+      - Security Guide: security-guide.md
   - Help:
       - FAQ: faq.md
       - Troubleshooting: troubleshooting.md
+      - Quick Reference: quick-reference.md
   - Design:
       - Overview: ../design/README.md
       - Architecture:

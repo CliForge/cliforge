@@ -38,10 +38,18 @@ CliForge is a dynamic CLI generator that creates branded command-line tools from
    - Sensitive data detection and masking
    - Security best practices
 
+5. **Security Guide** (`security-guide.md`)
+   - Comprehensive security architecture
+   - Credential management and authentication
+   - Network security and TLS configuration
+   - Audit and compliance (SOC2, HIPAA, GDPR)
+   - Vulnerability management
+
 #### For CLI Users
 
 - **User Configuration** - See "User Configuration File" section in `configuration-dsl.md`
 - **XDG Compliance** - File locations, caching, configuration
+- **Security Best Practices** - See "Security Best Practices > For CLI Users" in `security-guide.md`
 
 ## Advanced Topics
 
