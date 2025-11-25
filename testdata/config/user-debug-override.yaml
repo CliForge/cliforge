@@ -1,0 +1,21 @@
+# User config with debug overrides
+preferences:
+  output:
+    format: yaml
+
+# Debug overrides (only active when metadata.debug: true)
+debug_override:
+  api:
+    base_url: http://localhost:8080
+    openapi_url: file://./test-openapi.yaml
+
+  metadata:
+    name: test-cli-custom
+
+  branding:
+    colors:
+      primary: "#FF0000"  # Red for visibility
+
+  behaviors:
+    auth:
+      type: none  # Disable auth for local testing

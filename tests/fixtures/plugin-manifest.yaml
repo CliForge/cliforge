@@ -1,0 +1,26 @@
+name: test-plugin
+version: 1.0.0
+type: binary
+description: Test plugin for integration testing
+author: CliForge Team
+
+executable: test-plugin
+
+permissions:
+  - type: execute
+    resource: "*"
+    description: Execute system commands for testing
+  - type: read:file
+    resource: "*.txt"
+    description: Read test files
+  - type: write:file
+    resource: "/tmp/*"
+    description: Write to temporary directory
+  - type: network
+    description: Make HTTP requests
+
+metadata:
+  category: testing
+  tags:
+    - test
+    - integration

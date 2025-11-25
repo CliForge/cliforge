@@ -1,0 +1,25 @@
+# Valid user preferences configuration
+preferences:
+  http:
+    timeout: 60s
+    proxy: http://proxy.corp.com:8080
+    ca_bundle: /etc/ssl/certs/corp-ca.pem
+
+  output:
+    format: yaml
+    color: always
+    pretty_print: true
+    paging: false
+
+  pagination:
+    limit: 50
+
+  deprecations:
+    always_show: true
+    min_severity: warning
+
+  retry:
+    max_attempts: 5
+
+  telemetry:
+    enabled: false

@@ -1,0 +1,24 @@
+# Embedded config for debug build
+metadata:
+  name: test-cli-dev
+  version: 1.0.0-dev
+  description: Test CLI debug build
+  debug: true  # Debug mode enabled
+
+api:
+  openapi_url: https://api.example.com/openapi.yaml
+  base_url: https://api.example.com
+
+defaults:
+  http:
+    timeout: 30s
+  output:
+    format: json
+
+behaviors:
+  auth:
+    type: oauth2
+    oauth2:
+      client_id: production-client
+      auth_url: https://auth.example.com/authorize
+      token_url: https://auth.example.com/token

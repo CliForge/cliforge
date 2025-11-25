@@ -1,0 +1,57 @@
+# Test configuration file
+cli:
+  name: testcli
+  version: 1.0.0
+  description: Test CLI for integration testing
+
+spec:
+  url: http://localhost:8080/openapi.yaml
+  cache_ttl: 5m
+
+auth:
+  type: oauth2
+  oauth2:
+    client_id: test-client
+    client_secret: test-secret
+    auth_url: http://localhost:8081/oauth/authorize
+    token_url: http://localhost:8081/oauth/token
+    redirect_url: http://localhost:9999/callback
+    scopes:
+      - read
+      - write
+  storage:
+    type: file
+    file:
+      path: ~/.config/testcli/tokens.json
+
+cache:
+  enabled: true
+  ttl: 5m
+  max_size: 100MB
+
+output:
+  format: json
+  color: true
+  pretty: true
+
+progress:
+  enabled: true
+  style: spinner
+
+state:
+  enabled: true
+  path: ~/.local/state/testcli/state.yaml
+
+update:
+  enabled: true
+  check_interval: 24h
+  auto_install: false
+
+secrets:
+  mask: true
+  patterns:
+    - "(?i)(api[_-]?key|token|secret|password)\\s*[:=]\\s*['\"]?([a-zA-Z0-9_\\-\\.]+)['\"]?"
+
+deprecation:
+  warnings: true
+  error_on_removal: false

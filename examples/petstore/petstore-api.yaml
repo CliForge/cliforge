@@ -1,0 +1,1141 @@
+openapi: 3.0.3
+info:
+  title: Petstore API - Complete CliForge Example
+  version: 1.0.0
+  description: |
+    A complete petstore API demonstrating ALL CliForge v0.9.0 features.
+    This example showcases every x-cli-* extension available.
+  contact:
+    name: API Support
+    email: support@petstore.example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+  # Version management and changelog
+  x-cli-version: "2024.11.23.1"
+  x-cli-min-version: "0.9.0"
+  x-cli-changelog:
+    - date: "2024-11-23"
+      version: "1.0.0"
+      changes:
+        - type: added
+          severity: safe
+          description: "New streaming endpoint for real-time pet status"
+          path: "/pets/{petId}/status/stream"
+        - type: added
+          severity: safe
+          description: "Workflow for automated pet adoption process"
+          path: "/workflow/adopt"
+        - type: deprecated
+          severity: dangerous
+          description: "GET /v1/pets is deprecated"
+          path: "/v1/pets"
+          migration: "Use GET /pets instead"
+          sunset: "2025-12-31"
+        - type: modified
+          severity: breaking
+          description: "POST /pets now requires 'category' field"
+          path: "/pets"
+          migration: "Add 'category' field to request body"
+
+# Global CLI configuration
+x-cli-config:
+  name: "petstore"
+  version: "1.0.0"
+  description: "Petstore CLI - Complete CliForge Example"
+
+  branding:
+    ascii-art: |
+      ██████╗ ███████╗████████╗███████╗████████╗ ██████╗ ██████╗ ███████╗
+      ██╔══██╗██╔════╝╚══██╔══╝██╔════╝╚══██╔══╝██╔═══██╗██╔══██╗██╔════╝
+      ██████╔╝█████╗     ██║   ███████╗   ██║   ██║   ██║██████╔╝█████╗
+      ██╔═══╝ ██╔══╝     ██║   ╚════██║   ██║   ██║   ██║██╔══██╗██╔══╝
+      ██║     ███████╗   ██║   ███████║   ██║   ╚██████╔╝██║  ██║███████╗
+      ╚═╝     ╚══════╝   ╚═╝   ╚══════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝
+    colors:
+      primary: "#FF6B35"
+      secondary: "#004E89"
+      success: "#06D6A0"
+      warning: "#F4A261"
+      error: "#E76F51"
+
+  auth:
+    type: oauth2
+    storage: keyring
+    auto-refresh: true
+
+  output:
+    default-format: table
+    supported-formats: [table, json, yaml, csv, text]
+
+  features:
+    interactive-mode: true
+    auto-complete: true
+    self-update: true
+    telemetry: false
+    context-switching: true
+
+  cache:
+    enabled: true
+    ttl: 300
+    location: "~/.cache/petstore"
+
+  plugins:
+    enabled: true
+    search-paths:
+      - "~/.petstore/plugins"
+      - "/usr/local/lib/petstore/plugins"
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: https://api.petstore.example.com
+    description: Production server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: OAuth2 Bearer token
+      x-auth-config:
+        flows:
+          authorizationCode:
+            authorizationUrl: https://auth.petstore.example.com/authorize
+            tokenUrl: https://auth.petstore.example.com/token
+            refreshUrl: https://auth.petstore.example.com/token
+            scopes:
+              read:pets: Read pet information
+              write:pets: Modify pet information
+              admin: Administrative access
+        token-storage:
+          - type: keyring
+            service: "petstore-cli"
+            keyring-backends:
+              darwin: keychain
+              linux: secret-service
+              windows: wincred
+          - type: file
+            path: "~/.petstore/credentials.json"
+            permissions: "0600"
+
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API Key for service accounts
+
+  schemas:
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          enum: [dog, cat, bird, fish, reptile]
+      required:
+        - name
+
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+
+    Pet:
+      type: object
+      required:
+        - name
+        - category
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        category:
+          $ref: '#/components/schemas/Category'
+        status:
+          type: string
+          enum: [available, pending, sold, adopted]
+          default: available
+        photoUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+        age:
+          type: integer
+          minimum: 0
+          maximum: 30
+        price:
+          type: number
+          format: float
+          minimum: 0
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+
+    Store:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        location:
+          type: string
+        capacity:
+          type: integer
+      required:
+        - name
+        - location
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        petId:
+          type: integer
+          format: int64
+        quantity:
+          type: integer
+          minimum: 1
+        shipDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [placed, approved, delivered]
+        complete:
+          type: boolean
+      required:
+        - petId
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+      required:
+        - username
+        - email
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        details:
+          type: object
+
+security:
+  - BearerAuth: []
+
+paths:
+  # Pet Management Endpoints
+  /pets:
+    get:
+      operationId: listPets
+      summary: List all pets
+      description: Returns a list of all pets in the store
+      tags:
+        - Pets
+
+      # CLI command configuration
+      x-cli-command: "list pets"
+      x-cli-aliases: ["ls pets", "pets", "get pets"]
+      x-cli-description: "List all pets with optional filtering"
+
+      parameters:
+        - name: status
+          in: query
+          description: Filter by pet status
+          schema:
+            type: string
+            enum: [available, pending, sold, adopted]
+          x-cli-flag: "--status"
+          x-cli-aliases: ["-s"]
+          x-cli-description: "Filter pets by status"
+
+        - name: category
+          in: query
+          description: Filter by category
+          schema:
+            type: string
+            enum: [dog, cat, bird, fish, reptile]
+          x-cli-flag: "--category"
+          x-cli-aliases: ["-c"]
+          x-cli-env-var: "PETSTORE_CATEGORY"
+
+        - name: limit
+          in: query
+          description: Maximum number of results
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          x-cli-flag: "--limit"
+          x-cli-aliases: ["-l"]
+
+        - name: offset
+          in: query
+          description: Number of results to skip
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          x-cli-flag: "--offset"
+
+      responses:
+        '200':
+          description: List of pets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+
+      # Output table configuration
+      x-cli-output:
+        table:
+          columns:
+            - field: id
+              header: ID
+              width: 10
+              align: right
+            - field: name
+              header: NAME
+              width: 20
+            - field: category.name
+              header: CATEGORY
+              width: 15
+              transform: uppercase
+            - field: status
+              header: STATUS
+              width: 12
+              color-map:
+                available: green
+                pending: yellow
+                sold: blue
+                adopted: cyan
+            - field: age
+              header: AGE
+              width: 5
+              align: right
+              suffix: "y"
+            - field: price
+              header: PRICE
+              width: 10
+              align: right
+              prefix: "$"
+              format: "%.2f"
+          sort-by: "name"
+          sort-order: "asc"
+
+        json:
+          pretty: true
+          color: true
+
+        csv:
+          delimiter: ","
+          header: true
+
+      # Caching configuration
+      x-cli-cache:
+        enabled: true
+        ttl: 60
+        key: "pets:list:{{status}}:{{category}}"
+        invalidate-on:
+          - createPet
+          - updatePet
+          - deletePet
+
+    post:
+      operationId: createPet
+      summary: Add a new pet
+      description: Creates a new pet in the store
+      tags:
+        - Pets
+
+      x-cli-command: "create pet"
+      x-cli-aliases: ["add pet", "new pet"]
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+
+      responses:
+        '201':
+          description: Pet created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+      # CLI flags for request body fields
+      x-cli-flags:
+        - name: name
+          source: name
+          flag: "--name"
+          aliases: ["-n"]
+          required: true
+          type: string
+          description: "Pet name"
+          validation: "^[a-zA-Z0-9 ]{1,50}$"
+          validation-message: "Name must be 1-50 alphanumeric characters"
+
+        - name: category
+          source: category.name
+          flag: "--category"
+          aliases: ["-c"]
+          required: true
+          type: string
+          description: "Pet category (dog, cat, bird, fish, reptile)"
+          validation: "^(dog|cat|bird|fish|reptile)$"
+
+        - name: status
+          source: status
+          flag: "--status"
+          type: string
+          default: "available"
+          description: "Pet status"
+
+        - name: age
+          source: age
+          flag: "--age"
+          type: integer
+          description: "Pet age in years"
+
+        - name: price
+          source: price
+          flag: "--price"
+          type: float
+          description: "Pet price in USD"
+
+      # Interactive mode prompts
+      x-cli-interactive:
+        enabled: true
+        prompts:
+          - parameter: name
+            type: text
+            message: "What is the pet's name?"
+            validation: "^[a-zA-Z0-9 ]{1,50}$"
+            validation-message: "Name must be 1-50 alphanumeric characters"
+
+          - parameter: category.name
+            type: select
+            message: "Select pet category:"
+            choices:
+              - value: dog
+                label: "Dog 🐕"
+              - value: cat
+                label: "Cat 🐈"
+              - value: bird
+                label: "Bird 🐦"
+              - value: fish
+                label: "Fish 🐟"
+              - value: reptile
+                label: "Reptile 🦎"
+
+          - parameter: age
+            type: number
+            message: "How old is the pet (in years)?"
+            default: 1
+            min: 0
+            max: 30
+
+          - parameter: price
+            type: number
+            message: "What is the price?"
+            default: 100.00
+            min: 0
+            format: "currency"
+
+          - parameter: status
+            type: select
+            message: "What is the pet's status?"
+            default: available
+            choices:
+              - value: available
+                label: "Available for adoption"
+              - value: pending
+                label: "Adoption pending"
+
+      # Pre-flight validation checks
+      x-cli-preflight:
+        - name: validate-capacity
+          description: "Checking store capacity..."
+          endpoint: "/stores/capacity"
+          method: GET
+          required: true
+          validation:
+            condition: "response.body.available > 0"
+            error-message: "Store is at full capacity. Cannot add new pets."
+
+        - name: validate-duplicate
+          description: "Checking for duplicate pet names..."
+          endpoint: "/pets?name={args.name}"
+          method: GET
+          required: false
+          skip-flag: "--allow-duplicate"
+          validation:
+            condition: "len(response.body) == 0"
+            error-message: "A pet with name '{args.name}' already exists"
+
+      # Output configuration
+      x-cli-output:
+        success-message: "Pet '{name}' created successfully with ID {id}"
+        error-message: "Failed to create pet: {error.message}"
+        show-details: true
+        format: json
+
+  /pets/{petId}:
+    parameters:
+      - name: petId
+        in: path
+        required: true
+        description: Pet ID
+        schema:
+          type: integer
+          format: int64
+        x-cli-flag: "--pet-id"
+        x-cli-aliases: ["-p", "--id"]
+        x-cli-description: "Pet ID to operate on"
+
+    get:
+      operationId: getPet
+      summary: Get pet by ID
+      description: Returns details of a specific pet
+      tags:
+        - Pets
+
+      x-cli-command: "get pet"
+      x-cli-aliases: ["describe pet", "show pet"]
+
+      responses:
+        '200':
+          description: Pet details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '404':
+          description: Pet not found
+
+      x-cli-output:
+        format: yaml
+        template: |
+          Pet Details:
+          ------------
+          ID:       {{.id}}
+          Name:     {{.name}}
+          Category: {{.category.name}}
+          Status:   {{.status}}
+          Age:      {{.age}} years
+          Price:    ${{.price}}
+          Created:  {{.createdAt}}
+
+      # Watch mode support
+      x-cli-watch:
+        enabled: true
+        interval: 5
+        fields: [status, updatedAt]
+        alert-on-change:
+          - field: status
+            message: "Status changed to {new_value}"
+
+    put:
+      operationId: updatePet
+      summary: Update pet
+      description: Updates an existing pet
+      tags:
+        - Pets
+
+      x-cli-command: "update pet"
+      x-cli-aliases: ["edit pet", "modify pet"]
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+
+      responses:
+        '200':
+          description: Pet updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '404':
+          description: Pet not found
+
+      x-cli-flags:
+        - name: name
+          source: name
+          flag: "--name"
+          type: string
+        - name: status
+          source: status
+          flag: "--status"
+          type: string
+        - name: price
+          source: price
+          flag: "--price"
+          type: float
+
+      x-cli-output:
+        success-message: "Pet {id} updated successfully"
+
+    delete:
+      operationId: deletePet
+      summary: Delete pet
+      description: Removes a pet from the store
+      tags:
+        - Pets
+
+      x-cli-command: "delete pet"
+      x-cli-aliases: ["remove pet", "rm pet"]
+
+      responses:
+        '204':
+          description: Pet deleted
+        '404':
+          description: Pet not found
+
+      # Confirmation required
+      x-cli-confirmation:
+        enabled: true
+        message: "Are you sure you want to delete pet '{petId}'? This cannot be undone."
+        flag: "--yes"
+        aliases: ["-y"]
+
+      x-cli-output:
+        success-message: "Pet {petId} deleted successfully"
+
+      # Mark as deprecated
+      x-cli-deprecation:
+        deprecated: true
+        sunset-date: "2025-12-31"
+        alternative: "archive pet"
+        message: "Direct deletion is deprecated. Use 'archive pet' instead."
+
+  /pets/{petId}/status/stream:
+    parameters:
+      - name: petId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+        x-cli-flag: "--pet-id"
+
+    get:
+      operationId: streamPetStatus
+      summary: Stream pet status updates
+      description: Real-time streaming of pet status changes via SSE
+      tags:
+        - Pets
+
+      x-cli-command: "watch pet"
+      x-cli-aliases: ["stream pet", "monitor pet"]
+
+      responses:
+        '200':
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+      # Streaming configuration
+      x-cli-streaming:
+        enabled: true
+        type: sse
+        event-types:
+          - status-change
+          - location-update
+          - health-check
+        format:
+          template: "[{{.timestamp}}] {{.event}}: {{.data.message}}"
+          colors:
+            status-change: yellow
+            location-update: blue
+            health-check: green
+        reconnect:
+          enabled: true
+          max-retries: 10
+          backoff: exponential
+
+  # Plugin-based operations (AWS-like external tools)
+  /pets/{petId}/backup:
+    parameters:
+      - name: petId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+
+    post:
+      operationId: backupPetData
+      summary: Backup pet data to S3
+      description: Uses AWS CLI plugin to backup pet data
+      tags:
+        - Pets
+        - Plugins
+
+      x-cli-command: "backup pet"
+
+      parameters:
+        - name: bucket
+          in: query
+          required: true
+          schema:
+            type: string
+          x-cli-flag: "--bucket"
+          x-cli-env-var: "PETSTORE_BACKUP_BUCKET"
+
+      responses:
+        '200':
+          description: Backup created
+
+      # Plugin integration
+      x-cli-plugin:
+        type: external
+        command: aws
+        required: true
+        min-version: "2.0.0"
+        install-hint: "Install AWS CLI: https://aws.amazon.com/cli/"
+
+        operations:
+          - description: "Fetching pet data..."
+            api-call:
+              endpoint: "/pets/{petId}"
+              method: GET
+              output-var: pet_data
+
+          - description: "Uploading to S3..."
+            plugin-call:
+              command: "aws"
+              args:
+                - "s3"
+                - "cp"
+                - "-"
+                - "s3://{args.bucket}/pets/{petId}.json"
+              stdin: "{vars.pet_data}"
+              env:
+                AWS_REGION: "us-east-1"
+
+          - description: "Verifying backup..."
+            plugin-call:
+              command: "aws"
+              args:
+                - "s3"
+                - "ls"
+                - "s3://{args.bucket}/pets/{petId}.json"
+
+  # Workflow orchestration example
+  /workflow/adopt:
+    post:
+      operationId: adoptPet
+      summary: Complete pet adoption workflow
+      description: Multi-step workflow for pet adoption process
+      tags:
+        - Workflows
+
+      x-cli-command: "adopt pet"
+      x-cli-description: "Complete automated pet adoption workflow"
+
+      parameters:
+        - name: petId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          x-cli-flag: "--pet-id"
+
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          x-cli-flag: "--user-id"
+
+      responses:
+        '200':
+          description: Adoption completed
+
+      # Multi-step workflow
+      x-cli-workflow:
+        description: "Pet adoption workflow with validation and notifications"
+
+        steps:
+          # Step 1: Verify pet availability
+          - id: check-availability
+            description: "Checking pet availability..."
+            request:
+              method: GET
+              url: "{base_url}/pets/{args.petId}"
+            output-var: pet
+            validation:
+              condition: "pet.body.status == 'available'"
+              error-message: "Pet is not available for adoption (status: {pet.body.status})"
+
+          # Step 2: Verify user eligibility
+          - id: check-user
+            description: "Verifying user eligibility..."
+            request:
+              method: GET
+              url: "{base_url}/users/{args.userId}"
+            output-var: user
+            validation:
+              condition: "user.status == 200"
+              error-message: "User not found"
+
+          # Step 3: Create adoption order
+          - id: create-order
+            description: "Creating adoption order..."
+            request:
+              method: POST
+              url: "{base_url}/orders"
+              body:
+                petId: "{args.petId}"
+                userId: "{args.userId}"
+                status: "placed"
+            condition: "check-availability.valid && check-user.valid"
+            output-var: order
+
+          # Step 4: Update pet status
+          - id: update-pet-status
+            description: "Updating pet status..."
+            request:
+              method: PUT
+              url: "{base_url}/pets/{args.petId}"
+              body:
+                status: "adopted"
+            condition: "create-order.status == 201"
+
+          # Step 5: Send notification (plugin)
+          - id: send-notification
+            description: "Sending adoption notification..."
+            plugin-call:
+              command: "mail"
+              args:
+                - "-s"
+                - "Pet Adoption Confirmed"
+                - "{user.body.email}"
+              stdin: |
+                Congratulations! Your adoption of {pet.body.name} has been confirmed.
+                Order ID: {order.body.id}
+            condition: "update-pet-status.status == 200"
+
+          # Step 6: Wait for approval (async)
+          - id: wait-approval
+            description: "Waiting for admin approval..."
+            request:
+              method: GET
+              url: "{base_url}/orders/{order.body.id}"
+            polling:
+              interval: 10
+              timeout: 300
+              terminal-condition: "response.body.status in ['approved', 'rejected']"
+
+        # Rollback on failure
+        rollback:
+          enabled: true
+          steps:
+            - description: "Rolling back pet status..."
+              request:
+                method: PUT
+                url: "{base_url}/pets/{args.petId}"
+                body:
+                  status: "available"
+
+            - description: "Canceling order..."
+              request:
+                method: DELETE
+                url: "{base_url}/orders/{order.body.id}"
+
+        # Output transformation
+        output:
+          format: json
+          transform: |
+            {
+              "adoption_id": order.body.id,
+              "pet": {
+                "id": pet.body.id,
+                "name": pet.body.name,
+                "category": pet.body.category.name
+              },
+              "user": {
+                "id": user.body.id,
+                "name": user.body.firstName + " " + user.body.lastName,
+                "email": user.body.email
+              },
+              "status": wait-approval.body.status,
+              "message": "Adoption " + (wait-approval.body.status == "approved" ? "approved" : "rejected")
+            }
+
+  # Store operations
+  /stores:
+    get:
+      operationId: listStores
+      summary: List stores
+      tags:
+        - Stores
+
+      x-cli-command: "list stores"
+
+      responses:
+        '200':
+          description: List of stores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Store'
+
+      x-cli-output:
+        table:
+          columns:
+            - field: id
+              header: ID
+              width: 10
+            - field: name
+              header: NAME
+              width: 25
+            - field: location
+              header: LOCATION
+              width: 30
+            - field: capacity
+              header: CAPACITY
+              width: 10
+              align: right
+
+  /stores/capacity:
+    get:
+      operationId: getStoreCapacity
+      summary: Get store capacity info
+      tags:
+        - Stores
+
+      x-cli-hidden: true
+
+      responses:
+        '200':
+          description: Capacity info
+
+  # Order operations with async polling
+  /orders:
+    post:
+      operationId: createOrder
+      summary: Place order
+      tags:
+        - Orders
+
+      x-cli-command: "create order"
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+      # Async polling configuration
+      x-cli-async:
+        enabled: true
+        status-field: "status"
+        status-endpoint: "/orders/{id}"
+        terminal-states: [delivered, cancelled]
+        polling:
+          interval: 30
+          timeout: 3600
+          backoff:
+            enabled: true
+            multiplier: 1.5
+            max-interval: 300
+        progress:
+          show: true
+          format: "Order status: {status} ({elapsed}s elapsed)"
+
+  /orders/{orderId}:
+    parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+
+    get:
+      operationId: getOrder
+      summary: Get order
+      tags:
+        - Orders
+
+      x-cli-command: "get order"
+
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+  # User operations
+  /users:
+    get:
+      operationId: listUsers
+      summary: List users
+      tags:
+        - Users
+
+      x-cli-command: "list users"
+
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+  /users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+
+    get:
+      operationId: getUser
+      summary: Get user
+      tags:
+        - Users
+
+      x-cli-command: "get user"
+
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  # Context management
+  /contexts:
+    get:
+      operationId: listContexts
+      summary: List available contexts (dev/staging/prod)
+      tags:
+        - Contexts
+
+      x-cli-command: "list contexts"
+      x-cli-description: "List available API contexts"
+
+      responses:
+        '200':
+          description: Available contexts
+
+      x-cli-context:
+        enabled: true
+        default: "production"
+        contexts:
+          development:
+            base-url: "http://localhost:8080"
+            auth:
+              type: none
+          staging:
+            base-url: "https://staging-api.petstore.example.com"
+            auth:
+              type: oauth2
+          production:
+            base-url: "https://api.petstore.example.com"
+            auth:
+              type: oauth2
+
+        switch-command: "use context"
+        current-command: "current context"
+
+tags:
+  - name: Pets
+    description: Pet management operations
+  - name: Stores
+    description: Store operations
+  - name: Orders
+    description: Order management
+  - name: Users
+    description: User management
+  - name: Workflows
+    description: Multi-step workflows
+  - name: Plugins
+    description: External plugin operations
+  - name: Contexts
+    description: Context switching

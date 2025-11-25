@@ -53,9 +53,23 @@ markdown_extensions:
 
 nav:
   - Home: README.md
-  - Documentation:
-      - Technical Specification: technical-specification.md
+  - Getting Started:
+      - Quick Start: getting-started.md
+      - Installation: installation.md
+  - User Guide:
+      - Configuration: user-guide-configuration.md
+      - Authentication: user-guide-authentication.md
+      - Workflows: user-guide-workflows.md
+      - Examples & Recipes: examples-and-recipes.md
+  - Reference:
+      - OpenAPI Extensions: openapi-extensions-reference.md
       - Configuration DSL: configuration-dsl.md
+      - Technical Specification: technical-specification.md
+  - Developer Guide:
+      - Plugin Development: developer-guide-plugins.md
+  - Help:
+      - FAQ: faq.md
+      - Troubleshooting: troubleshooting.md
   - Design:
       - Overview: ../design/README.md
       - Architecture:
@@ -63,6 +77,12 @@ nav:
           - Configuration Override: ../design/architecture/configuration-override-matrix.md
           - Deprecation Strategy: ../design/architecture/deprecation-strategy.md
           - Secrets Handling: ../design/architecture/secrets-handling-design.md
+          - Plugin Architecture: ../design/architecture/plugin-architecture.md
+          - Workflow Orchestration: ../design/architecture/workflow-orchestration.md
+          - File Operations: ../design/architecture/file-operations.md
+          - Progress & Streaming: ../design/architecture/progress-and-streaming.md
+          - State Management: ../design/architecture/state-management.md
+          - Gap Analysis: ../design/architecture/gap-analysis-rosa-requirements.md
       - Decisions:
           - ADRs: ../design/decisions/README.md
           - ADR-000: ../design/decisions/000-use-architecture-decision-records.md

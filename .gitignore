@@ -21,6 +21,7 @@ vendor/
 # Build output
 bin/
 dist/
+cliforge
 
 # Local development and hacking
 hack/
@@ -46,3 +47,4 @@ Thumbs.db
 tmp/
 temp/
 *.tmp
+*.new
