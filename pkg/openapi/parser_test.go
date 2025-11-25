@@ -2,6 +2,7 @@ package openapi
 
 import (
 	"context"
+	"strings"
 	"testing"
 )
 
@@ -220,5 +221,171 @@ func TestParser_HiddenOperations(t *testing.T) {
 	}
 	if operations[0].OperationID != "listUsers" {
 		t.Errorf("expected operation 'listUsers', got '%s'", operations[0].OperationID)
+	}
+}
+
+func TestParser_ParseFile(t *testing.T) {
+	parser := NewParser()
+	ctx := context.Background()
+
+	spec, err := parser.ParseFile(ctx, "testdata/simple_openapi3.json")
+	if err != nil {
+		t.Fatalf("failed to parse file: %v", err)
+	}
+
+	if spec == nil {
+		t.Fatal("spec is nil")
+	}
+
+	info := spec.GetInfo()
+	if info.Title != "Test API" {
+		t.Errorf("expected title 'Test API', got '%s'", info.Title)
+	}
+}
+
+func TestParser_ParseFile_NotFound(t *testing.T) {
+	parser := NewParser()
+	ctx := context.Background()
+
+	_, err := parser.ParseFile(ctx, "testdata/nonexistent.json")
+	if err == nil {
+		t.Error("expected error for nonexistent file")
+	}
+}
+
+func TestParser_ParseReader(t *testing.T) {
+	spec := `{
+		"openapi": "3.0.0",
+		"info": {
+			"title": "Reader Test API",
+			"version": "1.0.0"
+		},
+		"paths": {}
+	}`
+
+	parser := NewParser()
+	ctx := context.Background()
+
+	reader := strings.NewReader(spec)
+	parsed, err := parser.ParseReader(ctx, reader)
+	if err != nil {
+		t.Fatalf("failed to parse from reader: %v", err)
+	}
+
+	info := parsed.GetInfo()
+	if info.Title != "Reader Test API" {
+		t.Errorf("expected title 'Reader Test API', got '%s'", info.Title)
+	}
+}
+
+func TestParser_ParseReader_InvalidJSON(t *testing.T) {
+	parser := NewParser()
+	ctx := context.Background()
+
+	reader := strings.NewReader("invalid json")
+	_, err := parser.ParseReader(ctx, reader)
+	if err == nil {
+		t.Error("expected error for invalid JSON")
+	}
+}
+
+func TestParser_DisableValidation(t *testing.T) {
+	spec := `{
+		"openapi": "3.0.0",
+		"info": {
+			"title": "Test",
+			"version": "1.0.0"
+		},
+		"paths": {}
+	}`
+
+	parser := NewParser()
+	parser.DisableValidation = true
+	ctx := context.Background()
+
+	parsed, err := parser.Parse(ctx, []byte(spec))
+	if err != nil {
+		t.Fatalf("failed to parse spec: %v", err)
+	}
+
+	if parsed == nil {
+		t.Fatal("spec is nil")
+	}
+}
+
+func TestParser_ParseOperationExtensions(t *testing.T) {
+	spec := `{
+		"openapi": "3.0.0",
+		"info": {"title": "Test", "version": "1.0.0"},
+		"paths": {
+			"/test": {
+				"get": {
+					"operationId": "test",
+					"summary": "Test operation",
+					"x-cli-command": "test-cmd",
+					"x-cli-aliases": ["tc", "test"],
+					"x-cli-parent-resource": "parent",
+					"responses": {"200": {"description": "OK"}}
+				}
+			}
+		}
+	}`
+
+	parser := NewParser()
+	ctx := context.Background()
+
+	parsed, err := parser.Parse(ctx, []byte(spec))
+	if err != nil {
+		t.Fatalf("failed to parse spec: %v", err)
+	}
+
+	operations, err := parsed.GetOperations()
+	if err != nil {
+		t.Fatalf("failed to get operations: %v", err)
+	}
+
+	if len(operations) != 1 {
+		t.Fatalf("expected 1 operation, got %d", len(operations))
+	}
+
+	op := operations[0]
+	if op.CLICommand != "test-cmd" {
+		t.Errorf("expected CLI command 'test-cmd', got '%s'", op.CLICommand)
+	}
+	if len(op.CLIAliases) != 2 {
+		t.Errorf("expected 2 aliases, got %d", len(op.CLIAliases))
+	}
+	if op.CLIParentRes != "parent" {
+		t.Errorf("expected parent resource 'parent', got '%s'", op.CLIParentRes)
+	}
+}
+
+func TestParser_UnsupportedSwaggerVersion(t *testing.T) {
+	spec := `{
+		"swagger": "1.2",
+		"info": {"title": "Test", "version": "1.0.0"}
+	}`
+
+	parser := NewParser()
+	ctx := context.Background()
+
+	_, err := parser.Parse(ctx, []byte(spec))
+	if err == nil {
+		t.Error("expected error for unsupported Swagger version")
+	}
+}
+
+func TestParser_UnsupportedOpenAPIVersion(t *testing.T) {
+	spec := `{
+		"openapi": "4.0.0",
+		"info": {"title": "Test", "version": "1.0.0"}
+	}`
+
+	parser := NewParser()
+	ctx := context.Background()
+
+	_, err := parser.Parse(ctx, []byte(spec))
+	if err == nil {
+		t.Error("expected error for unsupported OpenAPI version")
 	}
 }

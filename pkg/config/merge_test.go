@@ -340,3 +340,135 @@ func TestCopyConfig(t *testing.T) {
 		t.Error("original defaults were modified when copy was changed - not a deep copy")
 	}
 }
+
+func TestMergeConfigsIntegration(t *testing.T) {
+	embedded := &cli.CLIConfig{
+		Metadata: cli.Metadata{
+			Name:    "test-cli",
+			Version: "1.0.0",
+			Debug:   true,
+		},
+		API: cli.API{
+			BaseURL:    "https://api.example.com",
+			OpenAPIURL: "https://api.example.com/openapi.yaml",
+		},
+		Defaults: &cli.Defaults{
+			HTTP: &cli.DefaultsHTTP{
+				Timeout: "30s",
+			},
+		},
+	}
+
+	user := &cli.UserConfig{
+		Preferences: &cli.UserPreferences{
+			HTTP: &cli.PreferencesHTTP{
+				Timeout: "60s",
+			},
+		},
+		DebugOverride: &cli.CLIConfig{
+			API: cli.API{
+				BaseURL: "http://localhost:8080",
+			},
+		},
+	}
+
+	loader := &Loader{cliName: "test-cli"}
+	merged, overrides, err := loader.mergeConfigs(embedded, user)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if merged == nil {
+		t.Fatal("expected merged config but got nil")
+	}
+
+	// Check debug overrides were applied
+	if merged.API.BaseURL != "http://localhost:8080" {
+		t.Errorf("expected base URL from debug override, got %s", merged.API.BaseURL)
+	}
+
+	if len(overrides) == 0 {
+		t.Error("expected debug overrides to be tracked")
+	}
+
+	// Check preferences were applied
+	if merged.Defaults.HTTP.Timeout != "60s" {
+		t.Errorf("expected timeout from preferences, got %s", merged.Defaults.HTTP.Timeout)
+	}
+}
+
+func TestMergeConfigsNoDebugMode(t *testing.T) {
+	embedded := &cli.CLIConfig{
+		Metadata: cli.Metadata{
+			Name:    "test-cli",
+			Version: "1.0.0",
+			Debug:   false, // Debug disabled
+		},
+		API: cli.API{
+			BaseURL: "https://api.example.com",
+		},
+	}
+
+	user := &cli.UserConfig{
+		DebugOverride: &cli.CLIConfig{
+			API: cli.API{
+				BaseURL: "http://localhost:8080",
+			},
+		},
+	}
+
+	loader := &Loader{cliName: "test-cli"}
+	merged, overrides, err := loader.mergeConfigs(embedded, user)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Debug overrides should NOT be applied when debug is false
+	if merged.API.BaseURL != "https://api.example.com" {
+		t.Error("debug overrides should not be applied when debug mode is disabled")
+	}
+
+	if len(overrides) != 0 {
+		t.Error("expected no debug overrides when debug mode is disabled")
+	}
+}
+
+func TestCopyConfig_DeepCopy(t *testing.T) {
+	original := &cli.CLIConfig{
+		Metadata: cli.Metadata{
+			Name:    "test-cli",
+			Version: "1.0.0",
+		},
+		API: cli.API{
+			BaseURL: "https://api.example.com",
+		},
+		Defaults: &cli.Defaults{
+			HTTP: &cli.DefaultsHTTP{
+				Timeout: "30s",
+			},
+		},
+	}
+
+	copied := copyConfig(original)
+
+	// Verify it's a different object
+	if copied == original {
+		t.Error("copyConfig should return a new object")
+	}
+
+	// Modify copy and verify original is unchanged
+	copied.API.BaseURL = "https://different.com"
+	if original.API.BaseURL != "https://api.example.com" {
+		t.Error("modifying copy should not affect original")
+	}
+
+	// Verify nested structures are copied
+	if copied.Defaults != nil {
+		copied.Defaults.HTTP.Timeout = "60s"
+		if original.Defaults.HTTP.Timeout != "30s" {
+			t.Error("modifying nested copy should not affect original")
+		}
+	}
+}

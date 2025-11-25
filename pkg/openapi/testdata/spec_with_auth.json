@@ -1,0 +1,46 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Auth Test API",
+    "version": "1.0.0"
+  },
+  "components": {
+    "securitySchemes": {
+      "oauth2": {
+        "type": "oauth2",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://example.com/oauth/authorize",
+            "tokenUrl": "https://example.com/oauth/token",
+            "scopes": {
+              "read": "Read access",
+              "write": "Write access"
+            }
+          }
+        },
+        "x-auth-config": {
+          "flows": {
+            "authorizationCode": {
+              "authorizationUrl": "https://example.com/oauth/authorize",
+              "tokenUrl": "https://example.com/oauth/token",
+              "scopes": {
+                "read": "Read access"
+              }
+            }
+          },
+          "token-storage": [
+            {
+              "type": "keyring",
+              "service": "myapi",
+              "keyring-backends": {
+                "darwin": "keychain",
+                "linux": "secretservice"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "paths": {}
+}

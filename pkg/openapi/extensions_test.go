@@ -471,6 +471,233 @@ func TestParseCLIWorkflow(t *testing.T) {
 	}
 }
 
+func TestParseAuthConfig(t *testing.T) {
+	parser := NewParser()
+	ctx := context.Background()
+
+	spec, err := parser.ParseFile(ctx, "testdata/spec_with_auth.json")
+	if err != nil {
+		t.Fatalf("failed to parse spec: %v", err)
+	}
+
+	if spec.Extensions.AuthConfig == nil {
+		t.Fatal("x-auth-config not parsed")
+	}
+
+	authConfig := spec.Extensions.AuthConfig
+	if authConfig.Flows == nil {
+		t.Fatal("flows not parsed")
+	}
+
+	if authConfig.Flows.AuthorizationCode == nil {
+		t.Fatal("authorizationCode flow not parsed")
+	}
+
+	flow := authConfig.Flows.AuthorizationCode
+	if flow.AuthorizationURL != "https://example.com/oauth/authorize" {
+		t.Errorf("expected authorizationUrl, got '%s'", flow.AuthorizationURL)
+	}
+	if flow.TokenURL != "https://example.com/oauth/token" {
+		t.Errorf("expected tokenUrl, got '%s'", flow.TokenURL)
+	}
+
+	if len(authConfig.TokenStorage) != 1 {
+		t.Fatalf("expected 1 token storage, got %d", len(authConfig.TokenStorage))
+	}
+
+	storage := authConfig.TokenStorage[0]
+	if storage.Type != "keyring" {
+		t.Errorf("expected storage type 'keyring', got '%s'", storage.Type)
+	}
+	if storage.Service != "myapi" {
+		t.Errorf("expected service 'myapi', got '%s'", storage.Service)
+	}
+}
+
+func TestParseCLIPreflight(t *testing.T) {
+	spec := `{
+		"openapi": "3.0.0",
+		"info": {"title": "Test", "version": "1.0.0"},
+		"paths": {
+			"/deploy": {
+				"post": {
+					"operationId": "deploy",
+					"responses": {"200": {"description": "OK"}},
+					"x-cli-preflight": [
+						{
+							"name": "check-quota",
+							"description": "Check resource quota",
+							"endpoint": "/api/quota",
+							"method": "GET",
+							"required": true,
+							"skip-flag": "--skip-quota-check"
+						}
+					]
+				}
+			}
+		}
+	}`
+
+	parser := NewParser()
+	ctx := context.Background()
+
+	parsed, err := parser.Parse(ctx, []byte(spec))
+	if err != nil {
+		t.Fatalf("failed to parse spec: %v", err)
+	}
+
+	operations, err := parsed.GetOperations()
+	if err != nil {
+		t.Fatalf("failed to get operations: %v", err)
+	}
+
+	op := operations[0]
+	if len(op.CLIPreflight) != 1 {
+		t.Fatalf("expected 1 preflight check, got %d", len(op.CLIPreflight))
+	}
+
+	check := op.CLIPreflight[0]
+	if check.Name != "check-quota" {
+		t.Errorf("expected name 'check-quota', got '%s'", check.Name)
+	}
+	if check.Endpoint != "/api/quota" {
+		t.Errorf("expected endpoint '/api/quota', got '%s'", check.Endpoint)
+	}
+	if check.Method != "GET" {
+		t.Errorf("expected method 'GET', got '%s'", check.Method)
+	}
+	if !check.Required {
+		t.Error("expected required to be true")
+	}
+}
+
+func TestParseCLIConfirmation(t *testing.T) {
+	spec := `{
+		"openapi": "3.0.0",
+		"info": {"title": "Test", "version": "1.0.0"},
+		"paths": {
+			"/delete": {
+				"delete": {
+					"operationId": "deleteResource",
+					"responses": {"204": {"description": "Deleted"}},
+					"x-cli-confirmation": {
+						"enabled": true,
+						"message": "Are you sure you want to delete this resource?",
+						"flag": "--yes"
+					}
+				}
+			}
+		}
+	}`
+
+	parser := NewParser()
+	ctx := context.Background()
+
+	parsed, err := parser.Parse(ctx, []byte(spec))
+	if err != nil {
+		t.Fatalf("failed to parse spec: %v", err)
+	}
+
+	operations, err := parsed.GetOperations()
+	if err != nil {
+		t.Fatalf("failed to get operations: %v", err)
+	}
+
+	op := operations[0]
+	if op.CLIConfirmation == nil {
+		t.Fatal("x-cli-confirmation not parsed")
+	}
+
+	if !op.CLIConfirmation.Enabled {
+		t.Error("expected enabled to be true")
+	}
+	if op.CLIConfirmation.Message != "Are you sure you want to delete this resource?" {
+		t.Errorf("unexpected message: %s", op.CLIConfirmation.Message)
+	}
+	if op.CLIConfirmation.Flag != "--yes" {
+		t.Errorf("expected flag '--yes', got '%s'", op.CLIConfirmation.Flag)
+	}
+}
+
+func TestParseCLIOutput(t *testing.T) {
+	spec := `{
+		"openapi": "3.0.0",
+		"info": {"title": "Test", "version": "1.0.0"},
+		"paths": {
+			"/users": {
+				"get": {
+					"operationId": "listUsers",
+					"responses": {"200": {"description": "OK"}},
+					"x-cli-output": {
+						"format": "table",
+						"success-message": "Users retrieved successfully",
+						"error-message": "Failed to retrieve users",
+						"watch-status": true,
+						"table": {
+							"columns": [
+								{
+									"field": "id",
+									"header": "ID",
+									"width": 10
+								},
+								{
+									"field": "name",
+									"header": "Name",
+									"transform": "uppercase",
+									"width": 30
+								}
+							]
+						}
+					}
+				}
+			}
+		}
+	}`
+
+	parser := NewParser()
+	ctx := context.Background()
+
+	parsed, err := parser.Parse(ctx, []byte(spec))
+	if err != nil {
+		t.Fatalf("failed to parse spec: %v", err)
+	}
+
+	operations, err := parsed.GetOperations()
+	if err != nil {
+		t.Fatalf("failed to get operations: %v", err)
+	}
+
+	op := operations[0]
+	if op.CLIOutput == nil {
+		t.Fatal("x-cli-output not parsed")
+	}
+
+	if op.CLIOutput.Format != "table" {
+		t.Errorf("expected format 'table', got '%s'", op.CLIOutput.Format)
+	}
+	if op.CLIOutput.SuccessMessage != "Users retrieved successfully" {
+		t.Errorf("unexpected success message: %s", op.CLIOutput.SuccessMessage)
+	}
+	if !op.CLIOutput.WatchStatus {
+		t.Error("expected watch-status to be true")
+	}
+
+	if op.CLIOutput.Table == nil {
+		t.Fatal("table config not parsed")
+	}
+	if len(op.CLIOutput.Table.Columns) != 2 {
+		t.Fatalf("expected 2 columns, got %d", len(op.CLIOutput.Table.Columns))
+	}
+
+	col := op.CLIOutput.Table.Columns[0]
+	if col.Field != "id" {
+		t.Errorf("expected field 'id', got '%s'", col.Field)
+	}
+	if col.Width != 10 {
+		t.Errorf("expected width 10, got %d", col.Width)
+	}
+}
+
 func TestParseChangelog(t *testing.T) {
 	spec := `{
 		"openapi": "3.0.0",
