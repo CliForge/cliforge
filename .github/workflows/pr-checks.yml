@@ -1,0 +1,178 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  commit-message:
+    name: Validate Commit Messages
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Check commit messages
+      run: |
+        echo "Checking commit messages follow Conventional Commits..."
+
+        # Get commits in this PR
+        COMMITS=$(git log --format=%s origin/${{ github.base_ref }}..HEAD)
+
+        # Regex for conventional commits
+        PATTERN="^(feat|fix|docs|chore|refactor|test|perf)(\(.+\))?: .+"
+
+        FAILED=0
+        while IFS= read -r commit; do
+          if ! echo "$commit" | grep -qE "$PATTERN"; then
+            echo "❌ Invalid commit message: $commit"
+            echo "   Must match format: type(scope): description"
+            FAILED=1
+          else
+            echo "✅ Valid: $commit"
+          fi
+        done <<< "$COMMITS"
+
+        if [ $FAILED -eq 1 ]; then
+          echo ""
+          echo "Please follow Conventional Commits format:"
+          echo "  feat(scope): add new feature"
+          echo "  fix(scope): fix bug"
+          echo "  docs(scope): update documentation"
+          echo ""
+          echo "See CONTRIBUTING.md for details"
+          exit 1
+        fi
+
+  file-changes:
+    name: Check File Changes
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Check for large files
+      run: |
+        echo "Checking for large files..."
+        LARGE_FILES=$(find . -type f -size +1M -not -path "./.git/*" -not -path "./vendor/*")
+
+        if [ -n "$LARGE_FILES" ]; then
+          echo "❌ Large files detected (>1MB):"
+          echo "$LARGE_FILES"
+          echo ""
+          echo "Consider using Git LFS or adding to .gitignore"
+          exit 1
+        fi
+
+    - name: Check for secrets
+      run: |
+        echo "Checking for potential secrets..."
+
+        # Simple patterns for common secrets
+        if git grep -E "(password|secret|api[_-]?key|token|private[_-]?key)" -- '*.go' '*.yaml' '*.yml' '*.json' | grep -vE "(test|example|sample|placeholder)"; then
+          echo "⚠️  Warning: Potential secrets detected in code"
+          echo "Please review the matches above"
+        fi
+
+  test-coverage:
+    name: Check Test Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+
+    - name: Run tests with coverage
+      run: go test -coverprofile=coverage.out ./...
+
+    - name: Calculate coverage
+      id: coverage
+      run: |
+        TOTAL=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+        echo "total=$TOTAL" >> $GITHUB_OUTPUT
+        echo "Total coverage: $TOTAL%"
+
+    - name: Comment PR with coverage
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const coverage = '${{ steps.coverage.outputs.total }}';
+          const emoji = coverage >= 70 ? '✅' : coverage >= 60 ? '⚠️' : '❌';
+
+          const comment = `## Test Coverage Report ${emoji}
+
+          **Total Coverage:** ${coverage}%
+
+          ${coverage >= 70 ? '✅ Excellent coverage!' : coverage >= 60 ? '⚠️  Coverage is acceptable but could be improved' : '❌ Coverage is below 60% - please add tests'}
+
+          <details>
+          <summary>Coverage Guidelines</summary>
+
+          - 🎯 **Target:** 70%+ coverage
+          - ⚠️  **Minimum:** 60% coverage
+          - ❌ **Below 60%:** PR may be rejected
+
+          See [\`CONTRIBUTING.md\`](../blob/main/CONTRIBUTING.md) for testing guidelines.
+          </details>`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+    - name: Coverage check
+      run: |
+        COVERAGE=${{ steps.coverage.outputs.total }}
+        if (( $(echo "$COVERAGE < 60" | bc -l) )); then
+          echo "❌ Coverage dropped below 60%: $COVERAGE%"
+          exit 1
+        fi
+
+  docs-build:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        pip install mkdocs-material
+        pip install mkdocs-include-markdown-plugin
+
+    - name: Build docs
+      run: mkdocs build --strict
+
+    - name: Comment on PR
+      if: success()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '✅ Documentation builds successfully'
+          });
