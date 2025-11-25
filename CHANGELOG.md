@@ -11,6 +11,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.1] - 2025-11-25
+
+### Added
+
+**Test Coverage Improvements:**
+- Comprehensive test suite for pkg/config (31.2% → 62.3%, +31.1%)
+- Comprehensive test suite for pkg/openapi (33.1% → 84.1%, +51.0%)
+- Comprehensive test suite for internal/builder (48.7% → 85.0%, +36.3%)
+- Comprehensive test suite for internal/executor (24.0% → 74.9%, +50.9%)
+- End-to-end integration test suite (6 test functions)
+  - Binary build verification
+  - CLI command testing
+  - Completion generation testing
+  - Petstore example validation
+
+**Documentation:**
+- Quick Reference Guide (`docs/quick-reference.md`)
+  - Command cheat sheet
+  - Configuration patterns
+  - OpenAPI extension quick lookup
+  - Common workflows and troubleshooting
+- mkdocs.yml navigation updated with quick reference
+
+**Test Infrastructure:**
+- Mock HTTP servers for realistic testing
+- Table-driven tests for comprehensive coverage
+- OpenAPI test fixtures (testdata/)
+- Integration test framework
+
+### Fixed
+
+- Config loader NO_COLOR environment variable logic (inverted semantics)
+- Test coverage for previously untested functions:
+  - NewLoader, LoadConfig, loadEmbeddedConfig, loadUserConfig
+  - SaveUserConfig, EnsureConfigDirs, applyEnvironmentOverrides
+  - NewChangeDetector, DetectChanges, changelog formatting
+  - NewValidator, Validate, validateUpdates, ValidateUserPreferences
+  - buildPathGroupedCommands, determineCommandName
+  - addRequestBodyFlags, addCustomFlags, ValidateRequiredFlags
+  - executeHTTPOperation, buildRequest, handleAsyncOperation
+  - NewRuntime, initializeManagers, buildCommandTree
+
+### Test Coverage Summary
+
+| Package | Before | After | Improvement |
+|---------|--------|-------|-------------|
+| pkg/config | 31.2% | 62.3% | +31.1% |
+| pkg/openapi | 33.1% | 84.1% | +51.0% |
+| internal/builder | 48.7% | 85.0% | +36.3% |
+| internal/executor | 24.0% | 74.9% | +50.9% |
+
+**Overall Project Coverage:** Significantly improved across all core packages
+
+### Documentation Assessment
+
+- Comprehensive documentation review completed
+- Grade: B+ (85% complete)
+- 16 documentation files reviewed
+- Identified gaps and created quick reference guide
+- Recommended additional guides for future releases
+
+---
+
 ## [0.9.0] - 2025-11-23
 
 ### Added

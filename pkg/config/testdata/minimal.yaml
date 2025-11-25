@@ -1,0 +1,34 @@
+metadata:
+  name: test-cli
+  version: 1.0.0
+  description: A minimal test CLI configuration
+  debug: false
+
+api:
+  openapi_url: https://api.example.com/openapi.yaml
+  base_url: https://api.example.com
+
+defaults:
+  http:
+    timeout: 30s
+  output:
+    format: json
+    color: auto
+    pretty_print: true
+  caching:
+    enabled: true
+    ttl: 5m
+  pagination:
+    limit: 50
+  retry:
+    max_attempts: 3
+  deprecations:
+    always_show: false
+    min_severity: warning
+
+behaviors:
+  auth:
+    type: api_key
+    api_key:
+      header: X-API-Key
+      env_var: TEST_CLI_API_KEY

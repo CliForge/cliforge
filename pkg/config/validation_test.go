@@ -371,3 +371,167 @@ func TestValidator_Validate(t *testing.T) {
 		}
 	})
 }
+
+func TestValidator_ValidateUpdates(t *testing.T) {
+	tests := []struct {
+		name      string
+		updates   *cli.Updates
+		wantError bool
+		errorMsg  string
+	}{
+		{
+			name: "valid updates config",
+			updates: &cli.Updates{
+				Enabled:       true,
+				UpdateURL:     "https://releases.example.com/cli",
+				CheckInterval: "24h",
+			},
+			wantError: false,
+		},
+		{
+			name: "updates disabled",
+			updates: &cli.Updates{
+				Enabled: false,
+			},
+			wantError: false,
+		},
+		{
+			name: "missing update URL when enabled",
+			updates: &cli.Updates{
+				Enabled: true,
+			},
+			wantError: true,
+			errorMsg:  "updates.update_url",
+		},
+		{
+			name: "invalid update URL",
+			updates: &cli.Updates{
+				Enabled:   true,
+				UpdateURL: "not-a-url",
+			},
+			wantError: true,
+			errorMsg:  "updates.update_url",
+		},
+		{
+			name: "invalid check interval",
+			updates: &cli.Updates{
+				Enabled:       true,
+				UpdateURL:     "https://releases.example.com/cli",
+				CheckInterval: "not-a-duration",
+			},
+			wantError: true,
+			errorMsg:  "updates.check_interval",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v := NewValidator()
+			v.validateUpdates(tt.updates)
+
+			if tt.wantError && len(v.errors) == 0 {
+				t.Error("expected validation error but got none")
+			}
+			if !tt.wantError && len(v.errors) > 0 {
+				t.Errorf("unexpected validation errors: %v", v.errors)
+			}
+			if tt.wantError && len(v.errors) > 0 {
+				found := false
+				for _, err := range v.errors {
+					if err.Field == tt.errorMsg {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("expected error field %s, got errors: %v", tt.errorMsg, v.errors)
+				}
+			}
+		})
+	}
+}
+
+func TestValidator_ValidateUserPreferences(t *testing.T) {
+	tests := []struct {
+		name      string
+		prefs     *cli.UserPreferences
+		wantError bool
+		errorMsg  string
+	}{
+		{
+			name: "valid preferences",
+			prefs: &cli.UserPreferences{
+				HTTP: &cli.PreferencesHTTP{
+					Timeout:    "30s",
+					Proxy:      "http://proxy.example.com:8080",
+					HTTPSProxy: "https://proxy.example.com:8080",
+				},
+				Output: &cli.PreferencesOutput{
+					Format: "json",
+					Color:  "auto",
+				},
+			},
+			wantError: false,
+		},
+		{
+			name: "invalid timeout",
+			prefs: &cli.UserPreferences{
+				HTTP: &cli.PreferencesHTTP{
+					Timeout: "not-a-duration",
+				},
+			},
+			wantError: true,
+			errorMsg:  "preferences.http.timeout",
+		},
+		{
+			name: "invalid proxy URL",
+			prefs: &cli.UserPreferences{
+				HTTP: &cli.PreferencesHTTP{
+					Proxy: "not-a-url",
+				},
+			},
+			wantError: true,
+			errorMsg:  "preferences.http.proxy",
+		},
+		{
+			name: "invalid output format",
+			prefs: &cli.UserPreferences{
+				Output: &cli.PreferencesOutput{
+					Format: "invalid",
+				},
+			},
+			wantError: true,
+			errorMsg:  "preferences.output.format",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v := NewValidator()
+			err := v.ValidateUserPreferences(tt.prefs)
+
+			if tt.wantError && err == nil {
+				t.Error("expected validation error but got none")
+			}
+			if !tt.wantError && err != nil {
+				t.Errorf("unexpected validation error: %v", err)
+			}
+			if tt.wantError && err != nil {
+				ve, ok := err.(ValidationErrors)
+				if !ok {
+					t.Fatalf("expected ValidationErrors, got %T", err)
+				}
+				found := false
+				for _, e := range ve {
+					if e.Field == tt.errorMsg {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("expected error field %s, got errors: %v", tt.errorMsg, ve)
+				}
+			}
+		})
+	}
+}

@@ -219,6 +219,15 @@ func (l *Loader) applyEnvironmentOverrides(config *cli.CLIConfig) (*cli.CLIConfi
 	for envKey, configPath := range envMappings {
 		fullEnvKey := l.envPrefix + "_" + envKey
 		if val := os.Getenv(fullEnvKey); val != "" {
+			// Handle NO_COLOR specially - it has inverted semantics
+			if envKey == "NO_COLOR" {
+				// NO_COLOR=1 means disable color
+				if val == "1" || val == "true" {
+					val = "false" // Will be converted to "never" by setConfigValue
+				} else {
+					val = "true" // Will be converted to "always" by setConfigValue
+				}
+			}
 			// Parse the value and set in config
 			if err := l.setConfigValue(config, configPath, val); err != nil {
 				return nil, fmt.Errorf("failed to apply env var %s: %w", fullEnvKey, err)
