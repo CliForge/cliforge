@@ -234,3 +234,137 @@ func TestDefaultUpdateConfig(t *testing.T) {
 		t.Errorf("HTTPTimeout = %v, want 30s", config.HTTPTimeout)
 	}
 }
+
+func TestInstaller_Install(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping Install test on Windows (requires special handling)")
+	}
+
+	tmpDir := t.TempDir()
+
+	// Create a mock current executable
+	currentExe := filepath.Join(tmpDir, "current.bin")
+	if err := os.WriteFile(currentExe, []byte("old version"), 0755); err != nil {
+		t.Fatalf("Failed to create current executable: %v", err)
+	}
+
+	// Create a new version binary
+	newExe := filepath.Join(tmpDir, "new.bin")
+	if err := os.WriteFile(newExe, []byte("new version"), 0755); err != nil {
+		t.Fatalf("Failed to create new executable: %v", err)
+	}
+
+	installer := NewInstaller(nil)
+
+	// Note: This test is limited as we can't actually replace the running executable
+	// But we can test the backup and copy logic
+	err := installer.createBackup(currentExe, currentExe+".backup")
+	if err != nil {
+		t.Errorf("createBackup() error = %v", err)
+	}
+
+	// Verify backup was created
+	if _, err := os.Stat(currentExe + ".backup"); err != nil {
+		t.Error("Backup file should exist")
+	}
+}
+
+func TestInstaller_ReplaceFile(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping ReplaceFile test on Windows")
+	}
+
+	tmpDir := t.TempDir()
+
+	// Create source file
+	srcFile := filepath.Join(tmpDir, "source.bin")
+	if err := os.WriteFile(srcFile, []byte("new content"), 0755); err != nil {
+		t.Fatalf("Failed to create source file: %v", err)
+	}
+
+	// Create destination file
+	dstFile := filepath.Join(tmpDir, "dest.bin")
+	if err := os.WriteFile(dstFile, []byte("old content"), 0755); err != nil {
+		t.Fatalf("Failed to create destination file: %v", err)
+	}
+
+	installer := NewInstaller(nil)
+
+	// Replace file
+	err := installer.replaceFile(srcFile, dstFile)
+	if err != nil {
+		t.Fatalf("replaceFile() error = %v", err)
+	}
+
+	// Verify destination was replaced
+	data, err := os.ReadFile(dstFile)
+	if err != nil {
+		t.Fatalf("Failed to read destination: %v", err)
+	}
+
+	if string(data) != "new content" {
+		t.Errorf("Destination content = %s, want 'new content'", string(data))
+	}
+}
+
+func TestInstaller_ReplaceFile_Windows(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("Skipping Windows-specific test on non-Windows platform")
+	}
+
+	tmpDir := t.TempDir()
+
+	// Create source file
+	srcFile := filepath.Join(tmpDir, "source.bin")
+	if err := os.WriteFile(srcFile, []byte("new content"), 0755); err != nil {
+		t.Fatalf("Failed to create source file: %v", err)
+	}
+
+	// Create destination file
+	dstFile := filepath.Join(tmpDir, "dest.bin")
+	if err := os.WriteFile(dstFile, []byte("old content"), 0755); err != nil {
+		t.Fatalf("Failed to create destination file: %v", err)
+	}
+
+	installer := NewInstaller(nil)
+
+	// Replace file using Windows method
+	err := installer.replaceFileWindows(srcFile, dstFile)
+	if err != nil {
+		t.Fatalf("replaceFileWindows() error = %v", err)
+	}
+
+	// Verify destination was replaced
+	data, err := os.ReadFile(dstFile)
+	if err != nil {
+		t.Fatalf("Failed to read destination: %v", err)
+	}
+
+	if string(data) != "new content" {
+		t.Errorf("Destination content = %s, want 'new content'", string(data))
+	}
+}
+
+func TestInstaller_CreateBackup_Error(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	installer := NewInstaller(nil)
+
+	// Try to backup non-existent file
+	err := installer.createBackup("/nonexistent/file", tmpDir+"/backup")
+	if err == nil {
+		t.Error("createBackup() should return error for non-existent file")
+	}
+}
+
+func TestInstaller_CopyFile_Error(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	installer := NewInstaller(nil)
+
+	// Try to copy non-existent file
+	err := installer.copyFile("/nonexistent/file", tmpDir+"/dest")
+	if err == nil {
+		t.Error("copyFile() should return error for non-existent file")
+	}
+}

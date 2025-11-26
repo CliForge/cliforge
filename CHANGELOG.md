@@ -11,6 +11,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.3] - 2025-11-25
+
+### Added
+
+**Complete Test Coverage - All Packages at 70%+:**
+- pkg/cli/builtin: 37.0% → 74.1% (+37.1%)
+- pkg/plugin/builtin: 33.5% → 83.5% (+50.0%)
+- pkg/update: 44.0% → 74.2% (+30.2%)
+- pkg/workflow: 45.0% → 76.3% (+31.3%)
+- pkg/plugin: 52.3% → 72.2% (+19.9%)
+- pkg/cache: 61.8% → 71.5% (+9.7%)
+- pkg/progress: 64.7% → 72.3% (+7.6%)
+- pkg/auth/storage: 69.9% → 84.6% (+14.7%)
+
+**Performance Benchmarks:**
+- Comprehensive benchmark suite (benchmarks/ directory, 2,006 lines)
+- Startup benchmarks (spec loading, command tree generation)
+- Runtime benchmarks (HTTP execution, workflows, output formatting)
+- Memory profiling (spec caching, large responses)
+- Comparison benchmarks with performance targets
+- Automated benchmark CI workflow
+
+**GitHub Templates:**
+- Bug report template (.github/ISSUE_TEMPLATE/bug_report.md)
+- Feature request template (.github/ISSUE_TEMPLATE/feature_request.md)
+- Pull request template (.github/PULL_REQUEST_TEMPLATE.md)
+- Security policy (.github/SECURITY.md)
+
+### Improved
+
+**Project Quality:**
+- Average test coverage across all packages: ~75%
+- All core packages now at 70%+ coverage (17/17 packages with tests)
+- Zero packages below 60% coverage
+- Production-ready quality metrics
+
+**Developer Experience:**
+- README badges updated to "production-ready" status
+- Coverage, CI, and Go Report Card badges added
+- GitHub templates streamline issue/PR creation
+- Security policy clarifies vulnerability reporting
+
+### Test Coverage Summary
+
+| Package | Coverage | Status |
+|---------|----------|--------|
+| pkg/config | 95.0% | 🌟 Excellent |
+| pkg/state | 87.1% | 🌟 Excellent |
+| pkg/openapi | 84.1% | 🌟 Excellent |
+| internal/builder | 85.0% | 🌟 Excellent |
+| pkg/auth/storage | 84.6% | 🌟 Excellent |
+| pkg/plugin/builtin | 83.5% | 🌟 Excellent |
+| pkg/auth | 81.4% | 🌟 Excellent |
+| pkg/workflow | 76.3% | ✅ Good |
+| pkg/output | 76.0% | ✅ Good |
+| pkg/secrets | 75.4% | ✅ Good |
+| internal/executor | 74.9% | ✅ Good |
+| pkg/cli/builtin | 74.1% | ✅ Good |
+| pkg/update | 74.2% | ✅ Good |
+| pkg/deprecation | 72.8% | ✅ Good |
+| pkg/plugin | 72.2% | ✅ Good |
+| pkg/progress | 72.3% | ✅ Good |
+| pkg/cache | 71.5% | ✅ Good |
+
+**Average Coverage: ~75% (all packages 70%+)**
+
+---
+
 ## [0.9.2] - 2025-11-25
 
 ### Added

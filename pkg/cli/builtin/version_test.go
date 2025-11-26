@@ -122,6 +122,54 @@ func TestRunVersion_JSON(t *testing.T) {
 	}
 }
 
+func TestRunVersion_YAML(t *testing.T) {
+	config := &cli.CLIConfig{
+		Metadata: cli.Metadata{
+			Name:        "testcli",
+			Version:     "1.0.0",
+			Description: "Test CLI",
+		},
+		API: cli.API{
+			Version: "2.0.0",
+		},
+	}
+
+	buildTime := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	output := &bytes.Buffer{}
+	opts := &VersionOptions{
+		Config:         config,
+		BuildTime:      buildTime,
+		ShowAPIVersion: true,
+		OutputFormat:   "yaml",
+		Output:         output,
+	}
+
+	err := runVersion(opts)
+	if err != nil {
+		t.Fatalf("runVersion failed: %v", err)
+	}
+
+	result := output.String()
+
+	// Check YAML output
+	if !strings.Contains(result, "client_version: 1.0.0") {
+		t.Errorf("expected client_version in YAML output, got: %s", result)
+	}
+
+	if !strings.Contains(result, "server_version: 2.0.0") {
+		t.Errorf("expected server_version in YAML output, got: %s", result)
+	}
+
+	if !strings.Contains(result, "api_title: Test CLI") {
+		t.Errorf("expected api_title in YAML output, got: %s", result)
+	}
+
+	if !strings.Contains(result, "built:") {
+		t.Errorf("expected built in YAML output, got: %s", result)
+	}
+}
+
 func TestGetVersionShort(t *testing.T) {
 	tests := []struct {
 		name           string

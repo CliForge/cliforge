@@ -62,9 +62,15 @@ nav:
       - Workflows: user-guide-workflows.md
       - Examples & Recipes: examples-and-recipes.md
   - Tutorials:
+      - Overview: tutorials/README.md
       - Building a REST API CLI: tutorials/tutorial-rest-api.md
       - Cloud Infrastructure Management: tutorials/tutorial-cloud-management.md
       - CI/CD Integration: tutorials/tutorial-ci-cd-integration.md
+      - Quick Reference: tutorials/quick-reference.md
+  - Migration:
+      - Migration Guides: migration-guides.md
+  - Operations:
+      - Operations Guide: operations-guide.md
   - Reference:
       - OpenAPI Extensions: openapi-extensions-reference.md
       - Configuration DSL: configuration-dsl.md

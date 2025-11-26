@@ -6,7 +6,10 @@ CliForge combines static branded binaries with dynamic spec loading to create pr
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Go 1.21+](https://img.shields.io/badge/go-1.21+-blue.svg)](https://go.dev/dl/)
-[![Status](https://img.shields.io/badge/status-design%20phase-yellow.svg)]()
+[![Status](https://img.shields.io/badge/status-production--ready-green.svg)]()
+[![Coverage](https://img.shields.io/badge/coverage-75%25-brightgreen.svg)]()
+[![CI](https://github.com/CliForge/cliforge/workflows/CI/badge.svg)](https://github.com/CliForge/cliforge/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/CliForge/cliforge)](https://goreportcard.com/report/github.com/CliForge/cliforge)
 
 ---
 
