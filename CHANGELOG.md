@@ -11,6 +11,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.10.0] - 2025-11-27
+
+### Added
+
+**Complete Test Coverage - All Packages at 70%+:**
+- Comprehensive test improvements bringing all 17 packages to 70%+ coverage
+- Performance benchmark suite with automated regression detection
+- Integration test framework with E2E scenarios
+
+**CI/CD Infrastructure:**
+- Multi-platform testing (Ubuntu, macOS, Windows × Go 1.21-1.23)
+- Automated releases with checksums
+- PR validation with commit checking and coverage reporting
+- Performance benchmarking workflow
+
+### Changed
+
+**BREAKING: Renamed stuttering types for cleaner API:**
+- `cli.CLIConfig` → `cli.Config`
+- `cli.CLIAuth` → `cli.Auth`
+- `cache.CacheStats` → `cache.Stats`
+- `progress.ProgressType` → `progress.Type`
+- `progress.ProgressData` → `progress.Data`
+- `update.UpdateStatus` → `update.Status`
+- `workflow.WorkflowSettings` → `workflow.Settings`
+
+**Replaced pterm spinner with briandowns/spinner:**
+- Fix race conditions in progress indicators
+- Industry standard (used by ROSA CLI)
+- Proper thread-safety with RWMutex
+
+### Fixed
+
+- Race conditions using atomic.Int32 for concurrent operations
+- Real network calls in tests (replaced with httptest mocks)
+- 559 errcheck linter errors across all packages
+- Documentation links to work with published docs site
+- Missing exported comments and documentation
+- go.mod version compatibility (1.24.0)
+
+### Project Statistics
+
+**Test Coverage:**
+- Average: ~75% across all packages
+- 8 packages: 70-75% (Good)
+- 9 packages: 75%+ (Excellent)
+- All 17 packages above 70% threshold
+
+---
+
 ## [0.9.3] - 2025-11-25
 
 ### Added

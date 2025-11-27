@@ -333,7 +333,7 @@ func TestValidator_ValidateBehaviors(t *testing.T) {
 }
 
 func TestValidator_Validate(t *testing.T) {
-	validConfig := &cli.CLIConfig{
+	validConfig := &cli.Config{
 		Metadata: cli.Metadata{
 			Name:        "test-cli",
 			Version:     "1.0.0",
@@ -345,7 +345,7 @@ func TestValidator_Validate(t *testing.T) {
 		},
 	}
 
-	invalidConfig := &cli.CLIConfig{
+	invalidConfig := &cli.Config{
 		Metadata: cli.Metadata{
 			Name: "", // Missing required field
 		},

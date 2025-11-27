@@ -74,14 +74,14 @@ func TestManager_SetDefault(t *testing.T) {
 		Location: APIKeyLocationHeader,
 	}
 	apiAuth, _ := NewAPIKeyAuth(apiConfig)
-	manager.RegisterAuthenticator("api", apiAuth)
+	_ = manager.RegisterAuthenticator("api", apiAuth)
 
 	basicConfig := &BasicConfig{
 		Username: "user",
 		Password: "pass",
 	}
 	basicAuth, _ := NewBasicAuth(basicConfig)
-	manager.RegisterAuthenticator("basic", basicAuth)
+	_ = manager.RegisterAuthenticator("basic", basicAuth)
 
 	// Set default to basic
 	err := manager.SetDefault("basic")
@@ -178,7 +178,7 @@ func TestManager_Authenticate(t *testing.T) {
 		Location: APIKeyLocationHeader,
 	}
 	auth, _ := NewAPIKeyAuth(config)
-	manager.RegisterAuthenticator("api", auth)
+	_ = manager.RegisterAuthenticator("api", auth)
 
 	ctx := context.Background()
 	token, err := manager.Authenticate(ctx, "api")
@@ -200,7 +200,7 @@ func TestManager_GetToken(t *testing.T) {
 		Location: APIKeyLocationHeader,
 	}
 	auth, _ := NewAPIKeyAuth(config)
-	manager.RegisterAuthenticator("api", auth)
+	_ = manager.RegisterAuthenticator("api", auth)
 
 	// Register memory storage
 	stor := storage.NewMemoryStorage()
@@ -238,7 +238,7 @@ func TestManager_GetToken_WithRefresh(t *testing.T) {
 			}, nil
 		},
 	}
-	manager.RegisterAuthenticator("mock", mockAuth)
+	_ = manager.RegisterAuthenticator("mock", mockAuth)
 
 	stor := storage.NewMemoryStorage()
 	manager.RegisterStorage("mock", stor)
@@ -251,7 +251,7 @@ func TestManager_GetToken_WithRefresh(t *testing.T) {
 		RefreshToken: "refresh-token",
 		ExpiresAt:    time.Now().Add(-time.Hour),
 	}
-	stor.SaveToken(ctx, expiredToken)
+	_ = stor.SaveToken(ctx, expiredToken)
 
 	// GetToken should refresh the expired token
 	token, err := manager.GetToken(ctx, "mock")
@@ -279,7 +279,7 @@ func TestManager_GetToken_RefreshFails(t *testing.T) {
 			}, nil
 		},
 	}
-	manager.RegisterAuthenticator("mock", mockAuth)
+	_ = manager.RegisterAuthenticator("mock", mockAuth)
 
 	stor := storage.NewMemoryStorage()
 	manager.RegisterStorage("mock", stor)
@@ -292,7 +292,7 @@ func TestManager_GetToken_RefreshFails(t *testing.T) {
 		RefreshToken: "refresh-token",
 		ExpiresAt:    time.Now().Add(-time.Hour),
 	}
-	stor.SaveToken(ctx, expiredToken)
+	_ = stor.SaveToken(ctx, expiredToken)
 
 	// GetToken should fall back to authentication when refresh fails
 	token, err := manager.GetToken(ctx, "mock")
@@ -314,7 +314,7 @@ func TestManager_Logout(t *testing.T) {
 		Location: APIKeyLocationHeader,
 	}
 	auth, _ := NewAPIKeyAuth(config)
-	manager.RegisterAuthenticator("api", auth)
+	_ = manager.RegisterAuthenticator("api", auth)
 
 	stor := storage.NewMemoryStorage()
 	manager.RegisterStorage("api", stor)
@@ -323,7 +323,7 @@ func TestManager_Logout(t *testing.T) {
 
 	// Authenticate
 	token, _ := manager.Authenticate(ctx, "api")
-	stor.SaveToken(ctx, token)
+	_ = stor.SaveToken(ctx, token)
 
 	// Logout
 	err := manager.Logout(ctx, "api")
@@ -347,7 +347,7 @@ func TestManager_GetAuthenticatedClient(t *testing.T) {
 		Location: APIKeyLocationHeader,
 	}
 	auth, _ := NewAPIKeyAuth(config)
-	manager.RegisterAuthenticator("api", auth)
+	_ = manager.RegisterAuthenticator("api", auth)
 
 	client, err := manager.GetAuthenticatedClient("api", "")
 	if err != nil {
@@ -399,14 +399,14 @@ func TestManager_ListAuthenticators(t *testing.T) {
 		Location: APIKeyLocationHeader,
 	}
 	apiAuth, _ := NewAPIKeyAuth(apiConfig)
-	manager.RegisterAuthenticator("api", apiAuth)
+	_ = manager.RegisterAuthenticator("api", apiAuth)
 
 	basicConfig := &BasicConfig{
 		Username: "user",
 		Password: "pass",
 	}
 	basicAuth, _ := NewBasicAuth(basicConfig)
-	manager.RegisterAuthenticator("basic", basicAuth)
+	_ = manager.RegisterAuthenticator("basic", basicAuth)
 
 	names := manager.ListAuthenticators()
 	if len(names) != 2 {
@@ -457,14 +457,14 @@ func TestManager_LogoutAll(t *testing.T) {
 		Location: APIKeyLocationHeader,
 	}
 	apiAuth, _ := NewAPIKeyAuth(apiConfig)
-	manager.RegisterAuthenticator("api", apiAuth)
+	_ = manager.RegisterAuthenticator("api", apiAuth)
 
 	basicConfig := &BasicConfig{
 		Username: "user",
 		Password: "pass",
 	}
 	basicAuth, _ := NewBasicAuth(basicConfig)
-	manager.RegisterAuthenticator("basic", basicAuth)
+	_ = manager.RegisterAuthenticator("basic", basicAuth)
 
 	stor1 := storage.NewMemoryStorage()
 	manager.RegisterStorage("api", stor1)
@@ -476,10 +476,10 @@ func TestManager_LogoutAll(t *testing.T) {
 
 	// Authenticate both
 	token1, _ := manager.Authenticate(ctx, "api")
-	stor1.SaveToken(ctx, token1)
+	_ = stor1.SaveToken(ctx, token1)
 
 	token2, _ := manager.Authenticate(ctx, "basic")
-	stor2.SaveToken(ctx, token2)
+	_ = stor2.SaveToken(ctx, token2)
 
 	// Logout all
 	err := manager.LogoutAll(ctx)
@@ -504,7 +504,7 @@ func TestManager_RefreshToken(t *testing.T) {
 
 	// Use a mock authenticator that supports refresh
 	mockAuth := &mockAuthenticator{}
-	manager.RegisterAuthenticator("mock", mockAuth)
+	_ = manager.RegisterAuthenticator("mock", mockAuth)
 
 	stor := storage.NewMemoryStorage()
 	manager.RegisterStorage("mock", stor)
@@ -620,7 +620,7 @@ func TestManager_LogoutWithoutStorage(t *testing.T) {
 		Location: APIKeyLocationHeader,
 	}
 	auth, _ := NewAPIKeyAuth(config)
-	manager.RegisterAuthenticator("api", auth)
+	_ = manager.RegisterAuthenticator("api", auth)
 
 	ctx := context.Background()
 
@@ -640,7 +640,7 @@ func TestManager_LogoutDefaultAuth(t *testing.T) {
 		Location: APIKeyLocationHeader,
 	}
 	auth, _ := NewAPIKeyAuth(config)
-	manager.RegisterAuthenticator("api", auth)
+	_ = manager.RegisterAuthenticator("api", auth)
 
 	stor := storage.NewMemoryStorage()
 	manager.RegisterStorage("api", stor)
@@ -649,7 +649,7 @@ func TestManager_LogoutDefaultAuth(t *testing.T) {
 
 	// Authenticate
 	token, _ := manager.Authenticate(ctx, "api")
-	stor.SaveToken(ctx, token)
+	_ = stor.SaveToken(ctx, token)
 
 	// Logout with empty name should use default
 	err := manager.Logout(ctx, "")
@@ -673,7 +673,7 @@ func TestManager_GetTokenDefault(t *testing.T) {
 		Location: APIKeyLocationHeader,
 	}
 	auth, _ := NewAPIKeyAuth(config)
-	manager.RegisterAuthenticator("api", auth)
+	_ = manager.RegisterAuthenticator("api", auth)
 
 	ctx := context.Background()
 
@@ -718,7 +718,7 @@ func TestManager_GetAuthenticatedClientDefaults(t *testing.T) {
 		Location: APIKeyLocationHeader,
 	}
 	auth, _ := NewAPIKeyAuth(config)
-	manager.RegisterAuthenticator("api", auth)
+	_ = manager.RegisterAuthenticator("api", auth)
 
 	// Test with empty auth name (should use default)
 	client, err := manager.GetAuthenticatedClient("", "")

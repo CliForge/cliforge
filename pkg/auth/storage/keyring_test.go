@@ -188,10 +188,10 @@ func TestKeyringStorage_DefaultUser(t *testing.T) {
 
 func TestKeyringStorage_ServiceAndUserFields(t *testing.T) {
 	tests := []struct {
-		name           string
-		service        string
-		user           string
-		expectedUser   string
+		name         string
+		service      string
+		user         string
+		expectedUser string
 	}{
 		{
 			name:         "custom service and user",

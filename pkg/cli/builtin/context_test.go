@@ -40,10 +40,12 @@ func TestNewContextCommand(t *testing.T) {
 
 func TestContextCurrent_NoContext(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_DATA_HOME", filepath.Join(tmpDir, "data"))
-	os.Setenv("XDG_STATE_HOME", filepath.Join(tmpDir, "state"))
-	defer os.Unsetenv("XDG_DATA_HOME")
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_DATA_HOME", filepath.Join(tmpDir, "data"))
+	_ = os.Setenv("XDG_STATE_HOME", filepath.Join(tmpDir, "state"))
+	defer func() {
+		_ = os.Unsetenv("XDG_DATA_HOME")
+		_ = os.Unsetenv("XDG_STATE_HOME")
+	}()
 
 	stateMgr, _ := state.NewManager("testcli-nocontext")
 	manager := state.NewContextManager(stateMgr)
@@ -70,8 +72,8 @@ func TestContextCurrent_NoContext(t *testing.T) {
 func TestContextCurrent_WithContext(t *testing.T) {
 	stateMgr, _ := state.NewManager("testcli")
 	manager := state.NewContextManager(stateMgr)
-	manager.Create("test-ctx", "Test context", nil)
-	manager.SwitchTo("test-ctx")
+	_ = manager.Create("test-ctx", "Test context", nil)
+	_ = manager.SwitchTo("test-ctx")
 
 	output := &bytes.Buffer{}
 	opts := &ContextOptions{
@@ -154,7 +156,7 @@ func TestContextCreate_WithDescription(t *testing.T) {
 func TestContextUse(t *testing.T) {
 	stateMgr, _ := state.NewManager("testcli")
 	manager := state.NewContextManager(stateMgr)
-	manager.Create("test-ctx", "", nil)
+	_ = manager.Create("test-ctx", "", nil)
 
 	output := &bytes.Buffer{}
 	opts := &ContextOptions{
@@ -199,9 +201,9 @@ func TestContextUse_NonExistent(t *testing.T) {
 func TestContextDelete(t *testing.T) {
 	stateMgr, _ := state.NewManager("testcli")
 	manager := state.NewContextManager(stateMgr)
-	manager.Create("ctx1", "", nil)
-	manager.Create("ctx2", "", nil)
-	manager.SwitchTo("ctx1")
+	_ = manager.Create("ctx1", "", nil)
+	_ = manager.Create("ctx2", "", nil)
+	_ = manager.SwitchTo("ctx1")
 
 	output := &bytes.Buffer{}
 	opts := &ContextOptions{
@@ -230,8 +232,8 @@ func TestContextDelete(t *testing.T) {
 func TestContextDelete_Current(t *testing.T) {
 	stateMgr, _ := state.NewManager("testcli")
 	manager := state.NewContextManager(stateMgr)
-	manager.Create("current-ctx", "", nil)
-	manager.SwitchTo("current-ctx")
+	_ = manager.Create("current-ctx", "", nil)
+	_ = manager.SwitchTo("current-ctx")
 
 	output := &bytes.Buffer{}
 	opts := &ContextOptions{
@@ -253,7 +255,7 @@ func TestContextDelete_Current(t *testing.T) {
 func TestContextSet(t *testing.T) {
 	stateMgr, _ := state.NewManager("testcli")
 	manager := state.NewContextManager(stateMgr)
-	manager.Create("test-ctx", "", nil)
+	_ = manager.Create("test-ctx", "", nil)
 
 	output := &bytes.Buffer{}
 	opts := &ContextOptions{
@@ -284,7 +286,7 @@ func TestContextGet(t *testing.T) {
 	stateMgr, _ := state.NewManager("testcli")
 	manager := state.NewContextManager(stateMgr)
 	fields := map[string]string{"api_url": "https://api.example.com"}
-	manager.Create("test-ctx", "", fields)
+	_ = manager.Create("test-ctx", "", fields)
 
 	output := &bytes.Buffer{}
 	opts := &ContextOptions{
@@ -307,7 +309,7 @@ func TestContextGet(t *testing.T) {
 func TestContextGet_NonExistentKey(t *testing.T) {
 	stateMgr, _ := state.NewManager("testcli")
 	manager := state.NewContextManager(stateMgr)
-	manager.Create("test-ctx", "", nil)
+	_ = manager.Create("test-ctx", "", nil)
 
 	output := &bytes.Buffer{}
 	opts := &ContextOptions{
@@ -325,7 +327,7 @@ func TestContextGet_NonExistentKey(t *testing.T) {
 func TestContextRename(t *testing.T) {
 	stateMgr, _ := state.NewManager("testcli")
 	manager := state.NewContextManager(stateMgr)
-	manager.Create("old-name", "Test context", nil)
+	_ = manager.Create("old-name", "Test context", nil)
 
 	output := &bytes.Buffer{}
 	opts := &ContextOptions{
@@ -356,10 +358,12 @@ func TestContextRename(t *testing.T) {
 
 func TestContextList_Empty(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_DATA_HOME", filepath.Join(tmpDir, "data"))
-	os.Setenv("XDG_STATE_HOME", filepath.Join(tmpDir, "state"))
-	defer os.Unsetenv("XDG_DATA_HOME")
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_DATA_HOME", filepath.Join(tmpDir, "data"))
+	_ = os.Setenv("XDG_STATE_HOME", filepath.Join(tmpDir, "state"))
+	defer func() {
+		_ = os.Unsetenv("XDG_DATA_HOME")
+		_ = os.Unsetenv("XDG_STATE_HOME")
+	}()
 
 	stateMgr, _ := state.NewManager("testcli-empty")
 	manager := state.NewContextManager(stateMgr)
@@ -385,9 +389,9 @@ func TestContextList_Empty(t *testing.T) {
 func TestContextList_Table(t *testing.T) {
 	stateMgr, _ := state.NewManager("testcli")
 	manager := state.NewContextManager(stateMgr)
-	manager.Create("dev", "Development environment", map[string]string{"env": "dev"})
-	manager.Create("prod", "Production environment", map[string]string{"env": "prod"})
-	manager.SwitchTo("dev")
+	_ = manager.Create("dev", "Development environment", map[string]string{"env": "dev"})
+	_ = manager.Create("prod", "Production environment", map[string]string{"env": "prod"})
+	_ = manager.SwitchTo("dev")
 
 	output := &bytes.Buffer{}
 	opts := &ContextOptions{
@@ -415,8 +419,8 @@ func TestContextList_Table(t *testing.T) {
 func TestContextList_JSON(t *testing.T) {
 	stateMgr, _ := state.NewManager("testcli")
 	manager := state.NewContextManager(stateMgr)
-	manager.Create("test-ctx", "Test", nil)
-	manager.SwitchTo("test-ctx")
+	_ = manager.Create("test-ctx", "Test", nil)
+	_ = manager.SwitchTo("test-ctx")
 
 	output := &bytes.Buffer{}
 	opts := &ContextOptions{
@@ -444,8 +448,8 @@ func TestContextList_JSON(t *testing.T) {
 func TestContextList_YAML(t *testing.T) {
 	stateMgr, _ := state.NewManager("testcli")
 	manager := state.NewContextManager(stateMgr)
-	manager.Create("test-ctx", "Test", nil)
-	manager.SwitchTo("test-ctx")
+	_ = manager.Create("test-ctx", "Test", nil)
+	_ = manager.SwitchTo("test-ctx")
 
 	output := &bytes.Buffer{}
 	opts := &ContextOptions{
@@ -474,7 +478,7 @@ func TestContextShow_YAML(t *testing.T) {
 		"api_url": "https://api.example.com",
 		"token":   "secret123",
 	}
-	manager.Create("test-ctx", "Test context", fields)
+	_ = manager.Create("test-ctx", "Test context", fields)
 
 	output := &bytes.Buffer{}
 	opts := &ContextOptions{
@@ -505,7 +509,7 @@ func TestContextShow_YAML(t *testing.T) {
 func TestContextShow_JSON(t *testing.T) {
 	stateMgr, _ := state.NewManager("testcli")
 	manager := state.NewContextManager(stateMgr)
-	manager.Create("test-ctx", "Test context", nil)
+	_ = manager.Create("test-ctx", "Test context", nil)
 
 	output := &bytes.Buffer{}
 	opts := &ContextOptions{

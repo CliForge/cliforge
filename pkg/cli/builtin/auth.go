@@ -115,7 +115,7 @@ func runAuthLogin(opts *AuthOptions, authType string) error {
 	}
 
 	// Perform authentication
-	fmt.Fprintln(opts.Output, "Starting authentication flow...")
+	_, _ = fmt.Fprintln(opts.Output, "Starting authentication flow...")
 
 	token, err := authenticator.Authenticate(ctx)
 	if err != nil {
@@ -132,8 +132,8 @@ func runAuthLogin(opts *AuthOptions, authType string) error {
 		return fmt.Errorf("failed to store credentials: %w", err)
 	}
 
-	fmt.Fprintln(opts.Output, "✓ Authentication successful")
-	fmt.Fprintln(opts.Output, "Credentials stored securely")
+	_, _ = fmt.Fprintln(opts.Output, "✓ Authentication successful")
+	_, _ = fmt.Fprintln(opts.Output, "Credentials stored securely")
 
 	return nil
 }
@@ -157,7 +157,7 @@ func runAuthLogout(opts *AuthOptions) error {
 		if err == nil {
 			// Remove credentials
 			if err := storage.DeleteToken(ctx); err != nil {
-				fmt.Fprintf(opts.Output, "Warning: failed to remove %s credentials: %v\n", name, err)
+				_, _ = fmt.Fprintf(opts.Output, "Warning: failed to remove %s credentials: %v\n", name, err)
 			} else {
 				removed = true
 			}
@@ -165,10 +165,10 @@ func runAuthLogout(opts *AuthOptions) error {
 	}
 
 	if removed {
-		fmt.Fprintln(opts.Output, "✓ Logged out")
-		fmt.Fprintln(opts.Output, "Credentials removed")
+		_, _ = fmt.Fprintln(opts.Output, "✓ Logged out")
+		_, _ = fmt.Fprintln(opts.Output, "Credentials removed")
 	} else {
-		fmt.Fprintln(opts.Output, "No credentials found")
+		_, _ = fmt.Fprintln(opts.Output, "No credentials found")
 	}
 
 	return nil
@@ -178,8 +178,8 @@ func runAuthLogout(opts *AuthOptions) error {
 func runAuthStatus(opts *AuthOptions) error {
 	ctx := context.Background()
 
-	fmt.Fprintln(opts.Output, "Authentication Status:")
-	fmt.Fprintln(opts.Output)
+	_, _ = fmt.Fprintln(opts.Output, "Authentication Status:")
+	_, _ = fmt.Fprintln(opts.Output)
 
 	// Check all registered storage backends
 	storages := opts.AuthManager.ListStorages()
@@ -195,28 +195,28 @@ func runAuthStatus(opts *AuthOptions) error {
 		token, err := storage.LoadToken(ctx)
 		if err == nil && token != nil {
 			authenticated = true
-			fmt.Fprintf(opts.Output, "  %s: ✓ Authenticated\n", name)
+			_, _ = fmt.Fprintf(opts.Output, "  %s: ✓ Authenticated\n", name)
 
 			// Show token details if available
 			if !token.ExpiresAt.IsZero() {
 				remaining := time.Until(token.ExpiresAt)
 				if remaining > 0 {
-					fmt.Fprintf(opts.Output, "    Expires: %s (in %s)\n",
+					_, _ = fmt.Fprintf(opts.Output, "    Expires: %s (in %s)\n",
 						token.ExpiresAt.Format(time.RFC3339),
 						formatDuration(remaining))
 				} else {
-					fmt.Fprintf(opts.Output, "    Status: ⚠️  Expired\n")
+					_, _ = fmt.Fprintf(opts.Output, "    Status: ⚠️  Expired\n")
 				}
 			}
 		} else {
-			fmt.Fprintf(opts.Output, "  %s: ✗ Not authenticated\n", name)
+			_, _ = fmt.Fprintf(opts.Output, "  %s: ✗ Not authenticated\n", name)
 		}
 	}
 
-	fmt.Fprintln(opts.Output)
+	_, _ = fmt.Fprintln(opts.Output)
 
 	if !authenticated {
-		fmt.Fprintln(opts.Output, "Run 'auth login' to authenticate")
+		_, _ = fmt.Fprintln(opts.Output, "Run 'auth login' to authenticate")
 	}
 
 	return nil
@@ -226,7 +226,7 @@ func runAuthStatus(opts *AuthOptions) error {
 func runAuthRefresh(opts *AuthOptions) error {
 	ctx := context.Background()
 
-	fmt.Fprintln(opts.Output, "Refreshing authentication tokens...")
+	_, _ = fmt.Fprintln(opts.Output, "Refreshing authentication tokens...")
 
 	// Get all registered authenticators
 	authenticators := opts.AuthManager.ListAuthenticators()
@@ -253,17 +253,17 @@ func runAuthRefresh(opts *AuthOptions) error {
 		// Try to refresh
 		newToken, err := authenticator.RefreshToken(ctx, token)
 		if err != nil {
-			fmt.Fprintf(opts.Output, "Warning: failed to refresh %s: %v\n", name, err)
+			_, _ = fmt.Fprintf(opts.Output, "Warning: failed to refresh %s: %v\n", name, err)
 			continue
 		}
 
 		// Store new token
 		if err := storage.SaveToken(ctx, newToken); err != nil {
-			fmt.Fprintf(opts.Output, "Warning: failed to store refreshed %s token: %v\n", name, err)
+			_, _ = fmt.Fprintf(opts.Output, "Warning: failed to store refreshed %s token: %v\n", name, err)
 			continue
 		}
 
-		fmt.Fprintf(opts.Output, "✓ Refreshed %s token\n", name)
+		_, _ = fmt.Fprintf(opts.Output, "✓ Refreshed %s token\n", name)
 		refreshed = true
 	}
 

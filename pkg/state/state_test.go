@@ -10,8 +10,8 @@ import (
 func TestNewManager(t *testing.T) {
 	// Create temp directory for testing
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, err := NewManager("testcli")
 	if err != nil {
@@ -33,8 +33,8 @@ func TestNewManager(t *testing.T) {
 
 func TestManagerLoadSave(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, err := NewManager("testcli")
 	if err != nil {
@@ -42,7 +42,7 @@ func TestManagerLoadSave(t *testing.T) {
 	}
 
 	// Reset to ensure clean state
-	mgr.Reset()
+	_ = mgr.Reset()
 
 	// Create a context
 	ctx := NewContext("production")
@@ -78,8 +78,8 @@ func TestManagerLoadSave(t *testing.T) {
 
 func TestContextManagement(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, err := NewManager("testcli")
 	if err != nil {
@@ -87,7 +87,7 @@ func TestContextManagement(t *testing.T) {
 	}
 
 	// Reset to ensure clean state
-	mgr.Reset()
+	_ = mgr.Reset()
 
 	// Create contexts
 	prodCtx := NewContext("production")
@@ -137,8 +137,8 @@ func TestContextManagement(t *testing.T) {
 
 func TestRecentValues(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 
@@ -167,8 +167,8 @@ func TestRecentValues(t *testing.T) {
 
 func TestPreferences(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 
@@ -202,8 +202,8 @@ func TestPreferences(t *testing.T) {
 
 func TestMarkResourceUsed(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 
@@ -231,8 +231,8 @@ func TestMarkResourceUsed(t *testing.T) {
 
 func TestSession(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 
@@ -251,14 +251,14 @@ func TestSession(t *testing.T) {
 
 func TestReset(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 
 	// Create some state
 	ctx := NewContext("production")
-	mgr.CreateContext("production", ctx)
+	_ = mgr.CreateContext("production", ctx)
 	mgr.AddRecentValue("clusters", "cluster-1")
 
 	// Reset
@@ -280,16 +280,16 @@ func TestReset(t *testing.T) {
 
 func TestStatePersistence(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	// Create manager and add state
 	mgr1, _ := NewManager("testcli")
-	mgr1.Reset() // Ensure clean state
+	_ = mgr1.Reset() // Ensure clean state
 
 	ctx := NewContext("production")
 	ctx.Set("cluster", "prod-cluster")
-	mgr1.CreateContext("production", ctx)
+	_ = mgr1.CreateContext("production", ctx)
 	mgr1.AddRecentValue("clusters", "cluster-1")
 	mgr1.MarkResourceUsed("clusters", "cluster-1")
 
@@ -336,12 +336,12 @@ func TestGetStatePath(t *testing.T) {
 
 	// Set env var BEFORE creating manager (xdg lib caches on first access)
 	oldXDG := os.Getenv("XDG_STATE_HOME")
-	os.Setenv("XDG_STATE_HOME", tmpDir)
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
 	defer func() {
 		if oldXDG != "" {
-			os.Setenv("XDG_STATE_HOME", oldXDG)
+			_ = os.Setenv("XDG_STATE_HOME", oldXDG)
 		} else {
-			os.Unsetenv("XDG_STATE_HOME")
+			_ = os.Unsetenv("XDG_STATE_HOME")
 		}
 	}()
 
@@ -360,8 +360,8 @@ func TestGetStatePath(t *testing.T) {
 
 func TestConcurrentAccess(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 

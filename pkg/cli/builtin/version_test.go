@@ -10,7 +10,7 @@ import (
 )
 
 func TestNewVersionCommand(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name:        "testcli",
 			Version:     "1.0.0",
@@ -42,7 +42,7 @@ func TestNewVersionCommand(t *testing.T) {
 }
 
 func TestRunVersion_Text(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name:        "testcli",
 			Version:     "1.0.0",
@@ -86,7 +86,7 @@ func TestRunVersion_Text(t *testing.T) {
 }
 
 func TestRunVersion_JSON(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name:    "testcli",
 			Version: "1.0.0",
@@ -123,7 +123,7 @@ func TestRunVersion_JSON(t *testing.T) {
 }
 
 func TestRunVersion_YAML(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name:        "testcli",
 			Version:     "1.0.0",
@@ -193,7 +193,7 @@ func TestGetVersionShort(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			config := &cli.CLIConfig{
+			config := &cli.Config{
 				Metadata: cli.Metadata{
 					Version: tt.clientVersion,
 				},

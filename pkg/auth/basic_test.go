@@ -52,11 +52,11 @@ func TestNewBasicAuth(t *testing.T) {
 	}
 
 	// Set up environment for env var test
-	os.Setenv("USER", "envuser")
-	os.Setenv("PASS", "envpass")
+	_ = os.Setenv("USER", "envuser")
+	_ = os.Setenv("PASS", "envpass")
 	defer func() {
-		os.Unsetenv("USER")
-		os.Unsetenv("PASS")
+		_ = os.Unsetenv("USER")
+		_ = os.Unsetenv("PASS")
 	}()
 
 	for _, tt := range tests {
@@ -158,11 +158,11 @@ func TestBasicAuth_GetHeaders(t *testing.T) {
 
 func TestBasicAuth_EnvVars(t *testing.T) {
 	// Set environment variables
-	os.Setenv("TEST_USERNAME", "envuser")
-	os.Setenv("TEST_PASSWORD", "envpass")
+	_ = os.Setenv("TEST_USERNAME", "envuser")
+	_ = os.Setenv("TEST_PASSWORD", "envpass")
 	defer func() {
-		os.Unsetenv("TEST_USERNAME")
-		os.Unsetenv("TEST_PASSWORD")
+		_ = os.Unsetenv("TEST_USERNAME")
+		_ = os.Unsetenv("TEST_PASSWORD")
 	}()
 
 	config := &BasicConfig{
@@ -185,7 +185,10 @@ func TestBasicAuth_EnvVars(t *testing.T) {
 		t.Fatalf("Authenticate() failed: %v", err)
 	}
 
-	decoded, _ := base64.StdEncoding.DecodeString(token.AccessToken)
+	decoded, err := base64.StdEncoding.DecodeString(token.AccessToken)
+	if err != nil {
+		t.Fatalf("failed to decode token: %v", err)
+	}
 	if string(decoded) != "envuser:envpass" {
 		t.Errorf("credentials = %v, want %v", string(decoded), "envuser:envpass")
 	}
@@ -211,7 +214,10 @@ func TestBasicAuth_SetCredentials(t *testing.T) {
 		t.Fatalf("Authenticate() failed: %v", err)
 	}
 
-	decoded, _ := base64.StdEncoding.DecodeString(token.AccessToken)
+	decoded, err := base64.StdEncoding.DecodeString(token.AccessToken)
+	if err != nil {
+		t.Fatalf("failed to decode token: %v", err)
+	}
 	if string(decoded) != "newuser:newpass" {
 		t.Errorf("credentials = %v, want %v", string(decoded), "newuser:newpass")
 	}
@@ -288,8 +294,8 @@ func TestBasicAuth_GetHeaders_EmptyToken(t *testing.T) {
 }
 
 func TestBasicAuth_UsernameEnvVarReference(t *testing.T) {
-	os.Setenv("MY_USERNAME", "refuser")
-	defer os.Unsetenv("MY_USERNAME")
+	_ = os.Setenv("MY_USERNAME", "refuser")
+	defer func() { _ = os.Unsetenv("MY_USERNAME") }()
 
 	config := &BasicConfig{
 		Username: "$MY_USERNAME",
@@ -307,8 +313,8 @@ func TestBasicAuth_UsernameEnvVarReference(t *testing.T) {
 }
 
 func TestBasicAuth_PasswordEnvVarReference(t *testing.T) {
-	os.Setenv("MY_PASSWORD", "refpass")
-	defer os.Unsetenv("MY_PASSWORD")
+	_ = os.Setenv("MY_PASSWORD", "refpass")
+	defer func() { _ = os.Unsetenv("MY_PASSWORD") }()
 
 	config := &BasicConfig{
 		Username: "testuser",
@@ -326,7 +332,10 @@ func TestBasicAuth_PasswordEnvVarReference(t *testing.T) {
 		t.Fatalf("Authenticate() failed: %v", err)
 	}
 
-	decoded, _ := base64.StdEncoding.DecodeString(token.AccessToken)
+	decoded, err := base64.StdEncoding.DecodeString(token.AccessToken)
+	if err != nil {
+		t.Fatalf("failed to decode token: %v", err)
+	}
 	if string(decoded) != "testuser:refpass" {
 		t.Errorf("credentials = %v, want testuser:refpass", string(decoded))
 	}
@@ -357,8 +366,8 @@ func TestBasicAuth_PasswordEnvVarReferenceMissing(t *testing.T) {
 }
 
 func TestBasicAuth_EnvUsernamePreferredOverUsername(t *testing.T) {
-	os.Setenv("PREFERRED_USER", "env-user")
-	defer os.Unsetenv("PREFERRED_USER")
+	_ = os.Setenv("PREFERRED_USER", "env-user")
+	defer func() { _ = os.Unsetenv("PREFERRED_USER") }()
 
 	config := &BasicConfig{
 		Username:    "direct-user",
@@ -377,8 +386,8 @@ func TestBasicAuth_EnvUsernamePreferredOverUsername(t *testing.T) {
 }
 
 func TestBasicAuth_EnvPasswordPreferredOverPassword(t *testing.T) {
-	os.Setenv("PREFERRED_PASS", "env-pass")
-	defer os.Unsetenv("PREFERRED_PASS")
+	_ = os.Setenv("PREFERRED_PASS", "env-pass")
+	defer func() { _ = os.Unsetenv("PREFERRED_PASS") }()
 
 	config := &BasicConfig{
 		Username:    "testuser",
@@ -397,7 +406,10 @@ func TestBasicAuth_EnvPasswordPreferredOverPassword(t *testing.T) {
 		t.Fatalf("Authenticate() failed: %v", err)
 	}
 
-	decoded, _ := base64.StdEncoding.DecodeString(token.AccessToken)
+	decoded, err := base64.StdEncoding.DecodeString(token.AccessToken)
+	if err != nil {
+		t.Fatalf("failed to decode token: %v", err)
+	}
 	if string(decoded) != "testuser:env-pass" {
 		t.Errorf("credentials = %v, want testuser:env-pass (EnvPassword should be preferred)", string(decoded))
 	}

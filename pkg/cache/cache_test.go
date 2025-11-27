@@ -10,11 +10,11 @@ import (
 
 func TestNewSpecCache(t *testing.T) {
 	tmpDir := filepath.Join(os.TempDir(), "test-cache-new")
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Set custom cache dir for testing
-	os.Setenv("XDG_CACHE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_CACHE_HOME")
+	_ = os.Setenv("XDG_CACHE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_CACHE_HOME") }()
 
 	cache, err := NewSpecCache("test-app")
 	if err != nil {
@@ -41,7 +41,7 @@ func TestNewSpecCache(t *testing.T) {
 
 func TestSpecCache_SetGetCycle(t *testing.T) {
 	tmpDir := filepath.Join(os.TempDir(), "test-cache-setget")
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	if err := os.MkdirAll(tmpDir, 0755); err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
@@ -170,7 +170,7 @@ func TestSpecCache_IsValidWithTTL(t *testing.T) {
 
 func TestSpecCache_PruneDefaultTTL(t *testing.T) {
 	tmpDir := filepath.Join(os.TempDir(), "test-cache-prune-default")
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	if err := os.MkdirAll(tmpDir, 0755); err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
@@ -190,7 +190,7 @@ func TestSpecCache_PruneDefaultTTL(t *testing.T) {
 		FetchedAt: time.Now().Add(-5 * time.Minute),
 		URL:       "https://example.com/old.yaml",
 	}
-	cache.Set(ctx, spec.URL, spec)
+	_ = cache.Set(ctx, spec.URL, spec)
 
 	// Prune with zero TTL (should use default)
 	pruned, err := cache.Prune(ctx, 0)
@@ -249,7 +249,7 @@ func TestSpecCache_CacheKeyGeneration(t *testing.T) {
 
 func TestSpecCache_ClearWithNonJSONFiles(t *testing.T) {
 	tmpDir := filepath.Join(os.TempDir(), "test-cache-clear-mixed")
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	if err := os.MkdirAll(tmpDir, 0755); err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
@@ -269,15 +269,15 @@ func TestSpecCache_ClearWithNonJSONFiles(t *testing.T) {
 		FetchedAt: time.Now(),
 		URL:       "https://example.com/api.yaml",
 	}
-	cache.Set(ctx, spec.URL, spec)
+	_ = cache.Set(ctx, spec.URL, spec)
 
 	// Add non-JSON file
 	nonJSONFile := filepath.Join(tmpDir, "readme.txt")
-	os.WriteFile(nonJSONFile, []byte("test"), 0644)
+	_ = os.WriteFile(nonJSONFile, []byte("test"), 0644)
 
 	// Add subdirectory
 	subDir := filepath.Join(tmpDir, "subdir")
-	os.MkdirAll(subDir, 0755)
+	_ = os.MkdirAll(subDir, 0755)
 
 	// Clear should only remove JSON files
 	err := cache.Clear(ctx)
@@ -338,15 +338,15 @@ func TestGetCacheDir_CustomXDG(t *testing.T) {
 	originalXDG := os.Getenv("XDG_CACHE_HOME")
 	defer func() {
 		if originalXDG != "" {
-			os.Setenv("XDG_CACHE_HOME", originalXDG)
+			_ = os.Setenv("XDG_CACHE_HOME", originalXDG)
 		} else {
-			os.Unsetenv("XDG_CACHE_HOME")
+			_ = os.Unsetenv("XDG_CACHE_HOME")
 		}
 	}()
 
 	// Set custom XDG_CACHE_HOME
 	customCache := "/custom/cache"
-	os.Setenv("XDG_CACHE_HOME", customCache)
+	_ = os.Setenv("XDG_CACHE_HOME", customCache)
 
 	dir := GetCacheDir("myapp")
 	expected := filepath.Join(customCache, "myapp")
@@ -360,14 +360,14 @@ func TestGetConfigDir_CustomXDG(t *testing.T) {
 	originalXDG := os.Getenv("XDG_CONFIG_HOME")
 	defer func() {
 		if originalXDG != "" {
-			os.Setenv("XDG_CONFIG_HOME", originalXDG)
+			_ = os.Setenv("XDG_CONFIG_HOME", originalXDG)
 		} else {
-			os.Unsetenv("XDG_CONFIG_HOME")
+			_ = os.Unsetenv("XDG_CONFIG_HOME")
 		}
 	}()
 
 	customConfig := "/custom/config"
-	os.Setenv("XDG_CONFIG_HOME", customConfig)
+	_ = os.Setenv("XDG_CONFIG_HOME", customConfig)
 
 	dir := GetConfigDir("myapp")
 	expected := filepath.Join(customConfig, "myapp")
@@ -381,14 +381,14 @@ func TestGetDataDir_CustomXDG(t *testing.T) {
 	originalXDG := os.Getenv("XDG_DATA_HOME")
 	defer func() {
 		if originalXDG != "" {
-			os.Setenv("XDG_DATA_HOME", originalXDG)
+			_ = os.Setenv("XDG_DATA_HOME", originalXDG)
 		} else {
-			os.Unsetenv("XDG_DATA_HOME")
+			_ = os.Unsetenv("XDG_DATA_HOME")
 		}
 	}()
 
 	customData := "/custom/data"
-	os.Setenv("XDG_DATA_HOME", customData)
+	_ = os.Setenv("XDG_DATA_HOME", customData)
 
 	dir := GetDataDir("myapp")
 	expected := filepath.Join(customData, "myapp")
@@ -402,14 +402,14 @@ func TestGetStateDir_CustomXDG(t *testing.T) {
 	originalXDG := os.Getenv("XDG_STATE_HOME")
 	defer func() {
 		if originalXDG != "" {
-			os.Setenv("XDG_STATE_HOME", originalXDG)
+			_ = os.Setenv("XDG_STATE_HOME", originalXDG)
 		} else {
-			os.Unsetenv("XDG_STATE_HOME")
+			_ = os.Unsetenv("XDG_STATE_HOME")
 		}
 	}()
 
 	customState := "/custom/state"
-	os.Setenv("XDG_STATE_HOME", customState)
+	_ = os.Setenv("XDG_STATE_HOME", customState)
 
 	dir := GetStateDir("myapp")
 	expected := filepath.Join(customState, "myapp")
@@ -420,7 +420,7 @@ func TestGetStateDir_CustomXDG(t *testing.T) {
 }
 
 func TestCacheStats(t *testing.T) {
-	stats := &CacheStats{
+	stats := &Stats{
 		TotalEntries: 10,
 		TotalSize:    1024,
 	}
@@ -446,7 +446,7 @@ func TestErrCacheMiss(t *testing.T) {
 
 func TestSpecCache_InvalidateMissing(t *testing.T) {
 	tmpDir := filepath.Join(os.TempDir(), "test-cache-invalidate-missing")
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	if err := os.MkdirAll(tmpDir, 0755); err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
@@ -469,11 +469,11 @@ func TestSpecCache_InvalidateMissing(t *testing.T) {
 
 func TestNewSpecCache_DirectoryCreation(t *testing.T) {
 	tmpDir := filepath.Join(os.TempDir(), "test-newcache-dir")
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Set custom cache dir that doesn't exist
-	os.Setenv("XDG_CACHE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_CACHE_HOME")
+	_ = os.Setenv("XDG_CACHE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_CACHE_HOME") }()
 
 	cache, err := NewSpecCache("test-app")
 	if err != nil {
@@ -488,7 +488,7 @@ func TestNewSpecCache_DirectoryCreation(t *testing.T) {
 
 func TestSpecCache_GetStatsEmptyDir(t *testing.T) {
 	tmpDir := filepath.Join(os.TempDir(), "test-cache-stats-empty")
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	if err := os.MkdirAll(tmpDir, 0755); err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
@@ -517,7 +517,7 @@ func TestSpecCache_GetStatsEmptyDir(t *testing.T) {
 
 func TestSpecCache_PruneEmptyCache(t *testing.T) {
 	tmpDir := filepath.Join(os.TempDir(), "test-cache-prune-empty")
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	if err := os.MkdirAll(tmpDir, 0755); err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
@@ -542,7 +542,7 @@ func TestSpecCache_PruneEmptyCache(t *testing.T) {
 
 func TestSpecCache_ClearEmptyCache(t *testing.T) {
 	tmpDir := filepath.Join(os.TempDir(), "test-cache-clear-empty")
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	if err := os.MkdirAll(tmpDir, 0755); err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)

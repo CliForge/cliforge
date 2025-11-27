@@ -20,7 +20,7 @@ import (
 func BenchmarkHTTPRequestSimple(b *testing.B) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 	}))
 	defer server.Close()
 
@@ -32,8 +32,8 @@ func BenchmarkHTTPRequestSimple(b *testing.B) {
 		if err != nil {
 			b.Fatalf("failed to make request: %v", err)
 		}
-		io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
+		_, _ = io.Copy(io.Discard, resp.Body)
+		_ = resp.Body.Close()
 	}
 }
 
@@ -47,7 +47,7 @@ func BenchmarkHTTPRequestWithAuth(b *testing.B) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 	}))
 	defer server.Close()
 
@@ -71,8 +71,8 @@ func BenchmarkHTTPRequestWithAuth(b *testing.B) {
 		if err != nil {
 			b.Fatalf("failed to make request: %v", err)
 		}
-		io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
+		_, _ = io.Copy(io.Discard, resp.Body)
+		_ = resp.Body.Close()
 	}
 }
 
@@ -90,7 +90,7 @@ func BenchmarkHTTPRequestLargePayload(b *testing.B) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(largePayload)
+		_ = json.NewEncoder(w).Encode(largePayload)
 	}))
 	defer server.Close()
 
@@ -102,8 +102,8 @@ func BenchmarkHTTPRequestLargePayload(b *testing.B) {
 		if err != nil {
 			b.Fatalf("failed to make request: %v", err)
 		}
-		io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
+		_, _ = io.Copy(io.Discard, resp.Body)
+		_ = resp.Body.Close()
 	}
 }
 
@@ -183,7 +183,7 @@ func BenchmarkAuthTokenHandling(b *testing.B) {
 		Name:     "Authorization",
 		Prefix:   "Bearer",
 	})
-	manager.RegisterAuthenticator("apikey", apiKeyAuth)
+	_ = manager.RegisterAuthenticator("apikey", apiKeyAuth)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -198,7 +198,7 @@ func BenchmarkAuthTokenHandling(b *testing.B) {
 func BenchmarkWorkflowExecutionSimple(b *testing.B) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 	}))
 	defer server.Close()
 
@@ -235,7 +235,7 @@ func BenchmarkWorkflowExecutionSimple(b *testing.B) {
 func BenchmarkWorkflowExecutionMultiStep(b *testing.B) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"id":   "123",
 			"name": "Test",
 		})
@@ -297,12 +297,12 @@ func BenchmarkWorkflowExecutionParallel(b *testing.B) {
 		// Simulate some processing time
 		time.Sleep(10 * time.Millisecond)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 	}))
 	defer server.Close()
 
 	wf := &workflow.Workflow{
-		Settings: &workflow.WorkflowSettings{
+		Settings: &workflow.Settings{
 			ParallelExecution: true,
 		},
 		Steps: []*workflow.Step{

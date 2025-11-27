@@ -40,8 +40,6 @@ import (
 var (
 	// Version is set at build time
 	version = "0.9.0"
-	// BuildDate is set at build time
-	buildDate = "unknown"
 )
 
 func main() {
@@ -60,7 +58,7 @@ production-ready command-line tools from OpenAPI specifications.
 
 It supports authentication, caching, updates, and many other
 enterprise features out of the box.`,
-		Version: version,
+		Version:      version,
 		SilenceUsage: true,
 	}
 

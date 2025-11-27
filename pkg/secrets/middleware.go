@@ -160,11 +160,11 @@ func (l *DebugLogger) LogRequest(req *http.Request) error {
 	}
 
 	// Log request line
-	fmt.Fprintf(l.writer, "DEBUG: %s %s\n", req.Method, req.URL.String())
+	_, _ = fmt.Fprintf(l.writer, "DEBUG: %s %s\n", req.Method, req.URL.String())
 
 	// Log headers with masking
 	maskedHeaders := l.detector.MaskHeaders(req.Header)
-	fmt.Fprintf(l.writer, "DEBUG: Headers: %v\n", formatHeaders(maskedHeaders))
+	_, _ = fmt.Fprintf(l.writer, "DEBUG: Headers: %v\n", formatHeaders(maskedHeaders))
 
 	// Log body if present
 	if req.Body != nil {
@@ -183,7 +183,7 @@ func (l *DebugLogger) LogRequest(req *http.Request) error {
 			return fmt.Errorf("failed to mask request body: %w", err)
 		}
 
-		fmt.Fprintf(l.writer, "DEBUG: Body: %s\n", maskedBody)
+		_, _ = fmt.Fprintf(l.writer, "DEBUG: Body: %s\n", maskedBody)
 	}
 
 	return nil
@@ -196,11 +196,11 @@ func (l *DebugLogger) LogResponse(resp *http.Response) error {
 	}
 
 	// Log status line
-	fmt.Fprintf(l.writer, "DEBUG: Response: %s\n", resp.Status)
+	_, _ = fmt.Fprintf(l.writer, "DEBUG: Response: %s\n", resp.Status)
 
 	// Log headers with masking
 	maskedHeaders := l.detector.MaskHeaders(resp.Header)
-	fmt.Fprintf(l.writer, "DEBUG: Headers: %v\n", formatHeaders(maskedHeaders))
+	_, _ = fmt.Fprintf(l.writer, "DEBUG: Headers: %v\n", formatHeaders(maskedHeaders))
 
 	// Log body if present
 	if resp.Body != nil {
@@ -219,7 +219,7 @@ func (l *DebugLogger) LogResponse(resp *http.Response) error {
 			return fmt.Errorf("failed to mask response body: %w", err)
 		}
 
-		fmt.Fprintf(l.writer, "DEBUG: Body: %s\n", maskedBody)
+		_, _ = fmt.Fprintf(l.writer, "DEBUG: Body: %s\n", maskedBody)
 	}
 
 	return nil

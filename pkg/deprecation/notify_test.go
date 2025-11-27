@@ -11,8 +11,8 @@ import (
 func TestNotifier_ShowUpdateNotification(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldXdgDataHome := os.Getenv("XDG_DATA_HOME")
-	os.Setenv("XDG_DATA_HOME", tmpDir)
-	defer os.Setenv("XDG_DATA_HOME", oldXdgDataHome)
+	_ = os.Setenv("XDG_DATA_HOME", tmpDir)
+	defer func() { _ = os.Setenv("XDG_DATA_HOME", oldXdgDataHome) }()
 
 	notifier, err := NewNotifier("test-cli")
 	if err != nil {
@@ -55,8 +55,8 @@ func TestNotifier_ShowUpdateNotification(t *testing.T) {
 func TestNotifier_GetLastVersion(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldXdgDataHome := os.Getenv("XDG_DATA_HOME")
-	os.Setenv("XDG_DATA_HOME", tmpDir)
-	defer os.Setenv("XDG_DATA_HOME", oldXdgDataHome)
+	_ = os.Setenv("XDG_DATA_HOME", tmpDir)
+	defer func() { _ = os.Setenv("XDG_DATA_HOME", oldXdgDataHome) }()
 
 	notifier, err := NewNotifier("test-cli-versioning")
 	if err != nil {
@@ -67,7 +67,7 @@ func TestNotifier_GetLastVersion(t *testing.T) {
 	initialVersion := notifier.GetLastVersion()
 
 	// Save a version
-	notifier.saveVersion("1.0.0")
+	_ = notifier.saveVersion("1.0.0")
 
 	// Should be retrievable
 	if notifier.GetLastVersion() != "1.0.0" {
@@ -174,8 +174,8 @@ func TestFormatChangelog_Empty(t *testing.T) {
 func TestAcknowledgmentTracker_Acknowledge(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldXdgDataHome := os.Getenv("XDG_DATA_HOME")
-	os.Setenv("XDG_DATA_HOME", tmpDir)
-	defer os.Setenv("XDG_DATA_HOME", oldXdgDataHome)
+	_ = os.Setenv("XDG_DATA_HOME", tmpDir)
+	defer func() { _ = os.Setenv("XDG_DATA_HOME", oldXdgDataHome) }()
 
 	tracker, err := NewAcknowledgmentTracker("test-cli")
 	if err != nil {
@@ -225,8 +225,8 @@ func TestAcknowledgmentTracker_Acknowledge(t *testing.T) {
 func TestAcknowledgmentTracker_ClearAcknowledgment(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldXdgDataHome := os.Getenv("XDG_DATA_HOME")
-	os.Setenv("XDG_DATA_HOME", tmpDir)
-	defer os.Setenv("XDG_DATA_HOME", oldXdgDataHome)
+	_ = os.Setenv("XDG_DATA_HOME", tmpDir)
+	defer func() { _ = os.Setenv("XDG_DATA_HOME", oldXdgDataHome) }()
 
 	tracker, err := NewAcknowledgmentTracker("test-cli")
 	if err != nil {
@@ -236,7 +236,7 @@ func TestAcknowledgmentTracker_ClearAcknowledgment(t *testing.T) {
 	key := "op:listUsersV1"
 
 	// Acknowledge then clear
-	tracker.Acknowledge(key)
+	_ = tracker.Acknowledge(key)
 	err = tracker.ClearAcknowledgment(key)
 	if err != nil {
 		t.Errorf("ClearAcknowledgment() error = %v", err)

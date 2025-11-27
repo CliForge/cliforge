@@ -17,43 +17,43 @@ type ReleaseInfo struct {
 	Platform     map[string]string `json:"platform,omitempty"` // platform-specific URLs
 }
 
-// UpdateStatus represents the current update status.
-type UpdateStatus int
+// Status represents the current update status.
+type Status int
 
 const (
-	// UpdateStatusUnknown indicates the update status is unknown.
-	UpdateStatusUnknown UpdateStatus = iota
+	// StatusUnknown indicates the update status is unknown.
+	StatusUnknown Status = iota
 
-	// UpdateStatusUpToDate indicates the current version is up to date.
-	UpdateStatusUpToDate
+	// StatusUpToDate indicates the current version is up to date.
+	StatusUpToDate
 
-	// UpdateStatusAvailable indicates a new version is available.
-	UpdateStatusAvailable
+	// StatusAvailable indicates a new version is available.
+	StatusAvailable
 
-	// UpdateStatusDownloading indicates an update is being downloaded.
-	UpdateStatusDownloading
+	// StatusDownloading indicates an update is being downloaded.
+	StatusDownloading
 
-	// UpdateStatusInstalling indicates an update is being installed.
-	UpdateStatusInstalling
+	// StatusInstalling indicates an update is being installed.
+	StatusInstalling
 
-	// UpdateStatusFailed indicates an update failed.
-	UpdateStatusFailed
+	// StatusFailed indicates an update failed.
+	StatusFailed
 )
 
 // String returns the string representation of the update status.
-func (s UpdateStatus) String() string {
+func (s Status) String() string {
 	switch s {
-	case UpdateStatusUnknown:
+	case StatusUnknown:
 		return "unknown"
-	case UpdateStatusUpToDate:
+	case StatusUpToDate:
 		return "up-to-date"
-	case UpdateStatusAvailable:
+	case StatusAvailable:
 		return "available"
-	case UpdateStatusDownloading:
+	case StatusDownloading:
 		return "downloading"
-	case UpdateStatusInstalling:
+	case StatusInstalling:
 		return "installing"
-	case UpdateStatusFailed:
+	case StatusFailed:
 		return "failed"
 	default:
 		return "unknown"
@@ -62,7 +62,7 @@ func (s UpdateStatus) String() string {
 
 // CheckResult represents the result of an update check.
 type CheckResult struct {
-	Status         UpdateStatus
+	Status         Status
 	CurrentVersion *Version
 	LatestVersion  *Version
 	Release        *ReleaseInfo
@@ -72,7 +72,7 @@ type CheckResult struct {
 
 // UpdateAvailable returns true if an update is available.
 func (r *CheckResult) UpdateAvailable() bool {
-	return r.Status == UpdateStatusAvailable &&
+	return r.Status == StatusAvailable &&
 		r.LatestVersion != nil &&
 		r.CurrentVersion != nil &&
 		r.LatestVersion.IsNewer(r.CurrentVersion)
@@ -138,11 +138,11 @@ func DefaultUpdateConfig() *UpdateConfig {
 
 // LastCheckInfo stores information about the last update check.
 type LastCheckInfo struct {
-	CheckedAt      time.Time     `json:"checked_at"`
-	LatestVersion  string        `json:"latest_version"`
-	UpdateSkipped  bool          `json:"update_skipped,omitempty"`
-	SkippedVersion string        `json:"skipped_version,omitempty"`
-	SkippedAt      time.Time     `json:"skipped_at,omitempty"`
+	CheckedAt      time.Time `json:"checked_at"`
+	LatestVersion  string    `json:"latest_version"`
+	UpdateSkipped  bool      `json:"update_skipped,omitempty"`
+	SkippedVersion string    `json:"skipped_version,omitempty"`
+	SkippedAt      time.Time `json:"skipped_at,omitempty"`
 }
 
 // ShouldCheck returns true if enough time has passed since the last check.

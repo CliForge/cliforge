@@ -7,8 +7,8 @@ import (
 
 func TestNewDefaultsProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 	provider := NewDefaultsProvider(mgr)
@@ -28,8 +28,8 @@ func TestNewDefaultsProvider(t *testing.T) {
 
 func TestDefaultsProviderBuiltinDefaults(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 	provider := NewDefaultsProvider(mgr)
@@ -52,8 +52,8 @@ func TestDefaultsProviderBuiltinDefaults(t *testing.T) {
 
 func TestDefaultsProviderConfigOverridesBuiltin(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 	provider := NewDefaultsProvider(mgr)
@@ -76,8 +76,8 @@ func TestDefaultsProviderConfigOverridesBuiltin(t *testing.T) {
 
 func TestDefaultsProviderContextOverridesConfig(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 	provider := NewDefaultsProvider(mgr)
@@ -100,8 +100,8 @@ func TestDefaultsProviderContextOverridesConfig(t *testing.T) {
 
 func TestDefaultsProviderRecentOverridesContext(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 	provider := NewDefaultsProvider(mgr)
@@ -123,8 +123,8 @@ func TestDefaultsProviderRecentOverridesContext(t *testing.T) {
 
 func TestDefaultsProviderGetWithPriority(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 	provider := NewDefaultsProvider(mgr)
@@ -176,8 +176,8 @@ func TestDefaultsProviderGetWithPriority(t *testing.T) {
 
 func TestDefaultsProviderGetAll(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 	provider := NewDefaultsProvider(mgr)
@@ -211,8 +211,8 @@ func TestDefaultsProviderGetAll(t *testing.T) {
 
 func TestDefaultsProviderGetWithFallback(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 	provider := NewDefaultsProvider(mgr)
@@ -231,8 +231,8 @@ func TestDefaultsProviderGetWithFallback(t *testing.T) {
 
 func TestDefaultsProviderGetInt(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 	provider := NewDefaultsProvider(mgr)
@@ -260,8 +260,8 @@ func TestDefaultsProviderGetInt(t *testing.T) {
 
 func TestDefaultsProviderGetBool(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 	provider := NewDefaultsProvider(mgr)
@@ -289,8 +289,8 @@ func TestDefaultsProviderGetBool(t *testing.T) {
 
 func TestDefaultsResolverEnvOverride(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 	provider := NewDefaultsProvider(mgr)
@@ -306,8 +306,8 @@ func TestDefaultsResolverEnvOverride(t *testing.T) {
 	}
 
 	// With env var
-	os.Setenv("TEST_REGION", "eu-west-1")
-	defer os.Unsetenv("TEST_REGION")
+	_ = os.Setenv("TEST_REGION", "eu-west-1")
+	defer func() { _ = os.Unsetenv("TEST_REGION") }()
 
 	value, _ = resolver.Resolve("region")
 	if value != "eu-west-1" {
@@ -317,8 +317,8 @@ func TestDefaultsResolverEnvOverride(t *testing.T) {
 
 func TestDefaultsResolverWithPriority(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 	provider := NewDefaultsProvider(mgr)
@@ -334,8 +334,8 @@ func TestDefaultsResolverWithPriority(t *testing.T) {
 	}
 
 	// With env var
-	os.Setenv("TEST_KEY", "env-value")
-	defer os.Unsetenv("TEST_KEY")
+	_ = os.Setenv("TEST_KEY", "env-value")
+	defer func() { _ = os.Unsetenv("TEST_KEY") }()
 
 	value, priority, _ := resolver.ResolveWithPriority("key")
 	if priority != PriorityEnv {
@@ -466,8 +466,8 @@ func TestValidateDefaults(t *testing.T) {
 
 func TestDefaultsSnapshot(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	mgr, _ := NewManager("testcli")
 	provider := NewDefaultsProvider(mgr)

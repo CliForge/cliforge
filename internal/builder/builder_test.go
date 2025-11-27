@@ -18,8 +18,8 @@ func TestBuilder_Build(t *testing.T) {
 
 	// Create builder
 	config := &BuilderConfig{
-		RootName:        "test-cli",
-		GroupByTags:     true,
+		RootName:    "test-cli",
+		GroupByTags: true,
 	}
 	builder := NewBuilder(spec, config)
 
@@ -93,8 +93,8 @@ func TestToCommandName(t *testing.T) {
 		{"listClusters", "list-clusters"},
 		{"CreateCluster", "create-cluster"},
 		{"get_users", "get-users"},
-		{"Delete User", "delete--user"}, // Space becomes double hyphen after processing
-		{"{clusterId}", "cluster-id"}, // camelCase with braces removed
+		{"Delete User", "delete--user"},   // Space becomes double hyphen after processing
+		{"{clusterId}", "cluster-id"},     // camelCase with braces removed
 		{"MyAPICommand", "my-apicommand"}, // Consecutive caps stay together
 	}
 
@@ -221,13 +221,13 @@ func TestBuilder_GetCommandByPath(t *testing.T) {
 	}
 
 	// Test getting a path that exists
-	cmd, ok = builder.GetCommandByPath("/users")
+	_, ok = builder.GetCommandByPath("/users")
 	if !ok {
 		t.Error("Expected to find command for /users path")
 	}
 
 	// Test getting a path that doesn't exist
-	cmd, ok = builder.GetCommandByPath("/nonexistent")
+	_, ok = builder.GetCommandByPath("/nonexistent")
 	if ok {
 		t.Error("Expected not to find command for non-existent path")
 	}
@@ -497,7 +497,7 @@ func TestBuildOperationCommand_WithExecutor(t *testing.T) {
 
 	// Execute and verify executor is called
 	if cmd.RunE != nil {
-		cmd.RunE(cmd, []string{})
+		_ = cmd.RunE(cmd, []string{})
 		if !executorCalled {
 			t.Error("Expected executor to be called")
 		}

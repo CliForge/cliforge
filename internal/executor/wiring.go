@@ -20,15 +20,15 @@ import (
 // Runtime wires together all subsystems and manages the CLI lifecycle.
 type Runtime struct {
 	// Core components
-	spec           *openapi.ParsedSpec
-	rootCmd        *cobra.Command
+	spec    *openapi.ParsedSpec
+	rootCmd *cobra.Command
 
 	// Managers
-	authManager        *auth.Manager
-	stateManager       *state.Manager
-	outputManager      *output.Manager
-	progressManager    *progress.Manager
-	pluginRegistry     *plugin.Registry
+	authManager     *auth.Manager
+	stateManager    *state.Manager
+	outputManager   *output.Manager
+	progressManager *progress.Manager
+	pluginRegistry  *plugin.Registry
 
 	// Builders
 	commandBuilder *builder.Builder
@@ -205,12 +205,12 @@ func (rt *Runtime) buildCommandTree(runtimeConfig *RuntimeConfig) error {
 
 	// Create executor
 	execConfig := &ExecutorConfig{
-		BaseURL:        runtimeConfig.BaseURL,
-		HTTPClient:     rt.httpClient,
-		AuthManager:    rt.authManager,
-		OutputManager:  rt.outputManager,
-		StateManager:   rt.stateManager,
-		ProgressMgr:    rt.progressManager,
+		BaseURL:       runtimeConfig.BaseURL,
+		HTTPClient:    rt.httpClient,
+		AuthManager:   rt.authManager,
+		OutputManager: rt.outputManager,
+		StateManager:  rt.stateManager,
+		ProgressMgr:   rt.progressManager,
 	}
 
 	var err error

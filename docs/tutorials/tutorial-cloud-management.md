@@ -67,8 +67,8 @@ cloud-cli state export --format terraform
 ### Recommended Reading
 
 - [CliForge Workflows Guide](../user-guide-workflows.md)
-- [State Management Architecture](../../design/architecture/state-management.md)
-- [Async Operations Design](../../design/architecture/progress-and-streaming.md)
+
+> **Note**: For detailed architecture information on state management, progress tracking, and streaming operations, please refer to the internal design documentation or contact the development team.
 
 ---
 
@@ -1930,9 +1930,8 @@ echo "All tests passed!"
 ### Further Reading
 
 - [CliForge Workflow Orchestration](../user-guide-workflows.md)
-- [State Management Design](../../design/architecture/state-management.md)
-- [Progress and Streaming](../../design/architecture/progress-and-streaming.md)
-- [Plugin Architecture](../../design/architecture/plugin-architecture.md)
+
+> **Note**: Additional architectural design documentation on state management, progress tracking, streaming operations, and plugin architecture is available in the internal design documentation.
 
 ---
 

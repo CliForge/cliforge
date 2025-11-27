@@ -21,19 +21,19 @@ func newMockCache() *mockCache {
 	}
 }
 
-func (m *mockCache) Get(ctx context.Context, key string) (*CachedSpec, error) {
+func (m *mockCache) Get(_ context.Context, key string) (*CachedSpec, error) {
 	if spec, ok := m.data[key]; ok {
 		return spec, nil
 	}
 	return nil, nil
 }
 
-func (m *mockCache) Set(ctx context.Context, key string, spec *CachedSpec) error {
+func (m *mockCache) Set(_ context.Context, key string, spec *CachedSpec) error {
 	m.data[key] = spec
 	return nil
 }
 
-func (m *mockCache) Invalidate(ctx context.Context, key string) error {
+func (m *mockCache) Invalidate(_ context.Context, key string) error {
 	delete(m.data, key)
 	return nil
 }
@@ -142,11 +142,11 @@ func TestLoader_LoadFromURL(t *testing.T) {
 		"paths": {}
 	}`
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("ETag", `"test-etag"`)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(specData))
+		_, _ = w.Write([]byte(specData))
 	}))
 	defer server.Close()
 
@@ -168,6 +168,7 @@ func TestLoader_LoadFromURL(t *testing.T) {
 	cached, _ := cache.Get(ctx, server.URL)
 	if cached == nil {
 		t.Error("spec not cached")
+		return
 	}
 	if cached.ETag != `"test-etag"` {
 		t.Errorf("expected ETag '\"test-etag\"', got '%s'", cached.ETag)
@@ -182,11 +183,11 @@ func TestLoader_LoadFromURL_Cached(t *testing.T) {
 	}`
 
 	requestCount := 0
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		requestCount++
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(specData))
+		_, _ = w.Write([]byte(specData))
 	}))
 	defer server.Close()
 
@@ -224,11 +225,11 @@ func TestLoader_LoadFromURL_ForceRefresh(t *testing.T) {
 	}`
 
 	requestCount := 0
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		requestCount++
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(specData))
+		_, _ = w.Write([]byte(specData))
 	}))
 	defer server.Close()
 
@@ -272,7 +273,7 @@ func TestLoader_LoadFromURL_ETag(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("ETag", `"test-etag"`)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(specData))
+		_, _ = w.Write([]byte(specData))
 	}))
 	defer server.Close()
 
@@ -313,7 +314,7 @@ func TestLoader_LoadFromURL_InvalidURL(t *testing.T) {
 }
 
 func TestLoader_LoadFromURL_HTTPError(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	}))
 	defer server.Close()
@@ -335,10 +336,10 @@ func TestLoader_RefreshCache(t *testing.T) {
 		"paths": {}
 	}`
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(specData))
+		_, _ = w.Write([]byte(specData))
 	}))
 	defer server.Close()
 
@@ -362,7 +363,7 @@ func TestLoader_InvalidateCache(t *testing.T) {
 	ctx := context.Background()
 
 	// Add something to cache
-	cache.Set(ctx, "test-url", &CachedSpec{
+	_ = cache.Set(ctx, "test-url", &CachedSpec{
 		Data:      []byte("test"),
 		FetchedAt: time.Now(),
 	})
@@ -408,7 +409,7 @@ func TestLoader_LoadFromFile_Integration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 
 	specData := []byte(`{
 		"openapi": "3.0.0",
@@ -419,7 +420,9 @@ func TestLoader_LoadFromFile_Integration(t *testing.T) {
 	if _, err := tmpFile.Write(specData); err != nil {
 		t.Fatalf("failed to write temp file: %v", err)
 	}
-	tmpFile.Close()
+	if err := tmpFile.Close(); err != nil {
+		t.Fatalf("failed to close temp file: %v", err)
+	}
 
 	cache := newMockCache()
 	loader := NewLoader(cache)

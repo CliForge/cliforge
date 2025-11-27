@@ -147,9 +147,10 @@ func (v *Version) String() string {
 
 // Compare compares this version with another.
 // Returns:
-//   -1 if v < other
-//    0 if v == other
-//    1 if v > other
+//
+//	-1 if v < other
+//	 0 if v == other
+//	 1 if v > other
 func (v *Version) Compare(other *Version) int {
 	// Compare major
 	if v.Major != other.Major {

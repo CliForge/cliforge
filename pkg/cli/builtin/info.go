@@ -18,7 +18,7 @@ import (
 
 // InfoOptions configures the info command behavior.
 type InfoOptions struct {
-	Config          *cli.CLIConfig
+	Config          *cli.Config
 	CheckAPIHealth  bool
 	ShowConfigPaths bool
 	OutputFormat    string
@@ -45,11 +45,11 @@ type CLIDetails struct {
 
 // APIDetails contains API information.
 type APIDetails struct {
-	Title      string `json:"title,omitempty"`
-	Version    string `json:"version,omitempty"`
-	BaseURL    string `json:"base_url"`
-	SpecURL    string `json:"spec_url"`
-	Endpoints  int    `json:"endpoints,omitempty"`
+	Title     string `json:"title,omitempty"`
+	Version   string `json:"version,omitempty"`
+	BaseURL   string `json:"base_url"`
+	SpecURL   string `json:"spec_url"`
+	Endpoints int    `json:"endpoints,omitempty"`
 }
 
 // ConfigDetails contains configuration paths.
@@ -63,11 +63,11 @@ type ConfigDetails struct {
 
 // StatusDetails contains API health status.
 type StatusDetails struct {
-	APIReachable      bool      `json:"api_reachable"`
-	AuthValid         bool      `json:"auth_valid,omitempty"`
-	SpecCached        bool      `json:"spec_cached"`
-	SpecAge           string    `json:"spec_age,omitempty"`
-	LastChecked       time.Time `json:"last_checked"`
+	APIReachable bool      `json:"api_reachable"`
+	AuthValid    bool      `json:"auth_valid,omitempty"`
+	SpecCached   bool      `json:"spec_cached"`
+	SpecAge      string    `json:"spec_age,omitempty"`
+	LastChecked  time.Time `json:"last_checked"`
 }
 
 // NewInfoCommand creates a new info command.
@@ -178,7 +178,7 @@ func checkAPIHealth(opts *InfoOptions) StatusDetails {
 
 	resp, err := opts.HTTPClient.Do(req)
 	if err == nil {
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 		status.APIReachable = resp.StatusCode < 500
 	}
 
@@ -223,50 +223,50 @@ func formatDuration(d time.Duration) string {
 
 // formatInfoText formats info as human-readable text.
 func formatInfoText(info *CLIInfo, w io.Writer) error {
-	fmt.Fprintf(w, "\n%s v%s\n", info.CLI.Name, info.CLI.Version)
+	_, _ = fmt.Fprintf(w, "\n%s v%s\n", info.CLI.Name, info.CLI.Version)
 	if info.CLI.Description != "" {
-		fmt.Fprintf(w, "%s\n", info.CLI.Description)
+		_, _ = fmt.Fprintf(w, "%s\n", info.CLI.Description)
 	}
-	fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w)
 
-	fmt.Fprintln(w, "API Information:")
+	_, _ = fmt.Fprintln(w, "API Information:")
 	if info.API.Title != "" {
-		fmt.Fprintf(w, "  Title: %s\n", info.API.Title)
+		_, _ = fmt.Fprintf(w, "  Title: %s\n", info.API.Title)
 	}
 	if info.API.Version != "" {
-		fmt.Fprintf(w, "  Version: %s\n", info.API.Version)
+		_, _ = fmt.Fprintf(w, "  Version: %s\n", info.API.Version)
 	}
-	fmt.Fprintf(w, "  Base URL: %s\n", info.API.BaseURL)
-	fmt.Fprintf(w, "  Spec URL: %s\n", info.API.SpecURL)
+	_, _ = fmt.Fprintf(w, "  Base URL: %s\n", info.API.BaseURL)
+	_, _ = fmt.Fprintf(w, "  Spec URL: %s\n", info.API.SpecURL)
 	if info.API.Endpoints > 0 {
-		fmt.Fprintf(w, "  Endpoints: %d\n", info.API.Endpoints)
+		_, _ = fmt.Fprintf(w, "  Endpoints: %d\n", info.API.Endpoints)
 	}
-	fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w)
 
-	fmt.Fprintln(w, "Configuration:")
-	fmt.Fprintf(w, "  Config file: %s\n", info.Config.ConfigFile)
-	fmt.Fprintf(w, "  Cache dir: %s\n", info.Config.CacheDir)
-	fmt.Fprintf(w, "  Data dir: %s\n", info.Config.DataDir)
-	fmt.Fprintf(w, "  State dir: %s\n", info.Config.StateDir)
-	fmt.Fprintf(w, "  Auth: %s\n", info.Config.Auth)
-	fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w, "Configuration:")
+	_, _ = fmt.Fprintf(w, "  Config file: %s\n", info.Config.ConfigFile)
+	_, _ = fmt.Fprintf(w, "  Cache dir: %s\n", info.Config.CacheDir)
+	_, _ = fmt.Fprintf(w, "  Data dir: %s\n", info.Config.DataDir)
+	_, _ = fmt.Fprintf(w, "  State dir: %s\n", info.Config.StateDir)
+	_, _ = fmt.Fprintf(w, "  Auth: %s\n", info.Config.Auth)
+	_, _ = fmt.Fprintln(w)
 
 	// Show status if available
 	if info.Status.LastChecked.IsZero() {
 		return nil
 	}
 
-	fmt.Fprintln(w, "Status:")
+	_, _ = fmt.Fprintln(w, "Status:")
 	if info.Status.APIReachable {
-		fmt.Fprintln(w, "  ✓ API reachable")
+		_, _ = fmt.Fprintln(w, "  ✓ API reachable")
 	} else {
-		fmt.Fprintln(w, "  ✗ API unreachable")
+		_, _ = fmt.Fprintln(w, "  ✗ API unreachable")
 	}
 
 	if info.Status.SpecCached {
-		fmt.Fprintf(w, "  ✓ Spec cached (age: %s)\n", info.Status.SpecAge)
+		_, _ = fmt.Fprintf(w, "  ✓ Spec cached (age: %s)\n", info.Status.SpecAge)
 	} else {
-		fmt.Fprintln(w, "  ✗ Spec not cached")
+		_, _ = fmt.Fprintln(w, "  ✗ Spec not cached")
 	}
 
 	return nil
@@ -281,39 +281,39 @@ func formatInfoJSON(info *CLIInfo, w io.Writer) error {
 
 // formatInfoYAML formats info as YAML.
 func formatInfoYAML(info *CLIInfo, w io.Writer) error {
-	fmt.Fprintln(w, "cli:")
-	fmt.Fprintf(w, "  name: %s\n", info.CLI.Name)
-	fmt.Fprintf(w, "  version: %s\n", info.CLI.Version)
+	_, _ = fmt.Fprintln(w, "cli:")
+	_, _ = fmt.Fprintf(w, "  name: %s\n", info.CLI.Name)
+	_, _ = fmt.Fprintf(w, "  version: %s\n", info.CLI.Version)
 	if info.CLI.Description != "" {
-		fmt.Fprintf(w, "  description: %s\n", info.CLI.Description)
+		_, _ = fmt.Fprintf(w, "  description: %s\n", info.CLI.Description)
 	}
 	if info.CLI.Homepage != "" {
-		fmt.Fprintf(w, "  homepage: %s\n", info.CLI.Homepage)
+		_, _ = fmt.Fprintf(w, "  homepage: %s\n", info.CLI.Homepage)
 	}
 
-	fmt.Fprintln(w, "api:")
+	_, _ = fmt.Fprintln(w, "api:")
 	if info.API.Title != "" {
-		fmt.Fprintf(w, "  title: %s\n", info.API.Title)
+		_, _ = fmt.Fprintf(w, "  title: %s\n", info.API.Title)
 	}
 	if info.API.Version != "" {
-		fmt.Fprintf(w, "  version: %s\n", info.API.Version)
+		_, _ = fmt.Fprintf(w, "  version: %s\n", info.API.Version)
 	}
-	fmt.Fprintf(w, "  base_url: %s\n", info.API.BaseURL)
-	fmt.Fprintf(w, "  spec_url: %s\n", info.API.SpecURL)
+	_, _ = fmt.Fprintf(w, "  base_url: %s\n", info.API.BaseURL)
+	_, _ = fmt.Fprintf(w, "  spec_url: %s\n", info.API.SpecURL)
 
-	fmt.Fprintln(w, "config:")
-	fmt.Fprintf(w, "  config_file: %s\n", info.Config.ConfigFile)
-	fmt.Fprintf(w, "  cache_dir: %s\n", info.Config.CacheDir)
-	fmt.Fprintf(w, "  data_dir: %s\n", info.Config.DataDir)
-	fmt.Fprintf(w, "  state_dir: %s\n", info.Config.StateDir)
-	fmt.Fprintf(w, "  auth: %s\n", info.Config.Auth)
+	_, _ = fmt.Fprintln(w, "config:")
+	_, _ = fmt.Fprintf(w, "  config_file: %s\n", info.Config.ConfigFile)
+	_, _ = fmt.Fprintf(w, "  cache_dir: %s\n", info.Config.CacheDir)
+	_, _ = fmt.Fprintf(w, "  data_dir: %s\n", info.Config.DataDir)
+	_, _ = fmt.Fprintf(w, "  state_dir: %s\n", info.Config.StateDir)
+	_, _ = fmt.Fprintf(w, "  auth: %s\n", info.Config.Auth)
 
 	if !info.Status.LastChecked.IsZero() {
-		fmt.Fprintln(w, "status:")
-		fmt.Fprintf(w, "  api_reachable: %t\n", info.Status.APIReachable)
-		fmt.Fprintf(w, "  spec_cached: %t\n", info.Status.SpecCached)
+		_, _ = fmt.Fprintln(w, "status:")
+		_, _ = fmt.Fprintf(w, "  api_reachable: %t\n", info.Status.APIReachable)
+		_, _ = fmt.Fprintf(w, "  spec_cached: %t\n", info.Status.SpecCached)
 		if info.Status.SpecAge != "" {
-			fmt.Fprintf(w, "  spec_age: %s\n", info.Status.SpecAge)
+			_, _ = fmt.Fprintf(w, "  spec_age: %s\n", info.Status.SpecAge)
 		}
 	}
 

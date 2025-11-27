@@ -1145,7 +1145,7 @@ CliForge validates embedded configuration during CLI generation:
 
 ```go
 // Configuration validation rules
-func (v *Validator) Validate(config *cli.CLIConfig) error {
+func (v *Validator) Validate(config *cli.Config) error {
     // Metadata validation
     - Name: required, alphanumeric+hyphens, max 50 chars
     - Version: required, semantic versioning

@@ -22,6 +22,10 @@ linters-settings:
     simplify: true
   goimports:
     local-prefixes: github.com/cliforge/cliforge
+  revive:
+    rules:
+      - name: unused-parameter
+        disabled: true  # Disable - parameters often required by interfaces/handlers
 
 issues:
   exclude-use-default: false

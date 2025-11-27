@@ -17,9 +17,9 @@ func TestDownloader_Download(t *testing.T) {
 	checksum := sha256.Sum256(testData)
 	checksumStr := hex.EncodeToString(checksum[:])
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write(testData)
+		_, _ = w.Write(testData)
 	}))
 	defer server.Close()
 
@@ -76,7 +76,7 @@ func TestDownloader_Download(t *testing.T) {
 			}
 
 			if !tt.wantErr {
-				defer os.Remove(path)
+				defer func() { _ = os.Remove(path) }()
 
 				// Verify file exists and has correct content
 				data, err := os.ReadFile(path)
@@ -285,7 +285,7 @@ func TestDownloader_CleanupOldDownloads(t *testing.T) {
 func TestDownloader_Download_HTTPError(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	}))
 	defer server.Close()
@@ -315,9 +315,9 @@ func TestDownloader_Download_ContextCanceled(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Server that delays response
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		time.Sleep(2 * time.Second)
-		w.Write([]byte("data"))
+		_, _ = w.Write([]byte("data"))
 	}))
 	defer server.Close()
 
@@ -350,9 +350,9 @@ func TestDownloader_Download_WithProgress(t *testing.T) {
 	checksum := sha256.Sum256(testData)
 	checksumStr := hex.EncodeToString(checksum[:])
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write(testData)
+		_, _ = w.Write(testData)
 	}))
 	defer server.Close()
 
@@ -385,7 +385,7 @@ func TestDownloader_Download_WithProgress(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Download() error = %v", err)
 	}
-	defer os.Remove(path)
+	defer func() { _ = os.Remove(path) }()
 
 	if !progressCalled {
 		t.Error("Progress callback was not called")
@@ -397,9 +397,9 @@ func TestDownloader_DownloadWithProgress(t *testing.T) {
 	checksum := sha256.Sum256(testData)
 	checksumStr := hex.EncodeToString(checksum[:])
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write(testData)
+		_, _ = w.Write(testData)
 	}))
 	defer server.Close()
 
@@ -424,7 +424,7 @@ func TestDownloader_DownloadWithProgress(t *testing.T) {
 	if err != nil {
 		t.Fatalf("DownloadWithProgress() error = %v", err)
 	}
-	defer os.Remove(path)
+	defer func() { _ = os.Remove(path) }()
 
 	// Verify file exists
 	if _, err := os.Stat(path); err != nil {
@@ -435,7 +435,7 @@ func TestDownloader_DownloadWithProgress(t *testing.T) {
 func TestDownloader_DownloadWithProgress_Error(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	}))
 	defer server.Close()

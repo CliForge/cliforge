@@ -21,39 +21,39 @@ func TestChecker_Check(t *testing.T) {
 		Size:         1024,
 	}
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(release)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(release)
 	}))
 	defer server.Close()
 
 	tests := []struct {
 		name           string
 		currentVersion string
-		wantStatus     UpdateStatus
+		wantStatus     Status
 		wantErr        bool
 	}{
 		{
 			name:           "newer version available",
 			currentVersion: "1.0.0",
-			wantStatus:     UpdateStatusAvailable,
+			wantStatus:     StatusAvailable,
 			wantErr:        false,
 		},
 		{
 			name:           "up to date",
 			currentVersion: "1.2.3",
-			wantStatus:     UpdateStatusUpToDate,
+			wantStatus:     StatusUpToDate,
 			wantErr:        false,
 		},
 		{
 			name:           "current version newer",
 			currentVersion: "2.0.0",
-			wantStatus:     UpdateStatusUpToDate,
+			wantStatus:     StatusUpToDate,
 			wantErr:        false,
 		},
 		{
 			name:           "invalid current version",
 			currentVersion: "invalid",
-			wantStatus:     UpdateStatusFailed,
+			wantStatus:     StatusFailed,
 			wantErr:        true,
 		},
 	}
@@ -100,7 +100,7 @@ func TestChecker_ShouldNotify(t *testing.T) {
 	latestVersion, _ := ParseVersion("1.2.3")
 
 	result := &CheckResult{
-		Status:         UpdateStatusAvailable,
+		Status:         StatusAvailable,
 		CurrentVersion: currentVersion,
 		LatestVersion:  latestVersion,
 		CheckedAt:      time.Now(),
@@ -155,7 +155,10 @@ func TestChecker_GetLastCheck(t *testing.T) {
 		LatestVersion: "1.2.3",
 	}
 
-	data, _ := json.Marshal(testInfo)
+	data, err := json.Marshal(testInfo)
+	if err != nil {
+		t.Fatalf("Failed to marshal test info: %v", err)
+	}
 	lastCheckPath := filepath.Join(tmpDir, "last_check.json")
 	if err := os.WriteFile(lastCheckPath, data, 0600); err != nil {
 		t.Fatalf("Failed to write test data: %v", err)
@@ -214,28 +217,28 @@ func TestLastCheckInfo_ShouldCheck(t *testing.T) {
 func TestCheckResult_UpdateAvailable(t *testing.T) {
 	tests := []struct {
 		name    string
-		status  UpdateStatus
+		status  Status
 		current string
 		latest  string
 		want    bool
 	}{
 		{
 			name:    "update available",
-			status:  UpdateStatusAvailable,
+			status:  StatusAvailable,
 			current: "1.0.0",
 			latest:  "1.2.3",
 			want:    true,
 		},
 		{
 			name:    "up to date",
-			status:  UpdateStatusUpToDate,
+			status:  StatusUpToDate,
 			current: "1.2.3",
 			latest:  "1.2.3",
 			want:    false,
 		},
 		{
 			name:    "wrong status",
-			status:  UpdateStatusFailed,
+			status:  StatusFailed,
 			current: "1.0.0",
 			latest:  "1.2.3",
 			want:    false,
@@ -287,7 +290,7 @@ func TestChecker_Check_HTTPErrors(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
 
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(tt.statusCode)
 			}))
 			defer server.Close()
@@ -312,9 +315,9 @@ func TestChecker_Check_HTTPErrors(t *testing.T) {
 func TestChecker_Check_InvalidJSON(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("invalid json"))
+		_, _ = w.Write([]byte("invalid json"))
 	}))
 	defer server.Close()
 
@@ -344,8 +347,8 @@ func TestChecker_Check_InvalidLatestVersion(t *testing.T) {
 		Size:         1024,
 	}
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(release)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(release)
 	}))
 	defer server.Close()
 
@@ -369,25 +372,25 @@ func TestChecker_Check_PrereleaseHandling(t *testing.T) {
 		name            string
 		releaseVersion  string
 		allowPrerelease bool
-		wantStatus      UpdateStatus
+		wantStatus      Status
 	}{
 		{
 			name:            "prerelease allowed",
 			releaseVersion:  "2.0.0-beta.1",
 			allowPrerelease: true,
-			wantStatus:      UpdateStatusAvailable,
+			wantStatus:      StatusAvailable,
 		},
 		{
 			name:            "prerelease not allowed",
 			releaseVersion:  "2.0.0-beta.1",
 			allowPrerelease: false,
-			wantStatus:      UpdateStatusUpToDate,
+			wantStatus:      StatusUpToDate,
 		},
 		{
 			name:            "stable version",
 			releaseVersion:  "2.0.0",
 			allowPrerelease: false,
-			wantStatus:      UpdateStatusAvailable,
+			wantStatus:      StatusAvailable,
 		},
 	}
 
@@ -403,8 +406,8 @@ func TestChecker_Check_PrereleaseHandling(t *testing.T) {
 				Size:         1024,
 			}
 
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				json.NewEncoder(w).Encode(release)
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				_ = json.NewEncoder(w).Encode(release)
 			}))
 			defer server.Close()
 
@@ -439,8 +442,8 @@ func TestChecker_Check_NoStateDir(t *testing.T) {
 		Size:         1024,
 	}
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(release)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(release)
 	}))
 	defer server.Close()
 
@@ -459,8 +462,8 @@ func TestChecker_Check_NoStateDir(t *testing.T) {
 		t.Errorf("Checker.Check() error = %v", err)
 	}
 
-	if result.Status != UpdateStatusAvailable {
-		t.Errorf("Checker.Check() status = %v, want %v", result.Status, UpdateStatusAvailable)
+	if result.Status != StatusAvailable {
+		t.Errorf("Checker.Check() status = %v, want %v", result.Status, StatusAvailable)
 	}
 }
 

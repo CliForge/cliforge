@@ -6,10 +6,10 @@ import (
 
 func TestParseVersion(t *testing.T) {
 	tests := []struct {
-		name        string
-		input       string
-		want        *Version
-		wantErr     bool
+		name    string
+		input   string
+		want    *Version
+		wantErr bool
 	}{
 		{
 			name:  "simple version",
@@ -159,10 +159,10 @@ func TestVersionString(t *testing.T) {
 
 func TestVersionCompare(t *testing.T) {
 	tests := []struct {
-		name  string
-		v1    string
-		v2    string
-		want  int
+		name string
+		v1   string
+		v2   string
+		want int
 	}{
 		{
 			name: "equal versions",

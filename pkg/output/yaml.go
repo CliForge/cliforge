@@ -27,11 +27,7 @@ func (f *YAMLFormatter) Supports(data interface{}) bool {
 }
 
 // Format formats the data as YAML and writes it to the writer.
-func (f *YAMLFormatter) Format(w io.Writer, data interface{}, config *FormatConfig) error {
-	if config == nil {
-		config = NewFormatConfig()
-	}
-
+func (f *YAMLFormatter) Format(w io.Writer, data interface{}, _ *FormatConfig) error {
 	// Handle nil data
 	if data == nil {
 		_, err := w.Write([]byte("null\n"))
@@ -39,7 +35,7 @@ func (f *YAMLFormatter) Format(w io.Writer, data interface{}, config *FormatConf
 	}
 
 	encoder := yaml.NewEncoder(w)
-	defer encoder.Close()
+	defer func() { _ = encoder.Close() }()
 
 	// Set indentation (YAML default is 2 spaces)
 	encoder.SetIndent(2)
@@ -128,7 +124,7 @@ func (f *YAMLFormatter) FormatCompact(w io.Writer, data interface{}) error {
 	setFlowStyle(node)
 
 	encoder := yaml.NewEncoder(w)
-	defer encoder.Close()
+	defer func() { _ = encoder.Close() }()
 
 	if err := encoder.Encode(node); err != nil {
 		return fmt.Errorf("failed to encode compact YAML: %w", err)

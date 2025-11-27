@@ -11,23 +11,23 @@ import (
 
 // UpdateOptions configures the update command behavior.
 type UpdateOptions struct {
-	Config             *cli.CLIConfig
-	CurrentVersion     string
-	RequireConfirm     bool
-	ShowChangelog      bool
-	Output             io.Writer
-	CheckUpdateFunc    func(ctx context.Context) (*UpdateInfo, error)
-	PerformUpdateFunc  func(ctx context.Context, version string) error
+	Config            *cli.Config
+	CurrentVersion    string
+	RequireConfirm    bool
+	ShowChangelog     bool
+	Output            io.Writer
+	CheckUpdateFunc   func(ctx context.Context) (*UpdateInfo, error)
+	PerformUpdateFunc func(ctx context.Context, version string) error
 }
 
 // UpdateInfo contains information about available updates.
 type UpdateInfo struct {
-	CurrentVersion string   `json:"current_version"`
-	LatestVersion  string   `json:"latest_version"`
-	UpdateAvailable bool    `json:"update_available"`
-	DownloadURL    string   `json:"download_url,omitempty"`
-	Changelog      []string `json:"changelog,omitempty"`
-	ReleaseNotes   string   `json:"release_notes,omitempty"`
+	CurrentVersion  string   `json:"current_version"`
+	LatestVersion   string   `json:"latest_version"`
+	UpdateAvailable bool     `json:"update_available"`
+	DownloadURL     string   `json:"download_url,omitempty"`
+	Changelog       []string `json:"changelog,omitempty"`
+	ReleaseNotes    string   `json:"release_notes,omitempty"`
 }
 
 // NewUpdateCommand creates a new update command.
@@ -65,7 +65,7 @@ Examples:
 func runUpdate(opts *UpdateOptions, force, skipConfirm bool) error {
 	ctx := context.Background()
 
-	fmt.Fprintln(opts.Output, "Checking for updates...")
+	_, _ = fmt.Fprintln(opts.Output, "Checking for updates...")
 
 	// Check for updates
 	info, err := opts.CheckUpdateFunc(ctx)
@@ -73,57 +73,57 @@ func runUpdate(opts *UpdateOptions, force, skipConfirm bool) error {
 		return fmt.Errorf("failed to check for updates: %w", err)
 	}
 
-	fmt.Fprintf(opts.Output, "Current version: %s\n", info.CurrentVersion)
-	fmt.Fprintf(opts.Output, "Latest version: %s\n", info.LatestVersion)
-	fmt.Fprintln(opts.Output)
+	_, _ = fmt.Fprintf(opts.Output, "Current version: %s\n", info.CurrentVersion)
+	_, _ = fmt.Fprintf(opts.Output, "Latest version: %s\n", info.LatestVersion)
+	_, _ = fmt.Fprintln(opts.Output)
 
 	// Check if update is needed
 	if !info.UpdateAvailable && !force {
-		fmt.Fprintln(opts.Output, "✓ You are already running the latest version")
+		_, _ = fmt.Fprintln(opts.Output, "✓ You are already running the latest version")
 		return nil
 	}
 
 	// Show changelog if enabled
 	if opts.ShowChangelog && len(info.Changelog) > 0 {
-		fmt.Fprintln(opts.Output, "Changelog:")
+		_, _ = fmt.Fprintln(opts.Output, "Changelog:")
 		for _, change := range info.Changelog {
-			fmt.Fprintf(opts.Output, "  • %s\n", change)
+			_, _ = fmt.Fprintf(opts.Output, "  • %s\n", change)
 		}
-		fmt.Fprintln(opts.Output)
+		_, _ = fmt.Fprintln(opts.Output)
 	}
 
 	// Show release notes if available
 	if info.ReleaseNotes != "" {
-		fmt.Fprintln(opts.Output, info.ReleaseNotes)
-		fmt.Fprintln(opts.Output)
+		_, _ = fmt.Fprintln(opts.Output, info.ReleaseNotes)
+		_, _ = fmt.Fprintln(opts.Output)
 	}
 
 	// Confirm update
 	if opts.RequireConfirm && !skipConfirm {
-		fmt.Fprint(opts.Output, "Update now? [Y/n]: ")
+		_, _ = fmt.Fprint(opts.Output, "Update now? [Y/n]: ")
 		var response string
-		fmt.Scanln(&response)
+		_, _ = fmt.Scanln(&response)
 		if response != "" && response != "Y" && response != "y" {
-			fmt.Fprintln(opts.Output, "Update cancelled")
+			_, _ = fmt.Fprintln(opts.Output, "Update cancelled")
 			return nil
 		}
 	}
 
 	// Perform update
-	fmt.Fprintf(opts.Output, "Downloading %s...\n", info.LatestVersion)
+	_, _ = fmt.Fprintf(opts.Output, "Downloading %s...\n", info.LatestVersion)
 
 	if err := opts.PerformUpdateFunc(ctx, info.LatestVersion); err != nil {
 		return fmt.Errorf("update failed: %w", err)
 	}
 
-	fmt.Fprintln(opts.Output, "Installing...")
-	fmt.Fprintf(opts.Output, "✓ Updated to %s\n", info.LatestVersion)
+	_, _ = fmt.Fprintln(opts.Output, "Installing...")
+	_, _ = fmt.Fprintf(opts.Output, "✓ Updated to %s\n", info.LatestVersion)
 
 	return nil
 }
 
 // DefaultCheckUpdateFunc is a default implementation for checking updates.
-func DefaultCheckUpdateFunc(config *cli.CLIConfig, currentVersion string) func(ctx context.Context) (*UpdateInfo, error) {
+func DefaultCheckUpdateFunc(config *cli.Config, currentVersion string) func(ctx context.Context) (*UpdateInfo, error) {
 	return func(ctx context.Context) (*UpdateInfo, error) {
 		// This is a placeholder implementation
 		// In a real implementation, this would:

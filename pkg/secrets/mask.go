@@ -9,6 +9,7 @@ import (
 )
 
 // MaskValue masks a sensitive value using the specified masking strategy.
+// It supports full, partial, and hash masking styles based on configuration.
 func MaskValue(value string, config *cli.SecretsMasking) string {
 	if config == nil {
 		return defaultMask(value)
@@ -71,7 +72,8 @@ type MaskingWriter struct {
 	}
 }
 
-// NewMaskingWriter creates a new MaskingWriter.
+// NewMaskingWriter creates a new MaskingWriter that wraps an io.Writer.
+// It automatically masks secrets in the output based on the detector configuration and context.
 func NewMaskingWriter(detector *Detector, context string, delegate interface {
 	Write(p []byte) (n int, err error)
 }) *MaskingWriter {
@@ -107,22 +109,24 @@ type MaskFormatter struct {
 	detector *Detector
 }
 
-// NewMaskFormatter creates a new MaskFormatter.
+// NewMaskFormatter creates a new MaskFormatter for formatting-aware secret masking.
+// It provides methods for masking secrets in JSON, table, and other structured outputs.
 func NewMaskFormatter(detector *Detector) *MaskFormatter {
 	return &MaskFormatter{
 		detector: detector,
 	}
 }
 
-// FormatJSON formats and masks JSON data.
+// FormatJSON formats and masks JSON data by detecting and masking secret fields.
+// It returns the formatted JSON string with secrets replaced by mask values.
 func (f *MaskFormatter) FormatJSON(data interface{}) string {
 	masked := f.detector.MaskJSON(data)
 	// Note: Actual JSON formatting would be done by the output package
 	return fmt.Sprintf("%v", masked)
 }
 
-// FormatTable formats and masks table data.
-// Each row is a map of column name to value.
+// FormatTable formats and masks table data by detecting secrets in each cell.
+// Each row is a map of column name to value. It returns a new slice with masked values.
 func (f *MaskFormatter) FormatTable(rows []map[string]interface{}) []map[string]interface{} {
 	result := make([]map[string]interface{}, len(rows))
 
@@ -161,6 +165,7 @@ type PartialMaskStrategy struct {
 }
 
 // NewPartialMaskStrategy creates a new partial masking strategy.
+// It shows the first N characters and masks the rest with a replacement string.
 func NewPartialMaskStrategy(showChars int, replacement string) *PartialMaskStrategy {
 	return &PartialMaskStrategy{
 		showChars:   showChars,
@@ -182,6 +187,7 @@ type FullMaskStrategy struct {
 }
 
 // NewFullMaskStrategy creates a new full masking strategy.
+// It completely replaces the secret value with a replacement string.
 func NewFullMaskStrategy(replacement string) *FullMaskStrategy {
 	return &FullMaskStrategy{
 		replacement: replacement,
@@ -200,6 +206,7 @@ func (s *FullMaskStrategy) Name() string {
 type HashMaskStrategy struct{}
 
 // NewHashMaskStrategy creates a new hash masking strategy.
+// It replaces the secret value with a SHA256 hash prefix for audit purposes.
 func NewHashMaskStrategy() *HashMaskStrategy {
 	return &HashMaskStrategy{}
 }
@@ -213,6 +220,7 @@ func (s *HashMaskStrategy) Name() string {
 }
 
 // CreateMaskStrategy creates a MaskStrategy from configuration.
+// It returns the appropriate masking strategy based on the configured style (full, hash, or partial).
 func CreateMaskStrategy(config *cli.SecretsMasking) MaskStrategy {
 	if config == nil {
 		return NewPartialMaskStrategy(6, "***")
@@ -232,6 +240,7 @@ func CreateMaskStrategy(config *cli.SecretsMasking) MaskStrategy {
 
 // StructurePreservingMask masks a value while preserving its structure.
 // This is useful for debugging where you want to see the shape but not the content.
+// It preserves prefixes and separators (like "sk_live_" or "Bearer") while masking the sensitive part.
 func StructurePreservingMask(value string, config *cli.SecretsMasking) string {
 	if config == nil || config.Style != "partial" {
 		return MaskValue(value, config)

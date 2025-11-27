@@ -297,7 +297,7 @@ func TestOAuth2Auth_RefreshToken(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer server.Close()
 
@@ -386,7 +386,7 @@ func TestOAuth2Auth_AuthenticateClientCredentials(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer server.Close()
 
@@ -451,7 +451,7 @@ func TestOAuth2Auth_AuthenticatePassword(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer server.Close()
 
@@ -612,7 +612,7 @@ func TestOAuth2Auth_RequestDeviceCode(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer server.Close()
 
@@ -685,7 +685,7 @@ func TestOAuth2Auth_CheckDeviceToken(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(tt.statusCode)
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(tt.response)
+				_ = json.NewEncoder(w).Encode(tt.response)
 			}))
 			defer server.Close()
 
@@ -769,7 +769,7 @@ func TestOAuth2Auth_StartCallbackServer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("startCallbackServer() error = %v", err)
 	}
-	defer server.Close()
+	defer func() { _ = server.Close() }()
 
 	// Test successful callback
 	go func() {
@@ -778,7 +778,7 @@ func TestOAuth2Auth_StartCallbackServer(t *testing.T) {
 			t.Logf("callback request failed: %v", err)
 		}
 		if resp != nil {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 	}()
 

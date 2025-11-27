@@ -83,7 +83,7 @@ func TestExecutor_Execute(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"items": [{"id": "1", "name": "test"}]}`))
+		_, _ = w.Write([]byte(`{"items": [{"id": "1", "name": "test"}]}`))
 	}))
 	defer server.Close()
 
@@ -96,7 +96,7 @@ func TestExecutor_Execute(t *testing.T) {
 
 	// Create executor
 	authMgr := auth.NewManager("test")
-	authMgr.RegisterAuthenticator("default", &auth.NoneAuth{})
+	_ = authMgr.RegisterAuthenticator("default", &auth.NoneAuth{})
 
 	config := &ExecutorConfig{
 		BaseURL:       server.URL,
@@ -210,7 +210,7 @@ func TestExecutor_BuildURL(t *testing.T) {
 					"param:limit:in": "query",
 				}
 				cmd.Flags().Int("limit", 100, "Limit")
-				cmd.Flags().Set("limit", "50")
+				_ = cmd.Flags().Set("limit", "50")
 				return cmd
 			},
 			args:        nil,
@@ -323,11 +323,11 @@ func TestExecutor_BuildRequest(t *testing.T) {
 	}
 
 	tests := []struct {
-		name           string
-		operation      *openapi.Operation
-		setupCmd       func() *cobra.Command
-		wantMethod     string
-		wantHasBody    bool
+		name            string
+		operation       *openapi.Operation
+		setupCmd        func() *cobra.Command
+		wantMethod      string
+		wantHasBody     bool
 		wantContentType string
 	}{
 		{
@@ -339,11 +339,11 @@ func TestExecutor_BuildRequest(t *testing.T) {
 					"body:name": "name",
 				}
 				cmd.Flags().String("name", "", "Name")
-				cmd.Flags().Set("name", "test-user")
+				_ = cmd.Flags().Set("name", "test-user")
 				return cmd
 			},
-			wantMethod:     "POST",
-			wantHasBody:    true,
+			wantMethod:      "POST",
+			wantHasBody:     true,
 			wantContentType: "application/json",
 		},
 	}
@@ -388,7 +388,7 @@ func TestExecutor_ApplyAuth(t *testing.T) {
 			name: "no auth",
 			setupAuth: func() *auth.Manager {
 				mgr := auth.NewManager("test")
-				mgr.RegisterAuthenticator("default", &auth.NoneAuth{})
+				_ = mgr.RegisterAuthenticator("default", &auth.NoneAuth{})
 				return mgr
 			},
 			wantErr: false,
@@ -402,7 +402,7 @@ func TestExecutor_ApplyAuth(t *testing.T) {
 					Name:     "X-API-Key",
 					Key:      "test-key-123",
 				})
-				mgr.RegisterAuthenticator("default", apiKeyAuth)
+				_ = mgr.RegisterAuthenticator("default", apiKeyAuth)
 				return mgr
 			},
 			wantErr: false,
@@ -565,9 +565,9 @@ func TestExecutor_HandleAsyncOperationWithPolling(t *testing.T) {
 		requestCount++
 		w.Header().Set("Content-Type", "application/json")
 		if requestCount < 3 {
-			w.Write([]byte(`{"status": "pending"}`))
+			_, _ = w.Write([]byte(`{"status": "pending"}`))
 		} else {
-			w.Write([]byte(`{"status": "completed"}`))
+			_, _ = w.Write([]byte(`{"status": "completed"}`))
 		}
 	}))
 	defer server.Close()
@@ -638,7 +638,7 @@ func TestExecutor_PollStatus(t *testing.T) {
 			t.Errorf("Expected GET request, got %s", r.Method)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status": "running", "progress": 50}`))
+		_, _ = w.Write([]byte(`{"status": "running", "progress": 50}`))
 	}))
 	defer server.Close()
 
@@ -682,11 +682,11 @@ func TestExecutor_PollStatusError(t *testing.T) {
 
 func TestExecutor_FormatOutput(t *testing.T) {
 	tests := []struct {
-		name          string
-		body          []byte
-		outputFormat  string
-		hasOutputMgr  bool
-		wantErr       bool
+		name         string
+		body         []byte
+		outputFormat string
+		hasOutputMgr bool
+		wantErr      bool
 	}{
 		{
 			name:         "JSON output",
@@ -750,7 +750,7 @@ func TestExecutor_ExecuteHTTPOperation(t *testing.T) {
 		callCount++
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"success": true}`))
+		_, _ = w.Write([]byte(`{"success": true}`))
 	}))
 	defer server.Close()
 
@@ -761,7 +761,7 @@ func TestExecutor_ExecuteHTTPOperation(t *testing.T) {
 	}
 
 	authMgr := auth.NewManager("test")
-	authMgr.RegisterAuthenticator("default", &auth.NoneAuth{})
+	_ = authMgr.RegisterAuthenticator("default", &auth.NoneAuth{})
 
 	config := &ExecutorConfig{
 		BaseURL:       server.URL,
@@ -802,7 +802,7 @@ func TestExecutor_ExecuteHTTPOperationWithError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"message": "Invalid input"}`))
+		_, _ = w.Write([]byte(`{"message": "Invalid input"}`))
 	}))
 	defer server.Close()
 
@@ -849,7 +849,7 @@ func TestExecutor_ExecuteHTTPOperationWithError(t *testing.T) {
 func TestExecutor_ExecuteHTTPOperationWithProgress(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status": "ok"}`))
+		_, _ = w.Write([]byte(`{"status": "ok"}`))
 	}))
 	defer server.Close()
 
@@ -860,9 +860,9 @@ func TestExecutor_ExecuteHTTPOperationWithProgress(t *testing.T) {
 	}
 
 	config := &ExecutorConfig{
-		BaseURL:         server.URL,
-		OutputManager:   output.NewManager(),
-		ProgressMgr:     progress.NewManager(progress.DefaultConfig()),
+		BaseURL:       server.URL,
+		OutputManager: output.NewManager(),
+		ProgressMgr:   progress.NewManager(progress.DefaultConfig()),
 	}
 	executor, err := NewExecutor(spec, config)
 	if err != nil {
@@ -1025,7 +1025,7 @@ func TestExecutor_BuildRequestWithHeaders(t *testing.T) {
 		"param:x-custom-header:in": "header",
 	}
 	cmd.Flags().String("x-custom-header", "", "Custom header")
-	cmd.Flags().Set("x-custom-header", "custom-value")
+	_ = cmd.Flags().Set("x-custom-header", "custom-value")
 
 	ctx := context.Background()
 	req, err := executor.buildRequest(ctx, cmd, listOp, nil)
@@ -1170,7 +1170,7 @@ func TestExecutor_HandleAsyncOperationContextCanceled(t *testing.T) {
 
 func TestExecutor_PollStatusInvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`invalid json`))
+		_, _ = w.Write([]byte(`invalid json`))
 	}))
 	defer server.Close()
 

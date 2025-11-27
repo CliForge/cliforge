@@ -10,7 +10,7 @@ func DefaultFieldPatterns() []string {
 		"*passwd*",
 		"*secret*",
 		"*token*",
-		"*key",        // api_key, access_key, etc.
+		"*key", // api_key, access_key, etc.
 		"*apikey*",
 		"*api_key*",
 		"*access_key*",

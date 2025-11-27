@@ -59,7 +59,7 @@ func TestExecutionContext_SetAndGetVariable(t *testing.T) {
 	}
 }
 
-func TestExecutionContext_Variables_ThreadSafe(t *testing.T) {
+func TestExecutionContext_Variables_ThreadSafe(_ *testing.T) {
 	ctx := NewExecutionContext(map[string]interface{}{})
 
 	done := make(chan bool)
@@ -245,14 +245,14 @@ func TestExecutionContext_AddAndGetRollbackActions(t *testing.T) {
 	}
 }
 
-func TestExecutionContext_RollbackActions_ThreadSafe(t *testing.T) {
+func TestExecutionContext_RollbackActions_ThreadSafe(_ *testing.T) {
 	ctx := NewExecutionContext(map[string]interface{}{})
 
 	done := make(chan bool)
 
 	// Concurrent adds
 	for i := 0; i < 10; i++ {
-		go func(n int) {
+		go func(_ int) {
 			action := &RollbackAction{
 				StepID: "step",
 				Action: &Step{ID: "rollback"},

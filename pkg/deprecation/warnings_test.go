@@ -10,8 +10,8 @@ func TestWarningManager_ShouldShowWarning(t *testing.T) {
 	// Use temp directory for testing
 	tmpDir := t.TempDir()
 	oldXdgDataHome := os.Getenv("XDG_DATA_HOME")
-	os.Setenv("XDG_DATA_HOME", tmpDir)
-	defer os.Setenv("XDG_DATA_HOME", oldXdgDataHome)
+	_ = os.Setenv("XDG_DATA_HOME", tmpDir)
+	defer func() { _ = os.Setenv("XDG_DATA_HOME", oldXdgDataHome) }()
 
 	manager, err := NewWarningManager("test-cli")
 	if err != nil {
@@ -90,8 +90,8 @@ func TestWarningManager_ShouldShowWarning(t *testing.T) {
 func TestWarningManager_MarkShown(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldXdgDataHome := os.Getenv("XDG_DATA_HOME")
-	os.Setenv("XDG_DATA_HOME", tmpDir)
-	defer os.Setenv("XDG_DATA_HOME", oldXdgDataHome)
+	_ = os.Setenv("XDG_DATA_HOME", tmpDir)
+	defer func() { _ = os.Setenv("XDG_DATA_HOME", oldXdgDataHome) }()
 
 	manager, err := NewWarningManager("test-cli")
 	if err != nil {
@@ -167,8 +167,8 @@ func TestCompareWarningLevels(t *testing.T) {
 func TestWarningManager_SuppressOperation(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldXdgDataHome := os.Getenv("XDG_DATA_HOME")
-	os.Setenv("XDG_DATA_HOME", tmpDir)
-	defer os.Setenv("XDG_DATA_HOME", oldXdgDataHome)
+	_ = os.Setenv("XDG_DATA_HOME", tmpDir)
+	defer func() { _ = os.Setenv("XDG_DATA_HOME", oldXdgDataHome) }()
 
 	manager, err := NewWarningManager("test-cli")
 	if err != nil {
@@ -210,8 +210,8 @@ func TestWarningManager_SuppressOperation(t *testing.T) {
 func TestWarningManager_UnsuppressOperation(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldXdgDataHome := os.Getenv("XDG_DATA_HOME")
-	os.Setenv("XDG_DATA_HOME", tmpDir)
-	defer os.Setenv("XDG_DATA_HOME", oldXdgDataHome)
+	_ = os.Setenv("XDG_DATA_HOME", tmpDir)
+	defer func() { _ = os.Setenv("XDG_DATA_HOME", oldXdgDataHome) }()
 
 	manager, err := NewWarningManager("test-cli")
 	if err != nil {
@@ -221,7 +221,7 @@ func TestWarningManager_UnsuppressOperation(t *testing.T) {
 	operationID := "testOperation"
 
 	// Suppress then unsuppress
-	manager.SuppressOperation(operationID)
+	_ = manager.SuppressOperation(operationID)
 	err = manager.UnsuppressOperation(operationID)
 	if err != nil {
 		t.Errorf("UnsuppressOperation() error = %v", err)
@@ -414,8 +414,8 @@ func TestGetWarningColor(t *testing.T) {
 func contains(s, substr string) bool {
 	return len(s) > 0 && len(substr) > 0 &&
 		(s == substr || len(s) > len(substr) &&
-		(s[:len(substr)] == substr || s[len(s)-len(substr):] == substr ||
-		findSubstring(s, substr)))
+			(s[:len(substr)] == substr || s[len(s)-len(substr):] == substr ||
+				findSubstring(s, substr)))
 }
 
 func findSubstring(s, substr string) bool {

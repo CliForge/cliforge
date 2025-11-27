@@ -101,7 +101,7 @@ func TestAutoUpdater_CheckAndNotify(t *testing.T) {
 
 			// Setup mock HTTP server FIRST
 			var server *httptest.Server
-			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				release := &ReleaseInfo{
 					Version:      tt.releaseVersion,
 					URL:          server.URL + "/binary", // Use mock server
@@ -109,7 +109,7 @@ func TestAutoUpdater_CheckAndNotify(t *testing.T) {
 					ChecksumAlgo: "sha256",
 					Size:         int64(len(testData)),
 				}
-				json.NewEncoder(w).Encode(release)
+				_ = json.NewEncoder(w).Encode(release)
 			}))
 			defer server.Close()
 
@@ -121,9 +121,14 @@ func TestAutoUpdater_CheckAndNotify(t *testing.T) {
 
 			// Save last check if provided
 			if tt.lastCheck != nil {
-				data, _ := json.Marshal(tt.lastCheck)
+				data, err := json.Marshal(tt.lastCheck)
+				if err != nil {
+					t.Fatalf("Failed to marshal last check: %v", err)
+				}
 				lastCheckPath := filepath.Join(stateDir, "last_check.json")
-				os.WriteFile(lastCheckPath, data, 0600)
+				if err := os.WriteFile(lastCheckPath, data, 0600); err != nil {
+					t.Fatalf("Failed to write last check: %v", err)
+				}
 			}
 
 			config := &UpdateConfig{
@@ -150,7 +155,7 @@ func TestAutoUpdater_CheckAndNotify_ErrorHandling(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Server that returns error
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
 	defer server.Close()
@@ -215,14 +220,13 @@ func TestAutoUpdater_Update(t *testing.T) {
 			tmpDir := t.TempDir()
 
 			// Setup binary download server (returns actual binary data)
-			binaryServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.Write(testData)
+			binaryServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				_, _ = w.Write(testData)
 			}))
 			defer binaryServer.Close()
 
 			// Setup release check server (returns release info)
-			var releaseServer *httptest.Server
-			releaseServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			releaseServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				release := &ReleaseInfo{
 					Version:      tt.releaseVersion,
 					URL:          binaryServer.URL + "/binary", // Point to binary server
@@ -230,7 +234,7 @@ func TestAutoUpdater_Update(t *testing.T) {
 					ChecksumAlgo: "sha256",
 					Size:         int64(len(testData)),
 				}
-				json.NewEncoder(w).Encode(release)
+				_ = json.NewEncoder(w).Encode(release)
 			}))
 			defer releaseServer.Close()
 
@@ -257,7 +261,7 @@ func TestAutoUpdater_Update_CheckError(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Server that returns error
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
 	defer server.Close()
@@ -307,7 +311,7 @@ func TestAutoUpdater_SkipVersion(t *testing.T) {
 
 			// Setup mock HTTP server FIRST
 			var server *httptest.Server
-			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				release := &ReleaseInfo{
 					Version:      tt.releaseVersion,
 					URL:          server.URL + "/binary", // Use mock server
@@ -315,7 +319,7 @@ func TestAutoUpdater_SkipVersion(t *testing.T) {
 					ChecksumAlgo: "sha256",
 					Size:         int64(len(testData)),
 				}
-				json.NewEncoder(w).Encode(release)
+				_ = json.NewEncoder(w).Encode(release)
 			}))
 			defer server.Close()
 
@@ -354,7 +358,7 @@ func TestAutoUpdater_SkipVersion(t *testing.T) {
 func TestAutoUpdater_SkipVersion_CheckError(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
 	defer server.Close()
@@ -404,7 +408,7 @@ func TestAutoUpdater_Status(t *testing.T) {
 
 			// Setup mock HTTP server FIRST
 			var server *httptest.Server
-			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				release := &ReleaseInfo{
 					Version:      tt.releaseVersion,
 					URL:          server.URL + "/binary", // Use mock server
@@ -413,7 +417,7 @@ func TestAutoUpdater_Status(t *testing.T) {
 					Size:         int64(len(testData)),
 					Critical:     true,
 				}
-				json.NewEncoder(w).Encode(release)
+				_ = json.NewEncoder(w).Encode(release)
 			}))
 			defer server.Close()
 
@@ -438,7 +442,7 @@ func TestAutoUpdater_Status(t *testing.T) {
 func TestAutoUpdater_Status_CheckError(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
 	defer server.Close()

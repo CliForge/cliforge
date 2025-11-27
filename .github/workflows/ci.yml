@@ -42,9 +42,20 @@ jobs:
     - name: Download dependencies
       run: go mod download
 
-    - name: Run tests
-      run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
-      shell: bash  # Force bash on all platforms to avoid Windows cmd.exe issues
+    - name: Run tests with race detector
+      run: |
+        # Run most tests with race detector
+        # Exclude packages with pterm UI (known race conditions in pterm library itself)
+        go test -v -race -coverprofile=coverage.out -covermode=atomic \
+          $(go list ./... | grep -v '/pkg/progress$' | grep -v '/pkg/update$')
+      shell: bash
+
+    - name: Run UI package tests without race detector
+      run: |
+        # pterm library has known race conditions (see github.com/pterm/pterm/issues/655)
+        # Run these tests without -race to avoid false positives from library code
+        go test -v -coverprofile=ui_coverage.out ./pkg/progress ./pkg/update
+      shell: bash
 
     - name: Upload coverage to Codecov
       if: matrix.os == 'ubuntu-latest' && matrix.go == '1.23'

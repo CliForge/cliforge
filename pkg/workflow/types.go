@@ -51,12 +51,12 @@ import (
 
 // Workflow represents a complete workflow definition.
 type Workflow struct {
-	Steps    []*Step          `json:"steps"`
-	Settings *WorkflowSettings `json:"settings,omitempty"`
+	Steps    []*Step   `json:"steps"`
+	Settings *Settings `json:"settings,omitempty"`
 }
 
-// WorkflowSettings contains workflow-level configuration.
-type WorkflowSettings struct {
+// Settings contains workflow-level configuration.
+type Settings struct {
 	ParallelExecution bool `json:"parallel-execution,omitempty"`
 	FailFast          bool `json:"fail-fast,omitempty"`
 	Timeout           int  `json:"timeout,omitempty"` // seconds
@@ -95,20 +95,27 @@ type Step struct {
 type StepType string
 
 const (
-	StepTypeAPICall     StepType = "api-call"
-	StepTypePlugin      StepType = "plugin"
+	// StepTypeAPICall represents an API call step.
+	StepTypeAPICall StepType = "api-call"
+	// StepTypePlugin represents a plugin execution step.
+	StepTypePlugin StepType = "plugin"
+	// StepTypeConditional represents a conditional execution step.
 	StepTypeConditional StepType = "conditional"
-	StepTypeLoop        StepType = "loop"
-	StepTypeWait        StepType = "wait"
-	StepTypeParallel    StepType = "parallel"
-	StepTypeNoop        StepType = "noop"
+	// StepTypeLoop represents a loop execution step.
+	StepTypeLoop StepType = "loop"
+	// StepTypeWait represents a wait/delay step.
+	StepTypeWait StepType = "wait"
+	// StepTypeParallel represents parallel execution of sub-steps.
+	StepTypeParallel StepType = "parallel"
+	// StepTypeNoop represents a no-operation step.
+	StepTypeNoop StepType = "noop"
 )
 
 // RetryConfig defines retry behavior for a step.
 type RetryConfig struct {
-	MaxAttempts      int            `json:"max-attempts,omitempty"`
-	Backoff          *BackoffConfig `json:"backoff,omitempty"`
-	RetryableErrors  []*ErrorMatch  `json:"retryable-errors,omitempty"`
+	MaxAttempts     int            `json:"max-attempts,omitempty"`
+	Backoff         *BackoffConfig `json:"backoff,omitempty"`
+	RetryableErrors []*ErrorMatch  `json:"retryable-errors,omitempty"`
 }
 
 // BackoffConfig defines exponential backoff settings.
@@ -123,8 +130,11 @@ type BackoffConfig struct {
 type BackoffType string
 
 const (
-	BackoffFixed       BackoffType = "fixed"
-	BackoffLinear      BackoffType = "linear"
+	// BackoffFixed represents a fixed delay between retries.
+	BackoffFixed BackoffType = "fixed"
+	// BackoffLinear represents linearly increasing delay between retries.
+	BackoffLinear BackoffType = "linear"
+	// BackoffExponential represents exponentially increasing delay between retries.
 	BackoffExponential BackoffType = "exponential"
 )
 
@@ -199,22 +209,27 @@ type StepResult struct {
 
 // ExecutionState represents the state of workflow execution.
 type ExecutionState struct {
-	WorkflowID    string
-	StartTime     time.Time
-	Status        ExecutionStatus
+	WorkflowID     string
+	StartTime      time.Time
+	Status         ExecutionStatus
 	CompletedSteps []*StepResult
-	CurrentStep   string
-	Error         error
+	CurrentStep    string
+	Error          error
 }
 
 // ExecutionStatus defines the status of workflow execution.
 type ExecutionStatus string
 
 const (
-	ExecutionStatusPending   ExecutionStatus = "pending"
-	ExecutionStatusRunning   ExecutionStatus = "running"
+	// ExecutionStatusPending indicates the workflow is waiting to start.
+	ExecutionStatusPending ExecutionStatus = "pending"
+	// ExecutionStatusRunning indicates the workflow is currently executing.
+	ExecutionStatusRunning ExecutionStatus = "running"
+	// ExecutionStatusCompleted indicates the workflow completed successfully.
 	ExecutionStatusCompleted ExecutionStatus = "completed"
-	ExecutionStatusFailed    ExecutionStatus = "failed"
+	// ExecutionStatusFailed indicates the workflow failed.
+	ExecutionStatusFailed ExecutionStatus = "failed"
+	// ExecutionStatusRolledBack indicates the workflow was rolled back.
 	ExecutionStatusRolledBack ExecutionStatus = "rolled-back"
 )
 

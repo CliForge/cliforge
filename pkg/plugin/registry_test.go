@@ -7,7 +7,10 @@ import (
 
 func TestNewRegistry(t *testing.T) {
 	tmpDir := t.TempDir()
-	pm, _ := NewPermissionManager(tmpDir, &AutoApprover{})
+	pm, err := NewPermissionManager(tmpDir, &AutoApprover{})
+	if err != nil {
+		t.Fatalf("NewPermissionManager() error = %v", err)
+	}
 
 	registry := NewRegistry(tmpDir, pm)
 	if registry == nil {
@@ -21,7 +24,10 @@ func TestNewRegistry(t *testing.T) {
 
 func TestRegistry_Register(t *testing.T) {
 	tmpDir := t.TempDir()
-	pm, _ := NewPermissionManager(tmpDir, &AutoApprover{})
+	pm, err := NewPermissionManager(tmpDir, &AutoApprover{})
+	if err != nil {
+		t.Fatalf("NewPermissionManager() error = %v", err)
+	}
 	registry := NewRegistry(tmpDir, pm)
 
 	mockPlugin := &MockPlugin{
@@ -36,15 +42,15 @@ func TestRegistry_Register(t *testing.T) {
 		},
 	}
 
-	err := registry.Register(mockPlugin)
-	if err != nil {
-		t.Fatalf("Register() error = %v", err)
+	err2 := registry.Register(mockPlugin)
+	if err2 != nil {
+		t.Fatalf("Register() error = %v", err2)
 	}
 
 	// Verify plugin was registered
-	plugin, err := registry.Get("test-plugin")
-	if err != nil {
-		t.Fatalf("Get() error = %v", err)
+	plugin, err3 := registry.Get("test-plugin")
+	if err3 != nil {
+		t.Fatalf("Get() error = %v", err3)
 	}
 
 	if plugin == nil {
@@ -54,53 +60,70 @@ func TestRegistry_Register(t *testing.T) {
 
 func TestRegistry_RegisterDuplicate(t *testing.T) {
 	tmpDir := t.TempDir()
-	pm, _ := NewPermissionManager(tmpDir, &AutoApprover{})
+	pm, err := NewPermissionManager(tmpDir, &AutoApprover{})
+	if err != nil {
+		t.Fatalf("NewPermissionManager() error = %v", err)
+	}
 	registry := NewRegistry(tmpDir, pm)
 
 	mockPlugin := &MockPlugin{name: "test-plugin"}
 
 	// First registration should succeed
-	err := registry.Register(mockPlugin)
-	if err != nil {
-		t.Fatalf("First Register() error = %v", err)
+	err2 := registry.Register(mockPlugin)
+	if err2 != nil {
+		t.Fatalf("First Register() error = %v", err2)
 	}
 
 	// Second registration should fail
-	err = registry.Register(mockPlugin)
-	if err == nil {
+	err3 := registry.Register(mockPlugin)
+	if err3 == nil {
 		t.Error("Register() should fail for duplicate plugin")
 	}
 }
 
 func TestRegistry_Unregister(t *testing.T) {
 	tmpDir := t.TempDir()
-	pm, _ := NewPermissionManager(tmpDir, &AutoApprover{})
+	pm, err := NewPermissionManager(tmpDir, &AutoApprover{})
+	if err != nil {
+		t.Fatalf("NewPermissionManager() error = %v", err)
+	}
 	registry := NewRegistry(tmpDir, pm)
 
 	mockPlugin := &MockPlugin{name: "test-plugin"}
-	registry.Register(mockPlugin)
+	if err2 := registry.Register(mockPlugin); err2 != nil {
+		t.Fatalf("Register() error = %v", err2)
+	}
 
-	err := registry.Unregister("test-plugin")
-	if err != nil {
-		t.Fatalf("Unregister() error = %v", err)
+	err3 := registry.Unregister("test-plugin")
+	if err3 != nil {
+		t.Fatalf("Unregister() error = %v", err3)
 	}
 
 	// Verify plugin was unregistered
-	_, err = registry.Get("test-plugin")
-	if err == nil {
+	_, err4 := registry.Get("test-plugin")
+	if err4 == nil {
 		t.Error("Get() should fail after unregister")
 	}
 }
 
 func TestRegistry_List(t *testing.T) {
 	tmpDir := t.TempDir()
-	pm, _ := NewPermissionManager(tmpDir, &AutoApprover{})
+	pm, err := NewPermissionManager(tmpDir, &AutoApprover{})
+	if err != nil {
+		t.Fatalf("NewPermissionManager() error = %v", err)
+	}
 	registry := NewRegistry(tmpDir, pm)
 
 	// Register multiple plugins
-	registry.Register(&MockPlugin{name: "plugin1"})
-	registry.Register(&MockPlugin{name: "plugin2"})
-	registry.Register(&MockPlugin{name: "plugin3"})
+	if err := registry.Register(&MockPlugin{name: "plugin1"}); err != nil {
+		t.Fatalf("Register() error = %v", err)
+	}
+	if err := registry.Register(&MockPlugin{name: "plugin2"}); err != nil {
+		t.Fatalf("Register() error = %v", err)
+	}
+	if err := registry.Register(&MockPlugin{name: "plugin3"}); err != nil {
+		t.Fatalf("Register() error = %v", err)
+	}
 
 	names := registry.List()
 	if len(names) != 3 {
@@ -122,7 +145,10 @@ func TestRegistry_List(t *testing.T) {
 
 func TestRegistry_GetManifest(t *testing.T) {
 	tmpDir := t.TempDir()
-	pm, _ := NewPermissionManager(tmpDir, &AutoApprover{})
+	pm, err := NewPermissionManager(tmpDir, &AutoApprover{})
+	if err != nil {
+		t.Fatalf("NewPermissionManager() error = %v", err)
+	}
 	registry := NewRegistry(tmpDir, pm)
 
 	mockPlugin := &MockPlugin{
@@ -137,7 +163,9 @@ func TestRegistry_GetManifest(t *testing.T) {
 			Status: PluginStatusReady,
 		},
 	}
-	registry.Register(mockPlugin)
+	if err := registry.Register(mockPlugin); err != nil {
+		t.Fatalf("Register() error = %v", err)
+	}
 
 	manifest, err := registry.GetManifest("test-plugin")
 	if err != nil {
@@ -155,7 +183,10 @@ func TestRegistry_GetManifest(t *testing.T) {
 
 func TestRegistry_Execute(t *testing.T) {
 	tmpDir := t.TempDir()
-	pm, _ := NewPermissionManager(tmpDir, &AutoApprover{})
+	pm, err := NewPermissionManager(tmpDir, &AutoApprover{})
+	if err != nil {
+		t.Fatalf("NewPermissionManager() error = %v", err)
+	}
 	registry := NewRegistry(tmpDir, pm)
 
 	// Create a mock plugin that returns specific output
@@ -170,7 +201,9 @@ func TestRegistry_Execute(t *testing.T) {
 			}, nil
 		},
 	}
-	registry.Register(mockPlugin)
+	if err := registry.Register(mockPlugin); err != nil {
+		t.Fatalf("Register() error = %v", err)
+	}
 
 	input := &PluginInput{
 		Data: map[string]interface{}{
@@ -194,7 +227,10 @@ func TestRegistry_Execute(t *testing.T) {
 
 func TestRegistry_GetPluginInfo(t *testing.T) {
 	tmpDir := t.TempDir()
-	pm, _ := NewPermissionManager(tmpDir, &AutoApprover{})
+	pm, err := NewPermissionManager(tmpDir, &AutoApprover{})
+	if err != nil {
+		t.Fatalf("NewPermissionManager() error = %v", err)
+	}
 	registry := NewRegistry(tmpDir, pm)
 
 	mockPlugin := &MockPlugin{
@@ -209,7 +245,9 @@ func TestRegistry_GetPluginInfo(t *testing.T) {
 			Status:       PluginStatusReady,
 		},
 	}
-	registry.Register(mockPlugin)
+	if err := registry.Register(mockPlugin); err != nil {
+		t.Fatalf("Register() error = %v", err)
+	}
 
 	info, err := registry.GetPluginInfo("test-plugin")
 	if err != nil {
@@ -227,12 +265,19 @@ func TestRegistry_GetPluginInfo(t *testing.T) {
 
 func TestRegistry_ListPluginInfo(t *testing.T) {
 	tmpDir := t.TempDir()
-	pm, _ := NewPermissionManager(tmpDir, &AutoApprover{})
+	pm, err := NewPermissionManager(tmpDir, &AutoApprover{})
+	if err != nil {
+		t.Fatalf("NewPermissionManager() error = %v", err)
+	}
 	registry := NewRegistry(tmpDir, pm)
 
 	// Register multiple plugins
-	registry.Register(&MockPlugin{name: "plugin1"})
-	registry.Register(&MockPlugin{name: "plugin2"})
+	if err := registry.Register(&MockPlugin{name: "plugin1"}); err != nil {
+		t.Fatalf("Register() error = %v", err)
+	}
+	if err := registry.Register(&MockPlugin{name: "plugin2"}); err != nil {
+		t.Fatalf("Register() error = %v", err)
+	}
 
 	infos, err := registry.ListPluginInfo()
 	if err != nil {
@@ -246,7 +291,10 @@ func TestRegistry_ListPluginInfo(t *testing.T) {
 
 func TestRegistry_ValidateManifest(t *testing.T) {
 	tmpDir := t.TempDir()
-	pm, _ := NewPermissionManager(tmpDir, &AutoApprover{})
+	pm, err := NewPermissionManager(tmpDir, &AutoApprover{})
+	if err != nil {
+		t.Fatalf("NewPermissionManager() error = %v", err)
+	}
 	registry := NewRegistry(tmpDir, pm)
 
 	tests := []struct {

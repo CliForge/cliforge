@@ -267,7 +267,6 @@ func TestRollbackManager_SetContinueOnError(t *testing.T) {
 	}
 }
 
-
 // TestRollbackManager_ExecuteRollbackWithStatus_StopOnError tests that rollback stops on first error when configured
 func TestRollbackManager_ExecuteRollbackWithStatus_StopOnError(t *testing.T) {
 	rm := NewRollbackManager()

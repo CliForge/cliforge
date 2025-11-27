@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -61,7 +62,7 @@ func TestSSEClient_Unsubscribe(t *testing.T) {
 	client := NewSSEClient(nil)
 
 	handler := func(event *Event) error { return nil }
-	client.Subscribe("test", handler)
+	_ = client.Subscribe("test", handler)
 
 	err := client.Unsubscribe("test")
 	if err != nil {
@@ -129,7 +130,7 @@ func TestSSEClient_Connect(t *testing.T) {
 		t.Error("Timeout waiting for event")
 	}
 
-	client.Close()
+	_ = client.Close()
 }
 
 func TestSSEClient_readEvents(t *testing.T) {
@@ -149,16 +150,16 @@ id: 123
 	reader := strings.NewReader(sseData)
 
 	eventReceived := make(chan *Event, 2)
-	client.Subscribe("message", func(e *Event) error {
+	_ = client.Subscribe("message", func(e *Event) error {
 		eventReceived <- e
 		return nil
 	})
-	client.Subscribe("status", func(e *Event) error {
+	_ = client.Subscribe("status", func(e *Event) error {
 		eventReceived <- e
 		return nil
 	})
 
-	go client.readEvents(ctx, reader)
+	go func() { _ = client.readEvents(ctx, reader) }()
 
 	// Check first event
 	select {
@@ -212,11 +213,15 @@ func TestWebSocketClient_Connect(t *testing.T) {
 			t.Errorf("Upgrade error: %v", err)
 			return
 		}
-		defer conn.Close()
+		defer func() { _ = conn.Close() }()
 
 		// Send a test message
 		msg := map[string]string{"type": "test", "data": "hello"}
-		data, _ := json.Marshal(msg)
+		data, err := json.Marshal(msg)
+		if err != nil {
+			t.Errorf("Marshal error: %v", err)
+			return
+		}
 		_ = conn.WriteMessage(websocket.TextMessage, data)
 
 		// Keep connection open briefly
@@ -257,7 +262,7 @@ func TestWebSocketClient_Connect(t *testing.T) {
 		t.Error("Timeout waiting for message")
 	}
 
-	client.Close()
+	_ = client.Close()
 }
 
 func TestNewPollingClient(t *testing.T) {
@@ -278,18 +283,22 @@ func TestNewPollingClient(t *testing.T) {
 }
 
 func TestPollingClient_Connect(t *testing.T) {
-	pollCount := 0
+	var pollCount atomic.Int32
 
 	// Create test HTTP server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		pollCount++
+		count := pollCount.Add(1)
 		response := map[string]interface{}{
 			"status": "running",
-			"count":  pollCount,
+			"count":  count,
 		}
-		data, _ := json.Marshal(response)
+		data, err := json.Marshal(response)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(data)
+		_, _ = w.Write(data)
 	}))
 	defer server.Close()
 
@@ -313,8 +322,9 @@ func TestPollingClient_Connect(t *testing.T) {
 	// Wait for at least 2 polls
 	time.Sleep(300 * time.Millisecond)
 
-	if pollCount < 2 {
-		t.Errorf("Expected at least 2 polls, got %d", pollCount)
+	count := pollCount.Load()
+	if count < 2 {
+		t.Errorf("Expected at least 2 polls, got %d", count)
 	}
 
 	// Check if we received events
@@ -337,7 +347,7 @@ done:
 		t.Errorf("Expected at least 2 events, got %d", eventCount)
 	}
 
-	client.Close()
+	_ = client.Close()
 }
 
 func TestPollingClient_IsConnected(t *testing.T) {
@@ -357,7 +367,7 @@ func TestPollingClient_IsConnected(t *testing.T) {
 	defer server.Close()
 
 	client.config.Endpoint = server.URL
-	client.Connect(ctx)
+	_ = client.Connect(ctx)
 
 	time.Sleep(50 * time.Millisecond)
 
@@ -365,7 +375,7 @@ func TestPollingClient_IsConnected(t *testing.T) {
 		t.Error("Client should be connected after Connect()")
 	}
 
-	client.Close()
+	_ = client.Close()
 
 	time.Sleep(50 * time.Millisecond)
 
@@ -376,9 +386,9 @@ func TestPollingClient_IsConnected(t *testing.T) {
 
 func TestNewStreamClient(t *testing.T) {
 	tests := []struct {
-		name       string
-		config     *StreamConfig
-		wantType   string
+		name     string
+		config   *StreamConfig
+		wantType string
 	}{
 		{
 			name: "SSE client",

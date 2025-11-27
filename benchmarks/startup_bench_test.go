@@ -97,8 +97,8 @@ func BenchmarkSpecCacheGet(b *testing.B) {
 	tmpDir := b.TempDir()
 
 	specCache := &cache.SpecCache{
-		BaseDir:    tmpDir,
-		AppName:    "test",
+		BaseDir: tmpDir,
+		AppName: "test",
 	}
 
 	ctx := context.Background()
@@ -127,8 +127,8 @@ func BenchmarkSpecCacheSet(b *testing.B) {
 	tmpDir := b.TempDir()
 
 	specCache := &cache.SpecCache{
-		BaseDir:    tmpDir,
-		AppName:    "test",
+		BaseDir: tmpDir,
+		AppName: "test",
 	}
 
 	ctx := context.Background()

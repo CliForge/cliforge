@@ -176,40 +176,40 @@ func TestConfig_ApplyEnvironmentOverrides(t *testing.T) {
 	oldEnv := os.Getenv("TEST_NO_MASK_SECRETS")
 	defer func() {
 		if oldEnv != "" {
-			os.Setenv("TEST_NO_MASK_SECRETS", oldEnv)
+			_ = os.Setenv("TEST_NO_MASK_SECRETS", oldEnv)
 		} else {
-			os.Unsetenv("TEST_NO_MASK_SECRETS")
+			_ = os.Unsetenv("TEST_NO_MASK_SECRETS")
 		}
 	}()
 
 	tests := []struct {
-		name      string
-		envValue  string
+		name         string
+		envValue     string
 		wantDisabled bool
 	}{
 		{
-			name:      "env not set",
-			envValue:  "",
+			name:         "env not set",
+			envValue:     "",
 			wantDisabled: false,
 		},
 		{
-			name:      "env set to 1",
-			envValue:  "1",
+			name:         "env set to 1",
+			envValue:     "1",
 			wantDisabled: true,
 		},
 		{
-			name:      "env set to true",
-			envValue:  "true",
+			name:         "env set to true",
+			envValue:     "true",
 			wantDisabled: true,
 		},
 		{
-			name:      "env set to TRUE",
-			envValue:  "TRUE",
+			name:         "env set to TRUE",
+			envValue:     "TRUE",
 			wantDisabled: true,
 		},
 		{
-			name:      "env set to false",
-			envValue:  "false",
+			name:         "env set to false",
+			envValue:     "false",
 			wantDisabled: false,
 		},
 	}
@@ -218,9 +218,9 @@ func TestConfig_ApplyEnvironmentOverrides(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Set environment variable
 			if tt.envValue != "" {
-				os.Setenv("TEST_NO_MASK_SECRETS", tt.envValue)
+				_ = os.Setenv("TEST_NO_MASK_SECRETS", tt.envValue)
 			} else {
-				os.Unsetenv("TEST_NO_MASK_SECRETS")
+				_ = os.Unsetenv("TEST_NO_MASK_SECRETS")
 			}
 
 			config := NewConfig()
@@ -406,7 +406,7 @@ func TestConfigBuilder(t *testing.T) {
 func TestLoadConfigFromCLIConfig(t *testing.T) {
 	tests := []struct {
 		name   string
-		config *cli.CLIConfig
+		config *cli.Config
 		check  func(t *testing.T, result *Config)
 	}{
 		{
@@ -423,7 +423,7 @@ func TestLoadConfigFromCLIConfig(t *testing.T) {
 		},
 		{
 			name: "config without behaviors",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Behaviors: nil,
 			},
 			check: func(t *testing.T, result *Config) {
@@ -434,7 +434,7 @@ func TestLoadConfigFromCLIConfig(t *testing.T) {
 		},
 		{
 			name: "config with secrets behavior",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Behaviors: &cli.Behaviors{
 					Secrets: &cli.SecretsBehavior{
 						Enabled: false,

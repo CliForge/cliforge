@@ -13,8 +13,8 @@ import (
 
 func TestToken_IsExpired(t *testing.T) {
 	tests := []struct {
-		name      string
-		token     *Token
+		name        string
+		token       *Token
 		wantExpired bool
 	}{
 		{
@@ -274,6 +274,7 @@ func TestNewAuthenticatedClient(t *testing.T) {
 			client := NewAuthenticatedClient(tt.client, auth, storage)
 			if client == nil {
 				t.Error("NewAuthenticatedClient() returned nil")
+				return
 			}
 			if client.client == nil {
 				t.Error("client.client is nil")
@@ -360,7 +361,7 @@ func TestAuthenticatedClient_Do(t *testing.T) {
 					t.Error("Authorization header not set")
 				}
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte("OK"))
+				_, _ = w.Write([]byte("OK"))
 			}))
 			defer server.Close()
 
@@ -374,7 +375,7 @@ func TestAuthenticatedClient_Do(t *testing.T) {
 			}
 
 			if resp != nil {
-				resp.Body.Close()
+				_ = resp.Body.Close()
 				if !tt.wantErr && resp.StatusCode != http.StatusOK {
 					t.Errorf("Do() status = %v, want %v", resp.StatusCode, http.StatusOK)
 				}

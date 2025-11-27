@@ -79,7 +79,7 @@ func (cb *CommandBuilder) addOperationFlags(cmd *cobra.Command, op *openapi.Oper
 			}
 			cmd.Flags().String(flagName, defaultVal, flag.Description)
 			if flag.Required {
-				cmd.MarkFlagRequired(flagName)
+				_ = cmd.MarkFlagRequired(flagName)
 			}
 
 		case "int", "integer":
@@ -91,7 +91,7 @@ func (cb *CommandBuilder) addOperationFlags(cmd *cobra.Command, op *openapi.Oper
 			}
 			cmd.Flags().Int(flagName, defaultVal, flag.Description)
 			if flag.Required {
-				cmd.MarkFlagRequired(flagName)
+				_ = cmd.MarkFlagRequired(flagName)
 			}
 
 		case "bool", "boolean":
@@ -140,7 +140,7 @@ func (cb *CommandBuilder) addOperationFlags(cmd *cobra.Command, op *openapi.Oper
 					}
 					cmd.Flags().String(cliFlag, defaultVal, desc)
 					if param.Required {
-						cmd.MarkFlagRequired(cliFlag)
+						_ = cmd.MarkFlagRequired(cliFlag)
 					}
 
 				case "integer":
@@ -152,7 +152,7 @@ func (cb *CommandBuilder) addOperationFlags(cmd *cobra.Command, op *openapi.Oper
 					}
 					cmd.Flags().Int(cliFlag, defaultVal, desc)
 					if param.Required {
-						cmd.MarkFlagRequired(cliFlag)
+						_ = cmd.MarkFlagRequired(cliFlag)
 					}
 
 				case "boolean":
@@ -205,7 +205,7 @@ func (cb *CommandBuilder) executeOperation(ctx context.Context, op *openapi.Oper
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Handle response
 	return cb.handleResponse(ctx, op, resp, cmd)
@@ -254,7 +254,7 @@ func (cb *CommandBuilder) handleResponse(ctx context.Context, op *openapi.Operat
 
 	// Output response - simple implementation for now
 	// Future: use output manager for formatting
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	_, err := fmt.Fprintf(os.Stdout, "Success: HTTP %d\n", resp.StatusCode)
 	return err
 }

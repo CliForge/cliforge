@@ -17,11 +17,11 @@ import (
 
 // ConfigOptions configures the config command behavior.
 type ConfigOptions struct {
-	CLIName      string
-	AllowEdit    bool
-	Output       io.Writer
-	UserConfig   *cli.UserConfig
-	SaveFunc     func(*cli.UserConfig) error
+	CLIName    string
+	AllowEdit  bool
+	Output     io.Writer
+	UserConfig *cli.UserConfig
+	SaveFunc   func(*cli.UserConfig) error
 }
 
 // NewConfigCommand creates a new config command group.
@@ -69,7 +69,7 @@ func newConfigShowCommand(opts *ConfigOptions) *cobra.Command {
 				return fmt.Errorf("failed to marshal config: %w", err)
 			}
 
-			fmt.Fprint(opts.Output, string(data))
+			_, _ = fmt.Fprint(opts.Output, string(data))
 			return nil
 		},
 	}
@@ -94,7 +94,7 @@ Examples:
 				return err
 			}
 
-			fmt.Fprintln(opts.Output, value)
+			_, _ = fmt.Fprintln(opts.Output, value)
 			return nil
 		},
 	}
@@ -124,7 +124,7 @@ Examples:
 				return fmt.Errorf("failed to save config: %w", err)
 			}
 
-			fmt.Fprintf(opts.Output, "Set %s = %s\n", key, value)
+			_, _ = fmt.Fprintf(opts.Output, "Set %s = %s\n", key, value)
 			return nil
 		},
 	}
@@ -152,7 +152,7 @@ Examples:
 				return fmt.Errorf("failed to save config: %w", err)
 			}
 
-			fmt.Fprintf(opts.Output, "Unset %s\n", key)
+			_, _ = fmt.Fprintf(opts.Output, "Unset %s\n", key)
 			return nil
 		},
 	}
@@ -194,7 +194,7 @@ func newConfigEditCommand(opts *ConfigOptions) *cobra.Command {
 				return fmt.Errorf("failed to edit config: %w", err)
 			}
 
-			fmt.Fprintf(opts.Output, "Configuration updated: %s\n", configPath)
+			_, _ = fmt.Fprintf(opts.Output, "Configuration updated: %s\n", configPath)
 			return nil
 		},
 	}
@@ -208,7 +208,7 @@ func newConfigPathCommand(opts *ConfigOptions) *cobra.Command {
 		Long:  "Display the path to the configuration file.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			configPath := filepath.Join(xdg.ConfigHome, opts.CLIName, "config.yaml")
-			fmt.Fprintln(opts.Output, configPath)
+			_, _ = fmt.Fprintln(opts.Output, configPath)
 			return nil
 		},
 	}

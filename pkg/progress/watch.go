@@ -136,7 +136,7 @@ func (w *Watch) processEvents(ctx context.Context) {
 
 			// Check if error is fatal
 			if w.isFatalError(err) {
-				w.Stop()
+				_ = w.Stop()
 				return
 			}
 		}
@@ -184,7 +184,7 @@ func (w *Watch) displayLog(event *Event) {
 // updateProgress updates the progress indicator with status information.
 func (w *Watch) updateProgress(event *Event) {
 	if event.Data != "" {
-		w.progress.Update(event.Data)
+		_ = w.progress.Update(event.Data)
 	}
 }
 
@@ -268,12 +268,12 @@ func (w *Watch) cleanup() {
 
 	// Close stream connection
 	if w.streamClient != nil {
-		w.streamClient.Close()
+		_ = w.streamClient.Close()
 	}
 
 	// Stop progress indicator
 	if w.progress != nil {
-		w.progress.Stop()
+		_ = w.progress.Stop()
 	}
 
 	w.running = false
@@ -325,11 +325,11 @@ func (s *SimpleExpressionEvaluator) Evaluate(condition string, data map[string]i
 
 // WorkflowWatchCoordinator coordinates watch mode for workflow execution.
 type WorkflowWatchCoordinator struct {
-	watch      *Watch
-	workflow   *workflow.Workflow
-	multiStep  *MultiStep
-	stepMap    map[string]*StepInfo
-	mu         sync.RWMutex
+	watch     *Watch
+	workflow  *workflow.Workflow
+	multiStep *MultiStep
+	stepMap   map[string]*StepInfo
+	mu        sync.RWMutex
 }
 
 // NewWorkflowWatchCoordinator creates a coordinator for workflow watch mode.
@@ -339,7 +339,7 @@ func NewWorkflowWatchCoordinator(watchConfig *WatchConfig, wf *workflow.Workflow
 	if progressConfig == nil {
 		progressConfig = DefaultConfig()
 	}
-	progressConfig.Type = ProgressTypeSteps
+	progressConfig.Type = TypeSteps
 
 	multiStep := NewMultiStep(progressConfig)
 
@@ -382,7 +382,7 @@ func (w *WorkflowWatchCoordinator) initializeSteps() {
 		}
 
 		w.stepMap[step.ID] = stepInfo
-		w.multiStep.AddStep(stepInfo)
+		_ = w.multiStep.AddStep(stepInfo)
 	}
 }
 

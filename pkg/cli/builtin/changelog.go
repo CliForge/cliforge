@@ -14,7 +14,7 @@ import (
 
 // ChangelogOptions configures the changelog command behavior.
 type ChangelogOptions struct {
-	Config              *cli.CLIConfig
+	Config              *cli.Config
 	ShowBinaryChanges   bool
 	ShowAPIChanges      bool
 	BinaryChangelogFunc func() ([]ChangelogEntry, error)
@@ -24,12 +24,12 @@ type ChangelogOptions struct {
 
 // ChangelogEntry represents a single changelog entry.
 type ChangelogEntry struct {
-	Version     string    `json:"version"`
-	Date        time.Time `json:"date"`
-	Changes     []string  `json:"changes"`
-	Breaking    []string  `json:"breaking,omitempty"`
-	Deprecated  []string  `json:"deprecated,omitempty"`
-	IsCurrent   bool      `json:"is_current,omitempty"`
+	Version    string    `json:"version"`
+	Date       time.Time `json:"date"`
+	Changes    []string  `json:"changes"`
+	Breaking   []string  `json:"breaking,omitempty"`
+	Deprecated []string  `json:"deprecated,omitempty"`
+	IsCurrent  bool      `json:"is_current,omitempty"`
 }
 
 // NewChangelogCommand creates a new changelog command.
@@ -87,7 +87,7 @@ func runChangelog(opts *ChangelogOptions, binaryOnly, apiOnly bool, sinceVersion
 	if showBinary {
 		binaryChanges, err = opts.BinaryChangelogFunc()
 		if err != nil {
-			fmt.Fprintf(opts.Output, "Warning: failed to load binary changelog: %v\n", err)
+			_, _ = fmt.Fprintf(opts.Output, "Warning: failed to load binary changelog: %v\n", err)
 			binaryChanges = []ChangelogEntry{}
 		}
 	}
@@ -96,7 +96,7 @@ func runChangelog(opts *ChangelogOptions, binaryOnly, apiOnly bool, sinceVersion
 	if showAPI {
 		apiChanges, err = opts.APIChangelogFunc()
 		if err != nil {
-			fmt.Fprintf(opts.Output, "Warning: failed to load API changelog: %v\n", err)
+			_, _ = fmt.Fprintf(opts.Output, "Warning: failed to load API changelog: %v\n", err)
 			apiChanges = []openapi.ChangelogEntry{}
 		}
 	}
@@ -131,8 +131,8 @@ func runChangelog(opts *ChangelogOptions, binaryOnly, apiOnly bool, sinceVersion
 // formatChangelogText formats changelog as human-readable text.
 func formatChangelogText(binaryChanges []ChangelogEntry, apiChanges []openapi.ChangelogEntry, showBinary, showAPI bool, w io.Writer) error {
 	if showBinary && len(binaryChanges) > 0 {
-		fmt.Fprintln(w, "CLI Binary Changelog:")
-		fmt.Fprintln(w, strings.Repeat("━", 80))
+		_, _ = fmt.Fprintln(w, "CLI Binary Changelog:")
+		_, _ = fmt.Fprintln(w, strings.Repeat("━", 80))
 
 		for _, entry := range binaryChanges {
 			current := ""
@@ -147,89 +147,89 @@ func formatChangelogText(binaryChanges []ChangelogEntry, apiChanges []openapi.Ch
 			} else {
 				dateStr = "unknown"
 			}
-			fmt.Fprintf(w, "%s (%s)%s\n", entry.Version, dateStr, current)
+			_, _ = fmt.Fprintf(w, "%s (%s)%s\n", entry.Version, dateStr, current)
 
 			if len(entry.Breaking) > 0 {
-				fmt.Fprintln(w, "  Breaking Changes:")
+				_, _ = fmt.Fprintln(w, "  Breaking Changes:")
 				for _, change := range entry.Breaking {
-					fmt.Fprintf(w, "    ⚠️  %s\n", change)
+					_, _ = fmt.Fprintf(w, "    ⚠️  %s\n", change)
 				}
 			}
 
 			if len(entry.Changes) > 0 {
 				for _, change := range entry.Changes {
-					fmt.Fprintf(w, "  • %s\n", change)
+					_, _ = fmt.Fprintf(w, "  • %s\n", change)
 				}
 			}
 
 			if len(entry.Deprecated) > 0 {
-				fmt.Fprintln(w, "  Deprecated:")
+				_, _ = fmt.Fprintln(w, "  Deprecated:")
 				for _, dep := range entry.Deprecated {
-					fmt.Fprintf(w, "    🔔 %s\n", dep)
+					_, _ = fmt.Fprintf(w, "    🔔 %s\n", dep)
 				}
 			}
 
-			fmt.Fprintln(w)
+			_, _ = fmt.Fprintln(w)
 		}
 	}
 
 	if showAPI && len(apiChanges) > 0 {
 		if showBinary {
-			fmt.Fprintln(w)
-			fmt.Fprintln(w)
+			_, _ = fmt.Fprintln(w)
+			_, _ = fmt.Fprintln(w)
 		}
 
-		fmt.Fprintln(w, "API Changelog:")
-		fmt.Fprintln(w, strings.Repeat("━", 80))
+		_, _ = fmt.Fprintln(w, "API Changelog:")
+		_, _ = fmt.Fprintln(w, strings.Repeat("━", 80))
 
 		for _, entry := range apiChanges {
 			current := ""
 			if entry.IsCurrent {
 				current = " - Current"
 			}
-			fmt.Fprintf(w, "%s (%s)%s\n", entry.Version, entry.Date, current)
+			_, _ = fmt.Fprintf(w, "%s (%s)%s\n", entry.Version, entry.Date, current)
 
 			if len(entry.Breaking) > 0 {
-				fmt.Fprintln(w, "  Breaking Changes:")
+				_, _ = fmt.Fprintln(w, "  Breaking Changes:")
 				for _, change := range entry.Breaking {
-					fmt.Fprintf(w, "    ⚠️  %s\n", change)
+					_, _ = fmt.Fprintf(w, "    ⚠️  %s\n", change)
 				}
 			}
 
 			if len(entry.Added) > 0 {
-				fmt.Fprintln(w, "  Added:")
+				_, _ = fmt.Fprintln(w, "  Added:")
 				for _, add := range entry.Added {
-					fmt.Fprintf(w, "    + %s\n", add)
+					_, _ = fmt.Fprintf(w, "    + %s\n", add)
 				}
 			}
 
 			if len(entry.Changed) > 0 {
-				fmt.Fprintln(w, "  Changed:")
+				_, _ = fmt.Fprintln(w, "  Changed:")
 				for _, change := range entry.Changed {
-					fmt.Fprintf(w, "    ~ %s\n", change)
+					_, _ = fmt.Fprintf(w, "    ~ %s\n", change)
 				}
 			}
 
 			if len(entry.Deprecated) > 0 {
-				fmt.Fprintln(w, "  Deprecated:")
+				_, _ = fmt.Fprintln(w, "  Deprecated:")
 				for _, dep := range entry.Deprecated {
-					fmt.Fprintf(w, "    🔔 %s\n", dep)
+					_, _ = fmt.Fprintf(w, "    🔔 %s\n", dep)
 				}
 			}
 
 			if len(entry.Removed) > 0 {
-				fmt.Fprintln(w, "  Removed:")
+				_, _ = fmt.Fprintln(w, "  Removed:")
 				for _, rem := range entry.Removed {
-					fmt.Fprintf(w, "    - %s\n", rem)
+					_, _ = fmt.Fprintf(w, "    - %s\n", rem)
 				}
 			}
 
-			fmt.Fprintln(w)
+			_, _ = fmt.Fprintln(w)
 		}
 	}
 
 	if len(binaryChanges) == 0 && len(apiChanges) == 0 {
-		fmt.Fprintln(w, "No changelog entries found")
+		_, _ = fmt.Fprintln(w, "No changelog entries found")
 	}
 
 	return nil
@@ -250,28 +250,28 @@ func formatChangelogJSON(binaryChanges []ChangelogEntry, apiChanges []openapi.Ch
 // formatChangelogYAML formats changelog as YAML.
 func formatChangelogYAML(binaryChanges []ChangelogEntry, apiChanges []openapi.ChangelogEntry, w io.Writer) error {
 	if len(binaryChanges) > 0 {
-		fmt.Fprintln(w, "binary_changelog:")
+		_, _ = fmt.Fprintln(w, "binary_changelog:")
 		for _, entry := range binaryChanges {
-			fmt.Fprintf(w, "  - version: %s\n", entry.Version)
-			fmt.Fprintf(w, "    date: %s\n", entry.Date.Format("2006-01-02"))
+			_, _ = fmt.Fprintf(w, "  - version: %s\n", entry.Version)
+			_, _ = fmt.Fprintf(w, "    date: %s\n", entry.Date.Format("2006-01-02"))
 			if len(entry.Changes) > 0 {
-				fmt.Fprintln(w, "    changes:")
+				_, _ = fmt.Fprintln(w, "    changes:")
 				for _, change := range entry.Changes {
-					fmt.Fprintf(w, "      - %s\n", change)
+					_, _ = fmt.Fprintf(w, "      - %s\n", change)
 				}
 			}
 		}
 	}
 
 	if len(apiChanges) > 0 {
-		fmt.Fprintln(w, "api_changelog:")
+		_, _ = fmt.Fprintln(w, "api_changelog:")
 		for _, entry := range apiChanges {
-			fmt.Fprintf(w, "  - version: %s\n", entry.Version)
-			fmt.Fprintf(w, "    date: %s\n", entry.Date)
+			_, _ = fmt.Fprintf(w, "  - version: %s\n", entry.Version)
+			_, _ = fmt.Fprintf(w, "    date: %s\n", entry.Date)
 			if len(entry.Added) > 0 {
-				fmt.Fprintln(w, "    added:")
+				_, _ = fmt.Fprintln(w, "    added:")
 				for _, add := range entry.Added {
-					fmt.Fprintf(w, "      - %s\n", add)
+					_, _ = fmt.Fprintf(w, "      - %s\n", add)
 				}
 			}
 		}
@@ -315,7 +315,7 @@ func filterAPIChangelogSince(entries []openapi.ChangelogEntry, version string) [
 }
 
 // DefaultBinaryChangelogFunc returns a default binary changelog.
-func DefaultBinaryChangelogFunc(config *cli.CLIConfig) func() ([]ChangelogEntry, error) {
+func DefaultBinaryChangelogFunc(config *cli.Config) func() ([]ChangelogEntry, error) {
 	return func() ([]ChangelogEntry, error) {
 		// This would typically be embedded in the binary or fetched from a URL
 		return []ChangelogEntry{
@@ -330,7 +330,7 @@ func DefaultBinaryChangelogFunc(config *cli.CLIConfig) func() ([]ChangelogEntry,
 }
 
 // DefaultAPIChangelogFunc returns a default API changelog.
-func DefaultAPIChangelogFunc(config *cli.CLIConfig) func() ([]openapi.ChangelogEntry, error) {
+func DefaultAPIChangelogFunc(config *cli.Config) func() ([]openapi.ChangelogEntry, error) {
 	return func() ([]openapi.ChangelogEntry, error) {
 		// This would typically be parsed from the OpenAPI spec x-changelog extension
 		return []openapi.ChangelogEntry{}, nil

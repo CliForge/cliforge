@@ -99,8 +99,8 @@ func TestLoadUserConfig(t *testing.T) {
 				if err := os.WriteFile(configPath, []byte(content), 0600); err != nil {
 					t.Fatal(err)
 				}
-				os.Setenv("TEST_CLI_CONFIG", configPath)
-				return configPath, func() { os.Unsetenv("TEST_CLI_CONFIG") }
+				_ = os.Setenv("TEST_CLI_CONFIG", configPath)
+				return configPath, func() { _ = os.Unsetenv("TEST_CLI_CONFIG") }
 			},
 			wantError:  false,
 			wantConfig: true,
@@ -110,8 +110,8 @@ func TestLoadUserConfig(t *testing.T) {
 			setupFunc: func(t *testing.T) (string, func()) {
 				tempDir := t.TempDir()
 				configPath := filepath.Join(tempDir, "nonexistent.yaml")
-				os.Setenv("TEST_CLI_CONFIG", configPath)
-				return configPath, func() { os.Unsetenv("TEST_CLI_CONFIG") }
+				_ = os.Setenv("TEST_CLI_CONFIG", configPath)
+				return configPath, func() { _ = os.Unsetenv("TEST_CLI_CONFIG") }
 			},
 			wantError:  false,
 			wantConfig: true, // Returns empty config, not nil
@@ -128,8 +128,8 @@ func TestLoadUserConfig(t *testing.T) {
 				if err := os.WriteFile(configPath, []byte(content), 0600); err != nil {
 					t.Fatal(err)
 				}
-				os.Setenv("TEST_CLI_CONFIG", configPath)
-				return configPath, func() { os.Unsetenv("TEST_CLI_CONFIG") }
+				_ = os.Setenv("TEST_CLI_CONFIG", configPath)
+				return configPath, func() { _ = os.Unsetenv("TEST_CLI_CONFIG") }
 			},
 			wantError:  true,
 			wantConfig: false,
@@ -165,11 +165,11 @@ func TestLoadUserConfig(t *testing.T) {
 
 func TestGetUserConfigPath(t *testing.T) {
 	tests := []struct {
-		name      string
-		cliName   string
-		envVar    string
-		envValue  string
-		wantPath  string
+		name     string
+		cliName  string
+		envVar   string
+		envValue string
+		wantPath string
 	}{
 		{
 			name:     "default XDG path",
@@ -190,8 +190,8 @@ func TestGetUserConfigPath(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Set environment variable if specified
 			if tt.envVar != "" {
-				os.Setenv(tt.envVar, tt.envValue)
-				defer os.Unsetenv(tt.envVar)
+				_ = os.Setenv(tt.envVar, tt.envValue)
+				defer func() { _ = os.Unsetenv(tt.envVar) }()
 			}
 
 			loader := &Loader{
@@ -244,15 +244,15 @@ func TestEnsureConfigDirs(t *testing.T) {
 	tempDir := t.TempDir()
 
 	// Set XDG env vars to use temp directory
-	os.Setenv("XDG_CONFIG_HOME", filepath.Join(tempDir, "config"))
-	os.Setenv("XDG_CACHE_HOME", filepath.Join(tempDir, "cache"))
-	os.Setenv("XDG_DATA_HOME", filepath.Join(tempDir, "data"))
-	os.Setenv("XDG_STATE_HOME", filepath.Join(tempDir, "state"))
+	_ = os.Setenv("XDG_CONFIG_HOME", filepath.Join(tempDir, "config"))
+	_ = os.Setenv("XDG_CACHE_HOME", filepath.Join(tempDir, "cache"))
+	_ = os.Setenv("XDG_DATA_HOME", filepath.Join(tempDir, "data"))
+	_ = os.Setenv("XDG_STATE_HOME", filepath.Join(tempDir, "state"))
 	defer func() {
-		os.Unsetenv("XDG_CONFIG_HOME")
-		os.Unsetenv("XDG_CACHE_HOME")
-		os.Unsetenv("XDG_DATA_HOME")
-		os.Unsetenv("XDG_STATE_HOME")
+		_ = os.Unsetenv("XDG_CONFIG_HOME")
+		_ = os.Unsetenv("XDG_CACHE_HOME")
+		_ = os.Unsetenv("XDG_DATA_HOME")
+		_ = os.Unsetenv("XDG_STATE_HOME")
 	}()
 
 	loader := NewLoader("test-cli", nil, "")
@@ -280,8 +280,8 @@ func TestSaveUserConfig(t *testing.T) {
 	tempDir := t.TempDir()
 
 	// Set custom config path via environment variable
-	os.Setenv("TEST_CLI_CONFIG", filepath.Join(tempDir, "config.yaml"))
-	defer os.Unsetenv("TEST_CLI_CONFIG")
+	_ = os.Setenv("TEST_CLI_CONFIG", filepath.Join(tempDir, "config.yaml"))
+	defer func() { _ = os.Unsetenv("TEST_CLI_CONFIG") }()
 
 	loader := &Loader{
 		cliName:   "test-cli",
@@ -326,16 +326,16 @@ func TestSaveUserConfig(t *testing.T) {
 
 func TestApplyEnvironmentOverrides(t *testing.T) {
 	tests := []struct {
-		name     string
-		envVars  map[string]string
-		verify   func(*testing.T, *cli.CLIConfig)
+		name    string
+		envVars map[string]string
+		verify  func(*testing.T, *cli.Config)
 	}{
 		{
 			name: "override output format",
 			envVars: map[string]string{
 				"TEST_CLI_OUTPUT_FORMAT": "yaml",
 			},
-			verify: func(t *testing.T, config *cli.CLIConfig) {
+			verify: func(t *testing.T, config *cli.Config) {
 				if config.Defaults == nil || config.Defaults.Output == nil {
 					t.Fatal("defaults.output not initialized")
 				}
@@ -349,7 +349,7 @@ func TestApplyEnvironmentOverrides(t *testing.T) {
 			envVars: map[string]string{
 				"TEST_CLI_TIMEOUT": "60s",
 			},
-			verify: func(t *testing.T, config *cli.CLIConfig) {
+			verify: func(t *testing.T, config *cli.Config) {
 				if config.Defaults == nil || config.Defaults.HTTP == nil {
 					t.Fatal("defaults.http not initialized")
 				}
@@ -363,7 +363,7 @@ func TestApplyEnvironmentOverrides(t *testing.T) {
 			envVars: map[string]string{
 				"TEST_CLI_NO_COLOR": "1",
 			},
-			verify: func(t *testing.T, config *cli.CLIConfig) {
+			verify: func(t *testing.T, config *cli.Config) {
 				if config.Defaults == nil || config.Defaults.Output == nil {
 					t.Fatal("defaults.output not initialized")
 				}
@@ -377,7 +377,7 @@ func TestApplyEnvironmentOverrides(t *testing.T) {
 			envVars: map[string]string{
 				"TEST_CLI_NO_CACHE": "1",
 			},
-			verify: func(t *testing.T, config *cli.CLIConfig) {
+			verify: func(t *testing.T, config *cli.Config) {
 				if config.Defaults == nil || config.Defaults.Caching == nil {
 					t.Fatal("defaults.caching not initialized")
 				}
@@ -392,8 +392,8 @@ func TestApplyEnvironmentOverrides(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Set environment variables
 			for key, value := range tt.envVars {
-				os.Setenv(key, value)
-				defer os.Unsetenv(key)
+				_ = os.Setenv(key, value)
+				defer func(k string) { _ = os.Unsetenv(k) }(key)
 			}
 
 			loader := &Loader{
@@ -401,7 +401,7 @@ func TestApplyEnvironmentOverrides(t *testing.T) {
 				envPrefix: "TEST_CLI",
 			}
 
-			config := &cli.CLIConfig{}
+			config := &cli.Config{}
 			result, err := loader.applyEnvironmentOverrides(config)
 
 			if err != nil {
@@ -418,14 +418,14 @@ func TestSetConfigValue(t *testing.T) {
 		name      string
 		path      string
 		value     string
-		verify    func(*testing.T, *cli.CLIConfig)
+		verify    func(*testing.T, *cli.Config)
 		wantError bool
 	}{
 		{
 			name:  "set output format",
 			path:  "defaults.output.format",
 			value: "json",
-			verify: func(t *testing.T, config *cli.CLIConfig) {
+			verify: func(t *testing.T, config *cli.Config) {
 				if config.Defaults.Output.Format != "json" {
 					t.Errorf("expected format 'json', got %s", config.Defaults.Output.Format)
 				}
@@ -435,7 +435,7 @@ func TestSetConfigValue(t *testing.T) {
 			name:  "set timeout",
 			path:  "defaults.http.timeout",
 			value: "30s",
-			verify: func(t *testing.T, config *cli.CLIConfig) {
+			verify: func(t *testing.T, config *cli.Config) {
 				if config.Defaults.HTTP.Timeout != "30s" {
 					t.Errorf("expected timeout '30s', got %s", config.Defaults.HTTP.Timeout)
 				}
@@ -445,7 +445,7 @@ func TestSetConfigValue(t *testing.T) {
 			name:  "set color to always",
 			path:  "defaults.output.color",
 			value: "true",
-			verify: func(t *testing.T, config *cli.CLIConfig) {
+			verify: func(t *testing.T, config *cli.Config) {
 				if config.Defaults.Output.Color != "always" {
 					t.Errorf("expected color 'always', got %s", config.Defaults.Output.Color)
 				}
@@ -455,7 +455,7 @@ func TestSetConfigValue(t *testing.T) {
 			name:  "set color to never",
 			path:  "defaults.output.color",
 			value: "false",
-			verify: func(t *testing.T, config *cli.CLIConfig) {
+			verify: func(t *testing.T, config *cli.Config) {
 				if config.Defaults.Output.Color != "never" {
 					t.Errorf("expected color 'never', got %s", config.Defaults.Output.Color)
 				}
@@ -472,7 +472,7 @@ func TestSetConfigValue(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			loader := &Loader{}
-			config := &cli.CLIConfig{}
+			config := &cli.Config{}
 
 			err := loader.setConfigValue(config, tt.path, tt.value)
 
@@ -494,20 +494,20 @@ func TestSetConfigValue(t *testing.T) {
 
 func TestShowWarnings(t *testing.T) {
 	tests := []struct {
-		name           string
-		loaded         *cli.LoadedConfig
-		expectOutput   bool
+		name         string
+		loaded       *cli.LoadedConfig
+		expectOutput bool
 	}{
 		{
 			name: "debug override in production",
 			loaded: &cli.LoadedConfig{
-				EmbeddedConfig: &cli.CLIConfig{
+				EmbeddedConfig: &cli.Config{
 					Metadata: cli.Metadata{
 						Debug: false,
 					},
 				},
 				UserConfig: &cli.UserConfig{
-					DebugOverride: &cli.CLIConfig{
+					DebugOverride: &cli.Config{
 						API: cli.API{
 							BaseURL: "http://localhost",
 						},
@@ -520,7 +520,7 @@ func TestShowWarnings(t *testing.T) {
 		{
 			name: "debug mode with overrides",
 			loaded: &cli.LoadedConfig{
-				EmbeddedConfig: &cli.CLIConfig{
+				EmbeddedConfig: &cli.Config{
 					Metadata: cli.Metadata{
 						Debug:   true,
 						Version: "1.0.0",
@@ -537,7 +537,7 @@ func TestShowWarnings(t *testing.T) {
 		{
 			name: "no warnings",
 			loaded: &cli.LoadedConfig{
-				EmbeddedConfig: &cli.CLIConfig{
+				EmbeddedConfig: &cli.Config{
 					Metadata: cli.Metadata{
 						Debug: false,
 					},
@@ -550,7 +550,7 @@ func TestShowWarnings(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.name, func(_ *testing.T) {
 			loader := NewLoader("test-cli", nil, "")
 
 			// Just verify it doesn't panic - we can't easily capture stderr

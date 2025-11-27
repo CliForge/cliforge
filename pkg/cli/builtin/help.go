@@ -55,13 +55,13 @@ func showCustomHelp(cmd *cobra.Command, opts *HelpOptions) error {
 
 	// Add examples if enabled
 	if opts.ShowExamples && cmd.Example != "" {
-		fmt.Fprintln(opts.Output, "\nExamples:")
-		fmt.Fprintln(opts.Output, cmd.Example)
+		_, _ = fmt.Fprintln(opts.Output, "\nExamples:")
+		_, _ = fmt.Fprintln(opts.Output, cmd.Example)
 	}
 
 	// Add aliases if enabled
 	if opts.ShowAliases && len(cmd.Aliases) > 0 {
-		fmt.Fprintf(opts.Output, "\nAliases: %s\n", strings.Join(cmd.Aliases, ", "))
+		_, _ = fmt.Fprintf(opts.Output, "\nAliases: %s\n", strings.Join(cmd.Aliases, ", "))
 	}
 
 	return nil
