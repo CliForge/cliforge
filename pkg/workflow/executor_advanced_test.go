@@ -12,7 +12,9 @@ func TestExecutor_Execute_MultiStepWorkflow(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		callSequence = append(callSequence, r.URL.Path)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status": "ok"}`))
+		if _, err := w.Write([]byte(`{"status": "ok"}`)); err != nil {
+			t.Errorf("failed to write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -107,9 +109,11 @@ func TestExecutor_Execute_MultiStepWorkflow(t *testing.T) {
 }
 
 func TestExecutor_Execute_ConditionalExecution(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status": "ok"}`))
+		if _, err := w.Write([]byte(`{"status": "ok"}`)); err != nil {
+			t.Errorf("failed to write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -187,7 +191,7 @@ func TestExecutor_Execute_FailFast(t *testing.T) {
 	defer server.Close()
 
 	workflow := &Workflow{
-		Settings: &WorkflowSettings{
+		Settings: &Settings{
 			FailFast: true,
 		},
 		Steps: []*Step{
@@ -228,14 +232,14 @@ func TestExecutor_Execute_FailFast(t *testing.T) {
 }
 
 func TestExecutor_Execute_Timeout(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		time.Sleep(2 * time.Second)
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer server.Close()
 
 	workflow := &Workflow{
-		Settings: &WorkflowSettings{
+		Settings: &Settings{
 			Timeout: 1, // 1 second timeout
 		},
 		Steps: []*Step{
@@ -277,6 +281,9 @@ func TestExecutor_Execute_RequiredStepFailure(t *testing.T) {
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
 			w.WriteHeader(http.StatusOK)
+			if _, err := w.Write([]byte(`{"status": "ok"}`)); err != nil {
+				t.Errorf("failed to write response: %v", err)
+			}
 		}
 	}))
 	defer server.Close()
@@ -340,8 +347,8 @@ func TestExecutor_Execute_OptionalStepFailure(t *testing.T) {
 	workflow := &Workflow{
 		Steps: []*Step{
 			{
-				ID:       "step1",
-				Type:     StepTypeAPICall,
+				ID:   "step1",
+				Type: StepTypeAPICall,
 				APICall: &APICallStep{
 					Endpoint: server.URL + "/ok",
 					Method:   "GET",
@@ -375,7 +382,7 @@ func TestExecutor_Execute_OptionalStepFailure(t *testing.T) {
 	}
 
 	ctx := NewExecutionContext(map[string]interface{}{})
-	state, err := executor.Execute(ctx)
+	state, _ := executor.Execute(ctx)
 
 	// When an optional step fails at the level, the level still returns an error
 	// which triggers rollback. This is the current implementation behavior.
@@ -394,7 +401,7 @@ func TestExecutor_Execute_ParallelExecutionDisabled(t *testing.T) {
 	defer server.Close()
 
 	workflow := &Workflow{
-		Settings: &WorkflowSettings{
+		Settings: &Settings{
 			ParallelExecution: false,
 		},
 		Steps: []*Step{
@@ -462,9 +469,9 @@ func TestExecutor_Execute_EmptyWorkflow(t *testing.T) {
 }
 
 func TestExecutor_Resume(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status": "ok"}`))
+		_, _ = w.Write([]byte(`{"status": "ok"}`))
 	}))
 	defer server.Close()
 
@@ -553,11 +560,15 @@ func TestExecutor_Execute_RollbackOnFailure_MultipleSteps(t *testing.T) {
 		case "/create1":
 			createdResources["resource1"] = true
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"id": "resource1"}`))
+			if _, err := w.Write([]byte(`{"id": "resource1"}`)); err != nil {
+				t.Errorf("failed to write response: %v", err)
+			}
 		case "/create2":
 			createdResources["resource2"] = true
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"id": "resource2"}`))
+			if _, err := w.Write([]byte(`{"id": "resource2"}`)); err != nil {
+				t.Errorf("failed to write response: %v", err)
+			}
 		case "/fail":
 			w.WriteHeader(http.StatusInternalServerError)
 		case "/delete1":
@@ -642,9 +653,11 @@ func TestExecutor_Execute_RollbackOnFailure_MultipleSteps(t *testing.T) {
 }
 
 func TestExecutor_Execute_NoRollbackOnSuccess(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status": "ok"}`))
+		if _, err := w.Write([]byte(`{"status": "ok"}`)); err != nil {
+			t.Errorf("failed to write response: %v", err)
+		}
 	}))
 	defer server.Close()
 

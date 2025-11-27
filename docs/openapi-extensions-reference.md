@@ -2902,7 +2902,7 @@ CliForge provides 16 OpenAPI extensions that transform API specifications into r
 ### Next Steps
 
 1. Review [technical-specification.md](./technical-specification.md) for implementation details
-2. See [petstore-api.yaml](../examples/petstore/petstore-api.yaml) for complete examples
+2. See [petstore-api.yaml](https://github.com/wrale/alpha-omega/tree/main/examples/petstore/petstore-api.yaml) for complete examples
 3. Explore [configuration-dsl.md](./configuration-dsl.md) for advanced configuration
 4. Start with minimal extensions, add progressively
 5. Test generated CLIs with real users
@@ -2911,4 +2911,4 @@ CliForge provides 16 OpenAPI extensions that transform API specifications into r
 
 - OpenAPI 3.0 Specification: https://spec.openapis.org/oas/v3.0.3
 - CliForge Repository: https://github.com/CliForge/cliforge
-- Example Specifications: `examples/`
+- Example Specifications: https://github.com/wrale/alpha-omega/tree/main/examples

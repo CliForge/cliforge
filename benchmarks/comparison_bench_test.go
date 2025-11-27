@@ -16,14 +16,14 @@ type PerformanceTarget struct {
 
 // BenchmarkResult captures benchmark results for comparison
 type BenchmarkResult struct {
-	Name              string
-	NsPerOp           int64
-	AllocsPerOp       uint64
-	BytesPerOp        uint64
-	Iterations        int
-	Duration          time.Duration
-	MeetsTarget       bool
-	TargetDeviation   float64 // percentage deviation from target
+	Name            string
+	NsPerOp         int64
+	AllocsPerOp     uint64
+	BytesPerOp      uint64
+	Iterations      int
+	Duration        time.Duration
+	MeetsTarget     bool
+	TargetDeviation float64 // percentage deviation from target
 }
 
 // PerformanceComparison stores results for comparison reporting

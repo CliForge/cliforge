@@ -357,7 +357,11 @@ func (f *TableFormatter) transformValue(value interface{}, transform string, con
 	case "lowercase", "lower":
 		return strings.ToLower(str)
 	case "title":
-		return strings.Title(str)
+		// Simple title case - capitalize first letter only
+		if len(str) == 0 {
+			return str
+		}
+		return strings.ToUpper(str[:1]) + str[1:]
 	case "trim":
 		return strings.TrimSpace(str)
 	default:

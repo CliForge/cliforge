@@ -90,7 +90,7 @@ func TestInstaller_VerifyBinary(t *testing.T) {
 			name: "valid binary",
 			setup: func() string {
 				file := filepath.Join(tmpDir, "valid.bin")
-				os.WriteFile(file, []byte("binary"), 0755)
+				_ = os.WriteFile(file, []byte("binary"), 0755)
 				return file
 			},
 			wantErr: false,
@@ -102,7 +102,7 @@ func TestInstaller_VerifyBinary(t *testing.T) {
 					t.Skip("Skipping non-executable test on Windows")
 				}
 				file := filepath.Join(tmpDir, "noexec.bin")
-				os.WriteFile(file, []byte("binary"), 0644)
+				_ = os.WriteFile(file, []byte("binary"), 0644)
 				return file
 			},
 			wantErr: true,
@@ -111,7 +111,7 @@ func TestInstaller_VerifyBinary(t *testing.T) {
 			name: "directory",
 			setup: func() string {
 				dir := filepath.Join(tmpDir, "dir")
-				os.Mkdir(dir, 0755)
+				_ = os.Mkdir(dir, 0755)
 				return dir
 			},
 			wantErr: true,
@@ -153,7 +153,7 @@ func TestGetExecutablePath(t *testing.T) {
 	}
 }
 
-func TestCanUpdate(t *testing.T) {
+func TestCanUpdate(_ *testing.T) {
 	// This test may fail in some environments due to permissions
 	// We just verify that it doesn't panic
 	err := CanUpdate()
@@ -185,8 +185,8 @@ func TestInstaller_Rollback(t *testing.T) {
 	currentFile := filepath.Join(tmpDir, "current.bin")
 	backupFile := filepath.Join(tmpDir, "current.backup")
 
-	os.WriteFile(currentFile, []byte("corrupted"), 0755)
-	os.WriteFile(backupFile, []byte("backup"), 0755)
+	_ = os.WriteFile(currentFile, []byte("corrupted"), 0755)
+	_ = os.WriteFile(backupFile, []byte("backup"), 0755)
 
 	// Perform rollback
 	installer.rollback(currentFile, backupFile)

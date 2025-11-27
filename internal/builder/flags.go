@@ -215,7 +215,7 @@ func (fb *FlagBuilder) addCustomFlags(cmd *cobra.Command, cliFlags []*openapi.CL
 
 		// Add aliases - store in custom annotation
 		if len(cliFlag.Aliases) > 0 {
-			cmd.Flags().SetAnnotation(flagName, "aliases", cliFlag.Aliases)
+			_ = cmd.Flags().SetAnnotation(flagName, "aliases", cliFlag.Aliases)
 		}
 	}
 
@@ -247,7 +247,7 @@ func (fb *FlagBuilder) addFlagFromSchema(cmd *cobra.Command, flagName string, sc
 		for i, e := range schema.Enum {
 			enumStrs[i] = fmt.Sprintf("%v", e)
 		}
-		cmd.Flags().SetAnnotation(flagName, "enum", enumStrs)
+		_ = cmd.Flags().SetAnnotation(flagName, "enum", enumStrs)
 
 		if required {
 			if err := cmd.MarkFlagRequired(flagName); err != nil {
@@ -287,7 +287,7 @@ func (fb *FlagBuilder) addFlagFromSchema(cmd *cobra.Command, flagName string, sc
 		case "password":
 			cmd.Flags().String(flagName, defaultVal, description)
 			// Mark as sensitive in annotations
-			cmd.Flags().SetAnnotation(flagName, "sensitive", []string{"true"})
+			_ = cmd.Flags().SetAnnotation(flagName, "sensitive", []string{"true"})
 		default:
 			cmd.Flags().String(flagName, defaultVal, description)
 		}

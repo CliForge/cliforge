@@ -35,10 +35,10 @@ var defaultTargets = []buildTarget{
 
 func newBuildCmd() *cobra.Command {
 	var (
-		configPath  string
-		outputDir   string
-		platforms   []string
-		allPlatforms bool
+		configPath    string
+		outputDir     string
+		platforms     []string
+		allPlatforms  bool
 		skipChecksums bool
 	)
 
@@ -111,7 +111,7 @@ This command:
 			if err != nil {
 				return fmt.Errorf("failed to generate runtime: %w", err)
 			}
-			defer os.RemoveAll(buildDir)
+			defer func() { _ = os.RemoveAll(buildDir) }()
 
 			if verbose {
 				fmt.Printf("✓ Generated runtime in %s\n", buildDir)
@@ -198,7 +198,7 @@ func getBuildTargets(platforms []string, allPlatforms bool) ([]buildTarget, erro
 	return targets, nil
 }
 
-func generateRuntimeCode(config *cli.CLIConfig, debug, verbose bool) (string, error) {
+func generateRuntimeCode(config *cli.Config, debug, verbose bool) (string, error) {
 	// Create temporary build directory
 	buildDir, err := os.MkdirTemp("", "cliforge-build-*")
 	if err != nil {
@@ -208,7 +208,7 @@ func generateRuntimeCode(config *cli.CLIConfig, debug, verbose bool) (string, er
 	// Generate embedded config
 	configData, err := yaml.Marshal(config)
 	if err != nil {
-		os.RemoveAll(buildDir)
+		_ = os.RemoveAll(buildDir)
 		return "", fmt.Errorf("failed to marshal config: %w", err)
 	}
 
@@ -216,14 +216,14 @@ func generateRuntimeCode(config *cli.CLIConfig, debug, verbose bool) (string, er
 	generator := runtime.NewGenerator(config)
 	mainCode, err := generator.GenerateMain(configData)
 	if err != nil {
-		os.RemoveAll(buildDir)
+		_ = os.RemoveAll(buildDir)
 		return "", fmt.Errorf("failed to generate main: %w", err)
 	}
 
 	// Write main.go
 	mainPath := filepath.Join(buildDir, "main.go")
 	if err := os.WriteFile(mainPath, []byte(mainCode), 0644); err != nil {
-		os.RemoveAll(buildDir)
+		_ = os.RemoveAll(buildDir)
 		return "", fmt.Errorf("failed to write main.go: %w", err)
 	}
 
@@ -231,13 +231,13 @@ func generateRuntimeCode(config *cli.CLIConfig, debug, verbose bool) (string, er
 	embedder := embed.NewEmbedder()
 	embedPath := filepath.Join(buildDir, "config_embedded.yaml")
 	if err := embedder.WriteEmbeddedConfig(configData, embedPath); err != nil {
-		os.RemoveAll(buildDir)
+		_ = os.RemoveAll(buildDir)
 		return "", fmt.Errorf("failed to write embedded config: %w", err)
 	}
 
 	// Initialize go.mod
 	if err := initGoModule(buildDir, config.Metadata.Name, verbose); err != nil {
-		os.RemoveAll(buildDir)
+		_ = os.RemoveAll(buildDir)
 		return "", fmt.Errorf("failed to initialize go module: %w", err)
 	}
 
@@ -274,12 +274,6 @@ require github.com/CliForge/cliforge v0.9.0
 }
 
 func buildBinary(buildDir, outputDir, name string, target buildTarget, version string, debug bool) (string, error) {
-	// Determine binary name
-	binaryName := name
-	if target.OS == "windows" {
-		binaryName += ".exe"
-	}
-
 	// Add platform to filename
 	outputName := fmt.Sprintf("%s-%s-%s", name, target.OS, target.Arch)
 	if target.OS == "windows" {
@@ -322,7 +316,7 @@ func generateChecksum(filePath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer f.Close()
+	func() { _ = f.Close() }()
 
 	h := sha256.New()
 	if _, err := io.Copy(h, f); err != nil {

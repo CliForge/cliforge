@@ -11,12 +11,12 @@ import (
 
 // Manager manages progress indicators and streaming for operations.
 type Manager struct {
-	config            *Config
-	streamConfig      *StreamConfig
-	currentProgress   Progress
-	currentWatch      WatchCoordinator
+	config              *Config
+	streamConfig        *StreamConfig
+	currentProgress     Progress
+	currentWatch        WatchCoordinator
 	workflowIntegration *WorkflowIntegration
-	mu                sync.RWMutex
+	mu                  sync.RWMutex
 }
 
 // NewManager creates a new progress manager.
@@ -83,7 +83,7 @@ func (m *Manager) StartWorkflowProgress(wf *workflow.Workflow, progressConfig *o
 	config := m.selectProgressConfig(progressConfig)
 
 	// Use multi-step for workflows
-	config.Type = ProgressTypeSteps
+	config.Type = TypeSteps
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -98,7 +98,7 @@ func (m *Manager) StartWorkflowProgress(wf *workflow.Workflow, progressConfig *o
 				Description: step.Description,
 				Status:      StepStatusPending,
 			}
-			multiStep.AddStep(stepInfo)
+			_ = multiStep.AddStep(stepInfo)
 		}
 	}
 
@@ -254,7 +254,7 @@ func (m *Manager) UpdateProgress(message string) error {
 }
 
 // UpdateProgressWithData updates the current progress with structured data.
-func (m *Manager) UpdateProgressWithData(data *ProgressData) error {
+func (m *Manager) UpdateProgressWithData(data *Data) error {
 	m.mu.RLock()
 	progress := m.currentProgress
 	m.mu.RUnlock()
@@ -284,7 +284,7 @@ func (m *Manager) selectProgressConfig(opConfig *openapi.CLIProgress) *Config {
 			config.Enabled = *opConfig.Enabled
 		}
 		if opConfig.Type != "" {
-			config.Type = ProgressType(opConfig.Type)
+			config.Type = Type(opConfig.Type)
 		}
 		if opConfig.ShowTimestamps != nil {
 			config.ShowTimestamps = *opConfig.ShowTimestamps
@@ -319,7 +319,7 @@ func NewWorkflowIntegration(manager *Manager) *WorkflowIntegration {
 // OnWorkflowStart is called when a workflow starts.
 func (w *WorkflowIntegration) OnWorkflowStart(wf *workflow.Workflow) error {
 	config := w.manager.config
-	config.Type = ProgressTypeSteps
+	config.Type = TypeSteps
 
 	multiStep := NewMultiStep(config)
 
@@ -331,7 +331,7 @@ func (w *WorkflowIntegration) OnWorkflowStart(wf *workflow.Workflow) error {
 			Status:      StepStatusPending,
 		}
 		w.stepMap[step.ID] = stepInfo
-		multiStep.AddStep(stepInfo)
+		_ = multiStep.AddStep(stepInfo)
 	}
 
 	if err := multiStep.Start("Executing workflow..."); err != nil {

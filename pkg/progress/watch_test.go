@@ -82,7 +82,7 @@ func TestWatch_IsRunning(t *testing.T) {
 			Endpoint: "http://example.com/stream",
 		},
 		ProgressConfig: &Config{
-			Type:    ProgressTypeSpinner,
+			Type:    TypeSpinner,
 			Enabled: false, // Disable for testing
 		},
 	}
@@ -128,7 +128,7 @@ func TestWatch_handleEvent(t *testing.T) {
 			Endpoint: "http://example.com/stream",
 		},
 		ProgressConfig: &Config{
-			Type:    ProgressTypeSpinner,
+			Type:    TypeSpinner,
 			Enabled: false,
 		},
 		ShowLogs: true,
@@ -345,7 +345,7 @@ func TestNewWorkflowWatchCoordinator(t *testing.T) {
 			Endpoint: "http://example.com/stream",
 		},
 		ProgressConfig: &Config{
-			Type:    ProgressTypeSteps,
+			Type:    TypeSteps,
 			Enabled: false,
 		},
 	}
@@ -393,7 +393,7 @@ func TestWorkflowWatchCoordinator_UpdateStepStatus(t *testing.T) {
 			Endpoint: "http://example.com/stream",
 		},
 		ProgressConfig: &Config{
-			Type:    ProgressTypeSteps,
+			Type:    TypeSteps,
 			Enabled: false,
 		},
 	}
@@ -433,7 +433,7 @@ func TestWorkflowWatchCoordinator_AddSubStep(t *testing.T) {
 			Endpoint: "http://example.com/stream",
 		},
 		ProgressConfig: &Config{
-			Type:    ProgressTypeSteps,
+			Type:    TypeSteps,
 			Enabled: false,
 		},
 	}
@@ -483,7 +483,7 @@ func TestWorkflowWatchCoordinator_IsRunning(t *testing.T) {
 			Endpoint: "http://example.com/stream",
 		},
 		ProgressConfig: &Config{
-			Type:    ProgressTypeSteps,
+			Type:    TypeSteps,
 			Enabled: false,
 		},
 	}
@@ -515,7 +515,7 @@ func TestWorkflowWatchCoordinator_SuccessFailure(t *testing.T) {
 			Endpoint: "http://example.com/stream",
 		},
 		ProgressConfig: &Config{
-			Type:    ProgressTypeSteps,
+			Type:    TypeSteps,
 			Enabled: false,
 		},
 	}
@@ -551,7 +551,7 @@ func TestWorkflowWatchCoordinator_initializeSteps(t *testing.T) {
 	watchConfig := &WatchConfig{
 		Enabled:        true,
 		StreamConfig:   DefaultStreamConfig(),
-		ProgressConfig: &Config{Type: ProgressTypeSteps, Enabled: false},
+		ProgressConfig: &Config{Type: TypeSteps, Enabled: false},
 	}
 
 	tests := []struct {

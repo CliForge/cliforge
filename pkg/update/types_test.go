@@ -7,42 +7,42 @@ import (
 func TestUpdateStatus_String(t *testing.T) {
 	tests := []struct {
 		name   string
-		status UpdateStatus
+		status Status
 		want   string
 	}{
 		{
 			name:   "unknown",
-			status: UpdateStatusUnknown,
+			status: StatusUnknown,
 			want:   "unknown",
 		},
 		{
 			name:   "up to date",
-			status: UpdateStatusUpToDate,
+			status: StatusUpToDate,
 			want:   "up-to-date",
 		},
 		{
 			name:   "available",
-			status: UpdateStatusAvailable,
+			status: StatusAvailable,
 			want:   "available",
 		},
 		{
 			name:   "downloading",
-			status: UpdateStatusDownloading,
+			status: StatusDownloading,
 			want:   "downloading",
 		},
 		{
 			name:   "installing",
-			status: UpdateStatusInstalling,
+			status: StatusInstalling,
 			want:   "installing",
 		},
 		{
 			name:   "failed",
-			status: UpdateStatusFailed,
+			status: StatusFailed,
 			want:   "failed",
 		},
 		{
 			name:   "invalid status",
-			status: UpdateStatus(999),
+			status: Status(999),
 			want:   "unknown",
 		},
 	}
@@ -50,7 +50,7 @@ func TestUpdateStatus_String(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.status.String(); got != tt.want {
-				t.Errorf("UpdateStatus.String() = %v, want %v", got, tt.want)
+				t.Errorf("Status.String() = %v, want %v", got, tt.want)
 			}
 		})
 	}

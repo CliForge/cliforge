@@ -47,7 +47,7 @@ func NewValidator() *Validator {
 }
 
 // Validate validates a complete CLI configuration.
-func (v *Validator) Validate(config *cli.CLIConfig) error {
+func (v *Validator) Validate(config *cli.Config) error {
 	v.errors = make(ValidationErrors, 0)
 
 	// Validate metadata

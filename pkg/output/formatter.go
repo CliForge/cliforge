@@ -80,11 +80,11 @@ type FormatConfig struct {
 // NewFormatConfig creates a new FormatConfig with sensible defaults.
 func NewFormatConfig() *FormatConfig {
 	return &FormatConfig{
-		Pretty:      true,
-		Colors:      true,
-		ShowHeaders: true,
-		SortAsc:     true,
-		MaxWidth:    120,
+		Pretty:         true,
+		Colors:         true,
+		ShowHeaders:    true,
+		SortAsc:        true,
+		MaxWidth:       120,
 		AdditionalData: make(map[string]interface{}),
 	}
 }

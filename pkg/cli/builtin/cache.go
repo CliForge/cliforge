@@ -21,12 +21,12 @@ type CacheOptions struct {
 
 // CacheInfo contains information about the cache.
 type CacheInfo struct {
-	CacheDir      string    `json:"cache_dir"`
-	Size          int64     `json:"size_bytes"`
-	SpecCached    bool      `json:"spec_cached"`
-	SpecAge       string    `json:"spec_age,omitempty"`
-	SpecURL       string    `json:"spec_url,omitempty"`
-	LastFetched   time.Time `json:"last_fetched,omitempty"`
+	CacheDir    string    `json:"cache_dir"`
+	Size        int64     `json:"size_bytes"`
+	SpecCached  bool      `json:"spec_cached"`
+	SpecAge     string    `json:"spec_age,omitempty"`
+	SpecURL     string    `json:"spec_url,omitempty"`
+	LastFetched time.Time `json:"last_fetched,omitempty"`
 }
 
 // NewCacheCommand creates a new cache command group.
@@ -161,30 +161,30 @@ func listCacheEntries(ctx context.Context, specCache *cache.SpecCache) ([]*cache
 
 // printCacheInfo prints cache information.
 func printCacheInfo(info *CacheInfo, w io.Writer) {
-	fmt.Fprintln(w, "Cache Information:")
-	fmt.Fprintf(w, "  Directory: %s\n", info.CacheDir)
+	_, _ = fmt.Fprintln(w, "Cache Information:")
+	_, _ = fmt.Fprintf(w, "  Directory: %s\n", info.CacheDir)
 
 	if info.Size > 0 {
-		fmt.Fprintf(w, "  Size: %s\n", formatSize(info.Size))
+		_, _ = fmt.Fprintf(w, "  Size: %s\n", formatSize(info.Size))
 	} else {
-		fmt.Fprintln(w, "  Size: Empty")
+		_, _ = fmt.Fprintln(w, "  Size: Empty")
 	}
 
-	fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w)
 
 	if info.SpecCached {
-		fmt.Fprintln(w, "OpenAPI Spec:")
+		_, _ = fmt.Fprintln(w, "OpenAPI Spec:")
 		if info.SpecURL != "" {
-			fmt.Fprintf(w, "  URL: %s\n", info.SpecURL)
+			_, _ = fmt.Fprintf(w, "  URL: %s\n", info.SpecURL)
 		}
 		if !info.LastFetched.IsZero() {
-			fmt.Fprintf(w, "  Last fetched: %s\n", info.LastFetched.Format(time.RFC3339))
+			_, _ = fmt.Fprintf(w, "  Last fetched: %s\n", info.LastFetched.Format(time.RFC3339))
 		}
 		if info.SpecAge != "" {
-			fmt.Fprintf(w, "  Age: %s\n", info.SpecAge)
+			_, _ = fmt.Fprintf(w, "  Age: %s\n", info.SpecAge)
 		}
 	} else {
-		fmt.Fprintln(w, "OpenAPI Spec: Not cached")
+		_, _ = fmt.Fprintln(w, "OpenAPI Spec: Not cached")
 	}
 }
 
@@ -219,13 +219,13 @@ func clearCacheWithDir(cacheHome, cliName string, specOnly bool, w io.Writer) er
 		if err := os.RemoveAll(specCacheDir); err != nil && !os.IsNotExist(err) {
 			return fmt.Errorf("failed to clear spec cache: %w", err)
 		}
-		fmt.Fprintln(w, "✓ Spec cache cleared")
+		_, _ = fmt.Fprintln(w, "✓ Spec cache cleared")
 	} else {
 		// Clear entire cache
 		if err := os.RemoveAll(cacheDir); err != nil && !os.IsNotExist(err) {
 			return fmt.Errorf("failed to clear cache: %w", err)
 		}
-		fmt.Fprintln(w, "✓ Cache cleared")
+		_, _ = fmt.Fprintln(w, "✓ Cache cleared")
 	}
 
 	return nil

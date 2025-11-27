@@ -15,7 +15,7 @@ import (
 
 // DeprecationsOptions configures the deprecations command behavior.
 type DeprecationsOptions struct {
-	Config                 *cli.CLIConfig
+	Config                 *cli.Config
 	ShowBinaryDeprecations bool
 	ShowAPIDeprecations    bool
 	AllowScan              bool
@@ -119,7 +119,7 @@ func runDeprecations(opts *DeprecationsOptions, binaryOnly, apiOnly bool, output
 	if showBinary {
 		binaryDeps, err = opts.BinaryDeprecationsFunc()
 		if err != nil {
-			fmt.Fprintf(opts.Output, "Warning: failed to load binary deprecations: %v\n", err)
+			_, _ = fmt.Fprintf(opts.Output, "Warning: failed to load binary deprecations: %v\n", err)
 			binaryDeps = []BinaryDeprecation{}
 		}
 	}
@@ -128,7 +128,7 @@ func runDeprecations(opts *DeprecationsOptions, binaryOnly, apiOnly bool, output
 	if showAPI {
 		apiDeps, err = opts.APIDeprecationsFunc()
 		if err != nil {
-			fmt.Fprintf(opts.Output, "Warning: failed to load API deprecations: %v\n", err)
+			_, _ = fmt.Fprintf(opts.Output, "Warning: failed to load API deprecations: %v\n", err)
 			apiDeps = []openapi.Deprecation{}
 		}
 	}
@@ -163,26 +163,26 @@ func runDeprecationsShow(opts *DeprecationsOptions, operationID string) error {
 
 // runDeprecationsScan scans code for deprecated usage.
 func runDeprecationsScan(opts *DeprecationsOptions, path string) error {
-	fmt.Fprintf(opts.Output, "Scanning %s for deprecated API usage...\n", path)
-	fmt.Fprintln(opts.Output, "⚠️  Scan functionality not yet implemented")
+	_, _ = fmt.Fprintf(opts.Output, "Scanning %s for deprecated API usage...\n", path)
+	_, _ = fmt.Fprintln(opts.Output, "⚠️  Scan functionality not yet implemented")
 	return nil
 }
 
 // formatDeprecationsText formats deprecations as human-readable text.
 func formatDeprecationsText(binaryDeps []BinaryDeprecation, apiDeps []openapi.Deprecation, showBinary, showAPI bool, w io.Writer) error {
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Active Deprecations")
-	fmt.Fprintln(w, strings.Repeat("━", 80))
-	fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w, "Active Deprecations")
+	_, _ = fmt.Fprintln(w, strings.Repeat("━", 80))
+	_, _ = fmt.Fprintln(w)
 
 	if showBinary {
 		if len(binaryDeps) == 0 {
-			fmt.Fprintln(w, "CLI Binary Deprecations (0):")
-			fmt.Fprintln(w, "  ✓ No deprecated CLI features")
-			fmt.Fprintln(w)
+			_, _ = fmt.Fprintln(w, "CLI Binary Deprecations (0):")
+			_, _ = fmt.Fprintln(w, "  ✓ No deprecated CLI features")
+			_, _ = fmt.Fprintln(w)
 		} else {
-			fmt.Fprintf(w, "CLI Binary Deprecations (%d):\n", len(binaryDeps))
-			fmt.Fprintln(w)
+			_, _ = fmt.Fprintf(w, "CLI Binary Deprecations (%d):\n", len(binaryDeps))
+			_, _ = fmt.Fprintln(w)
 
 			for _, dep := range binaryDeps {
 				printBinaryDeprecation(&dep, w)
@@ -192,12 +192,12 @@ func formatDeprecationsText(binaryDeps []BinaryDeprecation, apiDeps []openapi.De
 
 	if showAPI {
 		if len(apiDeps) == 0 {
-			fmt.Fprintln(w, "API Deprecations (0):")
-			fmt.Fprintln(w, "  ✓ No deprecated API endpoints")
-			fmt.Fprintln(w)
+			_, _ = fmt.Fprintln(w, "API Deprecations (0):")
+			_, _ = fmt.Fprintln(w, "  ✓ No deprecated API endpoints")
+			_, _ = fmt.Fprintln(w)
 		} else {
-			fmt.Fprintf(w, "API Deprecations (%d):\n", len(apiDeps))
-			fmt.Fprintln(w)
+			_, _ = fmt.Fprintf(w, "API Deprecations (%d):\n", len(apiDeps))
+			_, _ = fmt.Fprintln(w)
 
 			// Sort by days remaining
 			sort.Slice(apiDeps, func(i, j int) bool {
@@ -216,9 +216,9 @@ func formatDeprecationsText(binaryDeps []BinaryDeprecation, apiDeps []openapi.De
 		}
 	}
 
-	fmt.Fprintln(w, strings.Repeat("━", 80))
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Show details: deprecations show <operation-id>")
+	_, _ = fmt.Fprintln(w, strings.Repeat("━", 80))
+	_, _ = fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w, "Show details: deprecations show <operation-id>")
 
 	return nil
 }
@@ -230,26 +230,26 @@ func printBinaryDeprecation(dep *BinaryDeprecation, w io.Writer) {
 		icon = "🔴 CRITICAL"
 	}
 
-	fmt.Fprintf(w, "  %s", icon)
+	_, _ = fmt.Fprintf(w, "  %s", icon)
 	if !dep.Sunset.IsZero() {
 		daysRemaining := int(time.Until(dep.Sunset).Hours() / 24)
-		fmt.Fprintf(w, " - %d days remaining", daysRemaining)
+		_, _ = fmt.Fprintf(w, " - %d days remaining", daysRemaining)
 	}
-	fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w)
 
-	fmt.Fprintf(w, "  ├─ Feature: %s\n", dep.Feature)
+	_, _ = fmt.Fprintf(w, "  ├─ Feature: %s\n", dep.Feature)
 	if dep.Replacement != "" {
-		fmt.Fprintf(w, "  ├─ Replacement: %s\n", dep.Replacement)
+		_, _ = fmt.Fprintf(w, "  ├─ Replacement: %s\n", dep.Replacement)
 	}
 	if !dep.Sunset.IsZero() {
-		fmt.Fprintf(w, "  ├─ Sunset: %s\n", dep.Sunset.Format("January 2, 2006"))
+		_, _ = fmt.Fprintf(w, "  ├─ Sunset: %s\n", dep.Sunset.Format("January 2, 2006"))
 	}
 	if dep.DocsURL != "" {
-		fmt.Fprintf(w, "  └─ Docs: %s\n", dep.DocsURL)
+		_, _ = fmt.Fprintf(w, "  └─ Docs: %s\n", dep.DocsURL)
 	} else {
-		fmt.Fprintf(w, "  └─ Message: %s\n", dep.Message)
+		_, _ = fmt.Fprintf(w, "  └─ Message: %s\n", dep.Message)
 	}
-	fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w)
 }
 
 // printAPIDeprecation prints an API deprecation notice.
@@ -260,68 +260,68 @@ func printAPIDeprecation(dep *openapi.Deprecation, w io.Writer) {
 		if daysRemaining < 30 {
 			icon = "🔴 CRITICAL"
 		}
-		fmt.Fprintf(w, "  %s - %d days remaining\n", icon, daysRemaining)
+		_, _ = fmt.Fprintf(w, "  %s - %d days remaining\n", icon, daysRemaining)
 	} else {
-		fmt.Fprintf(w, "  %s\n", icon)
+		_, _ = fmt.Fprintf(w, "  %s\n", icon)
 	}
 
-	fmt.Fprintf(w, "  ├─ Operation: %s %s", dep.Method, dep.Path)
+	_, _ = fmt.Fprintf(w, "  ├─ Operation: %s %s", dep.Method, dep.Path)
 	if dep.OperationID != "" {
-		fmt.Fprintf(w, " (%s)", dep.OperationID)
+		_, _ = fmt.Fprintf(w, " (%s)", dep.OperationID)
 	}
-	fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w)
 
 	if !dep.Sunset.IsZero() {
-		fmt.Fprintf(w, "  ├─ Sunset: %s\n", dep.Sunset.Format("January 2, 2006"))
+		_, _ = fmt.Fprintf(w, "  ├─ Sunset: %s\n", dep.Sunset.Format("January 2, 2006"))
 	}
 
 	if dep.Replacement != "" {
-		fmt.Fprintf(w, "  ├─ Replacement: %s\n", dep.Replacement)
+		_, _ = fmt.Fprintf(w, "  ├─ Replacement: %s\n", dep.Replacement)
 	}
 
 	if dep.DocsURL != "" {
-		fmt.Fprintf(w, "  └─ Docs: %s\n", dep.DocsURL)
+		_, _ = fmt.Fprintf(w, "  └─ Docs: %s\n", dep.DocsURL)
 	} else if dep.Message != "" {
-		fmt.Fprintf(w, "  └─ Message: %s\n", dep.Message)
+		_, _ = fmt.Fprintf(w, "  └─ Message: %s\n", dep.Message)
 	}
 
-	fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w)
 }
 
 // formatDeprecationDetail formats detailed deprecation information.
 func formatDeprecationDetail(dep *openapi.Deprecation, w io.Writer) error {
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Deprecation Details")
-	fmt.Fprintln(w, strings.Repeat("━", 80))
-	fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w, "Deprecation Details")
+	_, _ = fmt.Fprintln(w, strings.Repeat("━", 80))
+	_, _ = fmt.Fprintln(w)
 
-	fmt.Fprintf(w, "Operation: %s %s\n", dep.Method, dep.Path)
+	_, _ = fmt.Fprintf(w, "Operation: %s %s\n", dep.Method, dep.Path)
 	if dep.OperationID != "" {
-		fmt.Fprintf(w, "Operation ID: %s\n", dep.OperationID)
+		_, _ = fmt.Fprintf(w, "Operation ID: %s\n", dep.OperationID)
 	}
-	fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w)
 
 	if !dep.Sunset.IsZero() {
 		daysRemaining := int(time.Until(dep.Sunset).Hours() / 24)
-		fmt.Fprintf(w, "Sunset Date: %s (%d days remaining)\n", dep.Sunset.Format("January 2, 2006"), daysRemaining)
+		_, _ = fmt.Fprintf(w, "Sunset Date: %s (%d days remaining)\n", dep.Sunset.Format("January 2, 2006"), daysRemaining)
 	}
 
 	if dep.Message != "" {
-		fmt.Fprintln(w, "\nMessage:")
-		fmt.Fprintf(w, "%s\n", dep.Message)
+		_, _ = fmt.Fprintln(w, "\nMessage:")
+		_, _ = fmt.Fprintf(w, "%s\n", dep.Message)
 	}
 
 	if dep.Replacement != "" {
-		fmt.Fprintln(w, "\nReplacement:")
-		fmt.Fprintf(w, "%s\n", dep.Replacement)
+		_, _ = fmt.Fprintln(w, "\nReplacement:")
+		_, _ = fmt.Fprintf(w, "%s\n", dep.Replacement)
 	}
 
 	if dep.DocsURL != "" {
-		fmt.Fprintln(w, "\nDocumentation:")
-		fmt.Fprintf(w, "%s\n", dep.DocsURL)
+		_, _ = fmt.Fprintln(w, "\nDocumentation:")
+		_, _ = fmt.Fprintf(w, "%s\n", dep.DocsURL)
 	}
 
-	fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w)
 
 	return nil
 }
@@ -341,31 +341,31 @@ func formatDeprecationsJSON(binaryDeps []BinaryDeprecation, apiDeps []openapi.De
 // formatDeprecationsYAML formats deprecations as YAML.
 func formatDeprecationsYAML(binaryDeps []BinaryDeprecation, apiDeps []openapi.Deprecation, w io.Writer) error {
 	if len(binaryDeps) > 0 {
-		fmt.Fprintln(w, "binary_deprecations:")
+		_, _ = fmt.Fprintln(w, "binary_deprecations:")
 		for _, dep := range binaryDeps {
-			fmt.Fprintf(w, "  - feature: %s\n", dep.Feature)
+			_, _ = fmt.Fprintf(w, "  - feature: %s\n", dep.Feature)
 			if dep.Replacement != "" {
-				fmt.Fprintf(w, "    replacement: %s\n", dep.Replacement)
+				_, _ = fmt.Fprintf(w, "    replacement: %s\n", dep.Replacement)
 			}
 			if !dep.Sunset.IsZero() {
-				fmt.Fprintf(w, "    sunset: %s\n", dep.Sunset.Format("2006-01-02"))
+				_, _ = fmt.Fprintf(w, "    sunset: %s\n", dep.Sunset.Format("2006-01-02"))
 			}
-			fmt.Fprintf(w, "    severity: %s\n", dep.Severity)
-			fmt.Fprintf(w, "    message: %s\n", dep.Message)
+			_, _ = fmt.Fprintf(w, "    severity: %s\n", dep.Severity)
+			_, _ = fmt.Fprintf(w, "    message: %s\n", dep.Message)
 		}
 	}
 
 	if len(apiDeps) > 0 {
-		fmt.Fprintln(w, "api_deprecations:")
+		_, _ = fmt.Fprintln(w, "api_deprecations:")
 		for _, dep := range apiDeps {
-			fmt.Fprintf(w, "  - operation_id: %s\n", dep.OperationID)
-			fmt.Fprintf(w, "    method: %s\n", dep.Method)
-			fmt.Fprintf(w, "    path: %s\n", dep.Path)
+			_, _ = fmt.Fprintf(w, "  - operation_id: %s\n", dep.OperationID)
+			_, _ = fmt.Fprintf(w, "    method: %s\n", dep.Method)
+			_, _ = fmt.Fprintf(w, "    path: %s\n", dep.Path)
 			if !dep.Sunset.IsZero() {
-				fmt.Fprintf(w, "    sunset: %s\n", dep.Sunset.Format("2006-01-02"))
+				_, _ = fmt.Fprintf(w, "    sunset: %s\n", dep.Sunset.Format("2006-01-02"))
 			}
 			if dep.Replacement != "" {
-				fmt.Fprintf(w, "    replacement: %s\n", dep.Replacement)
+				_, _ = fmt.Fprintf(w, "    replacement: %s\n", dep.Replacement)
 			}
 		}
 	}

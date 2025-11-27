@@ -37,8 +37,8 @@ func TestNewHistoryCommand(t *testing.T) {
 
 func TestHistoryClear(t *testing.T) {
 	history, _ := state.NewHistory("testcli", 100)
-	history.Add(&state.HistoryEntry{Command: "command1", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
-	history.Add(&state.HistoryEntry{Command: "command2", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "command1", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "command2", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
 
 	output := &bytes.Buffer{}
 	opts := &HistoryOptions{
@@ -86,9 +86,9 @@ func TestRunHistory_Empty(t *testing.T) {
 
 func TestRunHistory_Table(t *testing.T) {
 	history, _ := state.NewHistory("testcli", 100)
-	history.Add(&state.HistoryEntry{Command: "command1", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
-	history.Add(&state.HistoryEntry{Command: "command2", ExitCode: 1, DurationMS: 200, Success: false, Timestamp: time.Now()})
-	history.Add(&state.HistoryEntry{Command: "command3", ExitCode: 0, DurationMS: 150, Success: true, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "command1", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "command2", ExitCode: 1, DurationMS: 200, Success: false, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "command3", ExitCode: 0, DurationMS: 150, Success: true, Timestamp: time.Now()})
 
 	output := &bytes.Buffer{}
 	opts := &HistoryOptions{
@@ -122,7 +122,7 @@ func TestRunHistory_Table(t *testing.T) {
 
 func TestRunHistory_JSON(t *testing.T) {
 	history, _ := state.NewHistory("testcli", 100)
-	history.Add(&state.HistoryEntry{Command: "test-command", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "test-command", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
 
 	output := &bytes.Buffer{}
 	opts := &HistoryOptions{
@@ -146,7 +146,7 @@ func TestRunHistory_JSON(t *testing.T) {
 
 func TestRunHistory_YAML(t *testing.T) {
 	history, _ := state.NewHistory("testcli", 100)
-	history.Add(&state.HistoryEntry{Command: "test-command", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "test-command", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
 
 	output := &bytes.Buffer{}
 	opts := &HistoryOptions{
@@ -171,7 +171,7 @@ func TestRunHistory_YAML(t *testing.T) {
 func TestRunHistory_WithLimit(t *testing.T) {
 	history, _ := state.NewHistory("testcli", 100)
 	for i := 1; i <= 50; i++ {
-		history.Add(&state.HistoryEntry{Command: "command", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
+		_ = history.Add(&state.HistoryEntry{Command: "command", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
 	}
 
 	output := &bytes.Buffer{}
@@ -195,9 +195,9 @@ func TestRunHistory_WithLimit(t *testing.T) {
 
 func TestRunHistory_SuccessOnly(t *testing.T) {
 	history, _ := state.NewHistory("testcli", 100)
-	history.Add(&state.HistoryEntry{Command: "success1", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
-	history.Add(&state.HistoryEntry{Command: "failed1", ExitCode: 1, DurationMS: 100, Success: false, Timestamp: time.Now()})
-	history.Add(&state.HistoryEntry{Command: "success2", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "success1", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "failed1", ExitCode: 1, DurationMS: 100, Success: false, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "success2", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
 
 	output := &bytes.Buffer{}
 	opts := &HistoryOptions{
@@ -221,9 +221,9 @@ func TestRunHistory_SuccessOnly(t *testing.T) {
 
 func TestRunHistory_FailedOnly(t *testing.T) {
 	history, _ := state.NewHistory("testcli", 100)
-	history.Add(&state.HistoryEntry{Command: "success1", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
-	history.Add(&state.HistoryEntry{Command: "failed1", ExitCode: 1, DurationMS: 100, Success: false, Timestamp: time.Now()})
-	history.Add(&state.HistoryEntry{Command: "failed2", ExitCode: 1, DurationMS: 100, Success: false, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "success1", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "failed1", ExitCode: 1, DurationMS: 100, Success: false, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "failed2", ExitCode: 1, DurationMS: 100, Success: false, Timestamp: time.Now()})
 
 	output := &bytes.Buffer{}
 	opts := &HistoryOptions{
@@ -247,9 +247,9 @@ func TestRunHistory_FailedOnly(t *testing.T) {
 
 func TestRunHistory_Search(t *testing.T) {
 	history, _ := state.NewHistory("testcli", 100)
-	history.Add(&state.HistoryEntry{Command: "git status", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
-	history.Add(&state.HistoryEntry{Command: "git commit", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
-	history.Add(&state.HistoryEntry{Command: "ls -la", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "git status", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "git commit", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "ls -la", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
 
 	output := &bytes.Buffer{}
 	opts := &HistoryOptions{
@@ -290,8 +290,8 @@ func TestRunHistory_ContextFilter(t *testing.T) {
 		Success:   true,
 	}
 
-	history.Add(entry1)
-	history.Add(entry2)
+	_ = history.Add(entry1)
+	_ = history.Add(entry2)
 
 	output := &bytes.Buffer{}
 	opts := &HistoryOptions{
@@ -312,9 +312,9 @@ func TestRunHistory_ContextFilter(t *testing.T) {
 
 func TestRunHistoryStats_Text(t *testing.T) {
 	history, _ := state.NewHistory("testcli", 100)
-	history.Add(&state.HistoryEntry{Command: "cmd1", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
-	history.Add(&state.HistoryEntry{Command: "cmd2", ExitCode: 1, DurationMS: 200, Success: false, Timestamp: time.Now()})
-	history.Add(&state.HistoryEntry{Command: "cmd3", ExitCode: 0, DurationMS: 150, Success: true, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "cmd1", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "cmd2", ExitCode: 1, DurationMS: 200, Success: false, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "cmd3", ExitCode: 0, DurationMS: 150, Success: true, Timestamp: time.Now()})
 
 	output := &bytes.Buffer{}
 	opts := &HistoryOptions{
@@ -344,7 +344,7 @@ func TestRunHistoryStats_Text(t *testing.T) {
 
 func TestRunHistoryStats_JSON(t *testing.T) {
 	history, _ := state.NewHistory("testcli", 100)
-	history.Add(&state.HistoryEntry{Command: "cmd1", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "cmd1", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
 
 	output := &bytes.Buffer{}
 	opts := &HistoryOptions{
@@ -365,7 +365,7 @@ func TestRunHistoryStats_JSON(t *testing.T) {
 
 func TestRunHistoryStats_YAML(t *testing.T) {
 	history, _ := state.NewHistory("testcli", 100)
-	history.Add(&state.HistoryEntry{Command: "cmd1", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "cmd1", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
 
 	output := &bytes.Buffer{}
 	opts := &HistoryOptions{
@@ -559,8 +559,8 @@ func TestFormatMilliseconds(t *testing.T) {
 
 func TestHistoryStatsCommand(t *testing.T) {
 	history, _ := state.NewHistory("testcli", 100)
-	history.Add(&state.HistoryEntry{Command: "cmd1", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
-	history.Add(&state.HistoryEntry{Command: "cmd2", ExitCode: 0, DurationMS: 150, Success: true, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "cmd1", ExitCode: 0, DurationMS: 100, Success: true, Timestamp: time.Now()})
+	_ = history.Add(&state.HistoryEntry{Command: "cmd2", ExitCode: 0, DurationMS: 150, Success: true, Timestamp: time.Now()})
 
 	output := &bytes.Buffer{}
 	opts := &HistoryOptions{

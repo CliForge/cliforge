@@ -13,7 +13,7 @@ import (
 )
 
 func TestNewDeprecationsCommand(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name: "testcli",
 		},

@@ -53,10 +53,10 @@ func TestExecutor_Execute(t *testing.T) {
 	executor := NewExecutor(1*time.Second, 5*time.Second)
 
 	tests := []struct {
-		name      string
-		plugin    Plugin
-		input     *PluginInput
-		wantErr   bool
+		name          string
+		plugin        Plugin
+		input         *PluginInput
+		wantErr       bool
 		checkDuration bool
 	}{
 		{

@@ -11,11 +11,11 @@ import (
 
 // Generator generates runtime code for CLIs.
 type Generator struct {
-	config *cli.CLIConfig
+	config *cli.Config
 }
 
 // NewGenerator creates a new Generator.
-func NewGenerator(config *cli.CLIConfig) *Generator {
+func NewGenerator(config *cli.Config) *Generator {
 	return &Generator{config: config}
 }
 
@@ -24,10 +24,10 @@ func (g *Generator) GenerateMain(configData []byte) (string, error) {
 	tmpl := template.Must(template.New("main").Parse(mainGoTemplate))
 
 	data := map[string]interface{}{
-		"CLIName":    g.config.Metadata.Name,
-		"Version":    g.config.Metadata.Version,
+		"CLIName":     g.config.Metadata.Name,
+		"Version":     g.config.Metadata.Version,
 		"HasBranding": g.config.Branding != nil && g.config.Branding.ASCIIArt != "",
-		"ASCIIArt":   "",
+		"ASCIIArt":    "",
 	}
 
 	if g.config.Branding != nil && g.config.Branding.ASCIIArt != "" {

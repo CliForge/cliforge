@@ -15,14 +15,14 @@ import (
 
 // SSEClient implements a Server-Sent Events client.
 type SSEClient struct {
-	config   *StreamConfig
-	client   *http.Client
-	handlers map[string][]EventHandler
-	events   chan *Event
-	errors   chan error
+	config    *StreamConfig
+	client    *http.Client
+	handlers  map[string][]EventHandler
+	events    chan *Event
+	errors    chan error
 	connected bool
-	cancel   context.CancelFunc
-	mu       sync.RWMutex
+	cancel    context.CancelFunc
+	mu        sync.RWMutex
 }
 
 // NewSSEClient creates a new SSE client.
@@ -118,7 +118,7 @@ func (s *SSEClient) doConnect(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to connect: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
@@ -370,7 +370,7 @@ func (w *WebSocketClient) readMessages(ctx context.Context) {
 		w.mu.Lock()
 		w.connected = false
 		if w.conn != nil {
-			w.conn.Close()
+			_ = w.conn.Close()
 		}
 		w.mu.Unlock()
 	}()
@@ -573,7 +573,7 @@ func (p *PollingClient) doPoll(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to poll: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)

@@ -18,11 +18,11 @@ type GlobalFlags struct {
 	Profile string
 
 	// Output formatting
-	Output   string
-	Verbose  int
-	Quiet    bool
-	Debug    bool
-	NoColor  bool
+	Output  string
+	Verbose int
+	Quiet   bool
+	Debug   bool
+	NoColor bool
 
 	// HTTP client settings
 	Timeout time.Duration
@@ -38,12 +38,12 @@ type GlobalFlags struct {
 
 // FlagManager manages global flags for a CLI.
 type FlagManager struct {
-	config *cli.CLIConfig
+	config *cli.Config
 	flags  *GlobalFlags
 }
 
 // NewFlagManager creates a new flag manager.
-func NewFlagManager(config *cli.CLIConfig) *FlagManager {
+func NewFlagManager(config *cli.Config) *FlagManager {
 	return &FlagManager{
 		config: config,
 		flags:  &GlobalFlags{},
@@ -251,7 +251,7 @@ func (fm *FlagManager) Validate() error {
 }
 
 // ApplyToConfig applies global flags to the loaded configuration.
-func (fm *FlagManager) ApplyToConfig(config *cli.CLIConfig) {
+func (fm *FlagManager) ApplyToConfig(config *cli.Config) {
 	// Apply output format
 	if fm.flags.Output != "" {
 		if config.Defaults == nil {

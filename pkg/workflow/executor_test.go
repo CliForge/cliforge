@@ -3,6 +3,7 @@ package workflow
 import (
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -11,7 +12,9 @@ func TestExecutor_Execute_SimpleWorkflow(t *testing.T) {
 	// Create test server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status": "ok"}`))
+		if _, err := w.Write([]byte(`{"status": "ok"}`)); err != nil {
+			t.Errorf("failed to write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -65,17 +68,19 @@ func TestExecutor_Execute_SimpleWorkflow(t *testing.T) {
 }
 
 func TestExecutor_Execute_ParallelWorkflow(t *testing.T) {
-	callCount := 0
+	var callCount atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		callCount++
+		callCount.Add(1)
 		time.Sleep(10 * time.Millisecond) // Simulate some work
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status": "ok"}`))
+		if _, err := w.Write([]byte(`{"status": "ok"}`)); err != nil {
+			t.Errorf("failed to write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
 	workflow := &Workflow{
-		Settings: &WorkflowSettings{
+		Settings: &Settings{
 			ParallelExecution: true,
 		},
 		Steps: []*Step{
@@ -126,7 +131,9 @@ func TestExecutor_Execute_ParallelWorkflow(t *testing.T) {
 func TestExecutor_Execute_ConditionalStep(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status": "ok"}`))
+		if _, err := w.Write([]byte(`{"status": "ok"}`)); err != nil {
+			t.Errorf("failed to write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -213,11 +220,13 @@ func TestExecutor_Execute_ConditionalStep(t *testing.T) {
 }
 
 func TestExecutor_Execute_LoopStep(t *testing.T) {
-	callCount := 0
+	var callCount atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		callCount++
+		callCount.Add(1)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status": "ok"}`))
+		if _, err := w.Write([]byte(`{"status": "ok"}`)); err != nil {
+			t.Errorf("failed to write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -284,10 +293,14 @@ func TestExecutor_Execute_WithRollback(t *testing.T) {
 		if r.Method == "POST" && r.URL.Path == "/api/create" {
 			createdResources["resource1"] = true
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"id": "resource1"}`))
+			if _, err := w.Write([]byte(`{"id": "resource1"}`)); err != nil {
+				t.Errorf("failed to write response: %v", err)
+			}
 		} else if r.Method == "POST" && r.URL.Path == "/api/fail" {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(`{"error": "failed"}`))
+			if _, err := w.Write([]byte(`{"error": "failed"}`)); err != nil {
+				t.Errorf("failed to write response: %v", err)
+			}
 		} else if r.Method == "DELETE" {
 			delete(createdResources, "resource1")
 			w.WriteHeader(http.StatusOK)

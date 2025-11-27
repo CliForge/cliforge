@@ -45,8 +45,8 @@ func TestGetCacheInfo_EmptyCache(t *testing.T) {
 	// Use a non-existent directory
 	tempDir := t.TempDir()
 	originalXDGCache := os.Getenv("XDG_CACHE_HOME")
-	os.Setenv("XDG_CACHE_HOME", tempDir)
-	defer os.Setenv("XDG_CACHE_HOME", originalXDGCache)
+	_ = os.Setenv("XDG_CACHE_HOME", tempDir)
+	defer func() { _ = os.Setenv("XDG_CACHE_HOME", originalXDGCache) }()
 
 	info, err := getCacheInfo("nonexistent")
 	if err != nil {
@@ -70,7 +70,7 @@ func TestCalculateDirSize(t *testing.T) {
 	file2 := filepath.Join(tempDir, "file2.txt")
 
 	content1 := []byte("hello world") // 11 bytes
-	content2 := []byte("test")         // 4 bytes
+	content2 := []byte("test")        // 4 bytes
 
 	if err := os.WriteFile(file1, content1, 0644); err != nil {
 		t.Fatalf("failed to create test file: %v", err)

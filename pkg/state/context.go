@@ -149,8 +149,8 @@ func (b *ContextBuilder) Build() *Context {
 type ContextField struct {
 	Name        string   `yaml:"name" json:"name"`
 	Description string   `yaml:"description,omitempty" json:"description,omitempty"`
-	Type        string   `yaml:"type,omitempty" json:"type,omitempty"`           // string, int, bool
-	EnvVar      string   `yaml:"env_var,omitempty" json:"env_var,omitempty"`     // Environment variable to read from
+	Type        string   `yaml:"type,omitempty" json:"type,omitempty"`       // string, int, bool
+	EnvVar      string   `yaml:"env_var,omitempty" json:"env_var,omitempty"` // Environment variable to read from
 	Default     string   `yaml:"default,omitempty" json:"default,omitempty"`
 	Required    bool     `yaml:"required,omitempty" json:"required,omitempty"`
 	ValidValues []string `yaml:"valid_values,omitempty" json:"valid_values,omitempty"` // For enum-like fields

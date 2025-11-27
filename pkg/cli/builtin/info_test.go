@@ -12,7 +12,7 @@ import (
 )
 
 func TestNewInfoCommand(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name:    "testcli",
 			Version: "1.0.0",
@@ -41,7 +41,7 @@ func TestNewInfoCommand(t *testing.T) {
 }
 
 func TestBuildCLIInfo(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name:        "testcli",
 			Version:     "1.0.0",
@@ -88,7 +88,7 @@ func TestCheckAPIHealth_Success(t *testing.T) {
 	}))
 	defer server.Close()
 
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name: "testcli",
 		},
@@ -117,7 +117,7 @@ func TestCheckAPIHealth_Success(t *testing.T) {
 }
 
 func TestCheckAPIHealth_Failure(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name: "testcli",
 		},
@@ -148,7 +148,7 @@ func TestCheckAPIHealth_ServerError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name: "testcli",
 		},
@@ -173,7 +173,7 @@ func TestCheckAPIHealth_ServerError(t *testing.T) {
 }
 
 func TestCheckSpecCache(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name: "testcli",
 		},
@@ -346,7 +346,7 @@ func TestRunInfo_WithHealthCheck(t *testing.T) {
 	}))
 	defer server.Close()
 
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name:    "testcli",
 			Version: "1.0.0",
@@ -378,7 +378,7 @@ func TestRunInfo_WithHealthCheck(t *testing.T) {
 }
 
 func TestRunInfo_JSONFormat(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name:    "testcli",
 			Version: "1.0.0",
@@ -409,7 +409,7 @@ func TestRunInfo_JSONFormat(t *testing.T) {
 }
 
 func TestRunInfo_YAMLFormat(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name:    "testcli",
 			Version: "1.0.0",

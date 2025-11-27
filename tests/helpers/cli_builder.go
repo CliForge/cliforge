@@ -326,7 +326,7 @@ func (a *AsyncCLI) WaitWithTimeout(timeout time.Duration) error {
 	case err := <-a.done:
 		return err
 	case <-time.After(timeout):
-		a.Kill()
+		_ = a.Kill()
 		return fmt.Errorf("command timed out after %s", timeout)
 	}
 }

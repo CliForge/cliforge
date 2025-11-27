@@ -221,7 +221,7 @@ func TestFileStorage_FilePermissions(t *testing.T) {
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) &&
 		(s[:len(substr)] == substr || s[len(s)-len(substr):] == substr ||
-		len(s) > len(substr)+1 && s[1:len(substr)+1] == substr))
+			len(s) > len(substr)+1 && s[1:len(substr)+1] == substr))
 }
 
 func TestFileStorage_LoadInvalidJSON(t *testing.T) {

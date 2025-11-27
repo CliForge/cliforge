@@ -14,7 +14,7 @@ import (
 func Example_spinner() {
 	// Create a spinner config
 	config := &progress.Config{
-		Type:    progress.ProgressTypeSpinner,
+		Type:    progress.TypeSpinner,
 		Enabled: false, // Set to false for example to avoid terminal output
 	}
 
@@ -22,16 +22,16 @@ func Example_spinner() {
 	spinner := progress.NewSpinner(config)
 
 	// Start the spinner
-	spinner.Start("Processing...")
+	_ = spinner.Start("Processing...")
 
 	// Simulate work
 	time.Sleep(100 * time.Millisecond)
 
 	// Update the message
-	spinner.Update("Almost done...")
+	_ = spinner.Update("Almost done...")
 
 	// Mark as successful
-	spinner.Success("Completed successfully!")
+	_ = spinner.Success("Completed successfully!")
 
 	fmt.Println("Operation completed")
 	// Output: Operation completed
@@ -40,20 +40,20 @@ func Example_spinner() {
 // Example_progressBar demonstrates using a progress bar for known steps.
 func Example_progressBar() {
 	config := &progress.Config{
-		Type:    progress.ProgressTypeBar,
+		Type:    progress.TypeBar,
 		Enabled: false,
 	}
 
 	bar := progress.NewProgressBar(config, 5)
 
-	bar.Start("Processing items...")
+	_ = bar.Start("Processing items...")
 
 	for i := 0; i < 5; i++ {
 		time.Sleep(50 * time.Millisecond)
-		bar.Increment()
+		_ = bar.Increment()
 	}
 
-	bar.Success("All items processed!")
+	_ = bar.Success("All items processed!")
 
 	fmt.Println("Processing complete")
 	// Output: Processing complete
@@ -62,13 +62,13 @@ func Example_progressBar() {
 // Example_multiStep demonstrates using multi-step progress for workflows.
 func Example_multiStep() {
 	config := &progress.Config{
-		Type:    progress.ProgressTypeSteps,
+		Type:    progress.TypeSteps,
 		Enabled: false,
 	}
 
 	multiStep := progress.NewMultiStep(config)
 
-	multiStep.Start("Deploying application...")
+	_ = multiStep.Start("Deploying application...")
 
 	// Add steps
 	steps := []*progress.StepInfo{
@@ -90,17 +90,17 @@ func Example_multiStep() {
 	}
 
 	for _, step := range steps {
-		multiStep.AddStep(step)
+		_ = multiStep.AddStep(step)
 	}
 
 	// Execute steps
 	for _, step := range steps {
-		multiStep.UpdateStep(step.ID, progress.StepStatusRunning, step.Description)
+		_ = multiStep.UpdateStep(step.ID, progress.StepStatusRunning, step.Description)
 		time.Sleep(50 * time.Millisecond)
-		multiStep.UpdateStep(step.ID, progress.StepStatusCompleted, step.Description)
+		_ = multiStep.UpdateStep(step.ID, progress.StepStatusCompleted, step.Description)
 	}
 
-	multiStep.Success("Application deployed successfully!")
+	_ = multiStep.Success("Application deployed successfully!")
 
 	fmt.Println("Deployment complete")
 	// Output: Deployment complete
@@ -110,7 +110,7 @@ func Example_multiStep() {
 func Example_manager() {
 	// Create a progress manager
 	manager := progress.NewManager(&progress.Config{
-		Type:    progress.ProgressTypeSpinner,
+		Type:    progress.TypeSpinner,
 		Enabled: false,
 	})
 
@@ -118,15 +118,15 @@ func Example_manager() {
 	prog, _ := manager.StartProgress("Initializing...", 0)
 
 	// Update progress
-	prog.Update("Processing data...")
+	_ = prog.Update("Processing data...")
 
 	time.Sleep(50 * time.Millisecond)
 
 	// Mark as successful
-	manager.SuccessProgress("Done!")
+	_ = manager.SuccessProgress("Done!")
 
 	// Stop progress
-	manager.StopProgress()
+	_ = manager.StopProgress()
 
 	fmt.Println("Manager example complete")
 	// Output: Manager example complete
@@ -152,7 +152,7 @@ func Example_workflowIntegration() {
 
 	// Create progress manager
 	manager := progress.NewManager(&progress.Config{
-		Type:    progress.ProgressTypeSteps,
+		Type:    progress.TypeSteps,
 		Enabled: false,
 	})
 
@@ -160,18 +160,18 @@ func Example_workflowIntegration() {
 	integration := progress.NewWorkflowIntegration(manager)
 
 	// Workflow lifecycle
-	integration.OnWorkflowStart(wf)
+	_ = integration.OnWorkflowStart(wf)
 
 	// Simulate step execution
-	integration.OnStepStart("step1")
+	_ = integration.OnStepStart("step1")
 	time.Sleep(50 * time.Millisecond)
-	integration.OnStepComplete("step1")
+	_ = integration.OnStepComplete("step1")
 
-	integration.OnStepStart("step2")
+	_ = integration.OnStepStart("step2")
 	time.Sleep(50 * time.Millisecond)
-	integration.OnStepComplete("step2")
+	_ = integration.OnStepComplete("step2")
 
-	integration.OnWorkflowComplete(true, "Workflow completed successfully")
+	_ = integration.OnWorkflowComplete(true, "Workflow completed successfully")
 
 	fmt.Println("Workflow integration complete")
 	// Output: Workflow integration complete
@@ -191,7 +191,7 @@ func Example_streaming() {
 	client := progress.NewSSEClient(config)
 
 	// Subscribe to events
-	client.Subscribe("status", func(event *progress.Event) error {
+	_ = client.Subscribe("status", func(event *progress.Event) error {
 		fmt.Printf("Received: %s\n", event.Type)
 		return nil
 	})
@@ -216,7 +216,7 @@ func Example_watch() {
 			Endpoint: "http://example.com/logs",
 		},
 		ProgressConfig: &progress.Config{
-			Type:    progress.ProgressTypeSpinner,
+			Type:    progress.TypeSpinner,
 			Enabled: false,
 		},
 		ExitConditions: []*progress.ExitCondition{
@@ -255,18 +255,18 @@ func Example_progressWithOpenAPI() {
 
 	// Create manager
 	manager := progress.NewManager(&progress.Config{
-		Type:    progress.ProgressTypeSpinner,
+		Type:    progress.TypeSpinner,
 		Enabled: false,
 	})
 
 	// Start progress for operation
 	prog, _ := manager.StartProgressForOperation(opConfig, "Executing API call...")
 
-	prog.Update("Sending request...")
+	_ = prog.Update("Sending request...")
 	time.Sleep(50 * time.Millisecond)
 
-	manager.SuccessProgress("API call completed")
-	manager.StopProgress()
+	_ = manager.SuccessProgress("API call completed")
+	_ = manager.StopProgress()
 
 	fmt.Println("OpenAPI integration complete")
 	// Output: OpenAPI integration complete
@@ -289,7 +289,7 @@ func Example_workflowWatch() {
 			Endpoint: "http://example.com/workflow/status",
 		},
 		ProgressConfig: &progress.Config{
-			Type:    progress.ProgressTypeSteps,
+			Type:    progress.TypeSteps,
 			Enabled: false,
 		},
 	}
@@ -313,13 +313,13 @@ func Example_packageFunctions() {
 	// These use the default manager
 	prog, _ := progress.StartProgress("Working...", 0)
 
-	progress.UpdateProgress("Still working...")
+	_ = progress.UpdateProgress("Still working...")
 
 	time.Sleep(50 * time.Millisecond)
 
-	progress.SuccessProgress("All done!")
+	_ = progress.SuccessProgress("All done!")
 
-	progress.StopProgress()
+	_ = progress.StopProgress()
 
 	_ = prog
 
@@ -331,7 +331,7 @@ func Example_packageFunctions() {
 func Example_customProgress() {
 	// Using the factory function
 	config := &progress.Config{
-		Type:                 progress.ProgressTypeBar,
+		Type:                 progress.TypeBar,
 		Enabled:              false,
 		ShowTimestamps:       true,
 		ShowStepDescriptions: true,
@@ -340,10 +340,10 @@ func Example_customProgress() {
 	// Create appropriate progress type based on config
 	prog := progress.New(config, 10)
 
-	prog.Start("Custom progress...")
+	_ = prog.Start("Custom progress...")
 
 	// Update with structured data
-	data := &progress.ProgressData{
+	data := &progress.Data{
 		Message:    "Processing item 5/10",
 		Current:    5,
 		Total:      10,
@@ -351,11 +351,11 @@ func Example_customProgress() {
 		Timestamp:  time.Now(),
 	}
 
-	prog.UpdateWithData(data)
+	_ = prog.UpdateWithData(data)
 
 	time.Sleep(50 * time.Millisecond)
 
-	prog.Success("Custom progress complete!")
+	_ = prog.Success("Custom progress complete!")
 
 	fmt.Println("Custom progress example complete")
 	// Output: Custom progress example complete
@@ -399,7 +399,7 @@ func Example_stepInfo() {
 // Example_errorHandling demonstrates error handling with progress.
 func Example_errorHandling() {
 	config := &progress.Config{
-		Type:    progress.ProgressTypeSpinner,
+		Type:    progress.TypeSpinner,
 		Enabled: false,
 	}
 
@@ -432,7 +432,7 @@ func Example_contextCancellation() {
 			Endpoint: "http://example.com/stream",
 		},
 		ProgressConfig: &progress.Config{
-			Type:    progress.ProgressTypeSpinner,
+			Type:    progress.TypeSpinner,
 			Enabled: false,
 		},
 	}

@@ -6,10 +6,10 @@
 //
 // # Embedding Process
 //
-//	1. Write configuration to config_embedded.yaml
-//	2. Generate Go code with //go:embed directive
-//	3. Generate main.go template that loads embedded config
-//	4. Build binary with embedded configuration
+//  1. Write configuration to config_embedded.yaml
+//  2. Generate Go code with //go:embed directive
+//  3. Generate main.go template that loads embedded config
+//  4. Build binary with embedded configuration
 //
 // # Example Usage
 //

@@ -35,8 +35,11 @@ type DetectedChange struct {
 type ChangeType string
 
 const (
-	ChangeTypeAdded    ChangeType = "added"
-	ChangeTypeRemoved  ChangeType = "removed"
+	// ChangeTypeAdded represents a newly added element.
+	ChangeTypeAdded ChangeType = "added"
+	// ChangeTypeRemoved represents a removed element.
+	ChangeTypeRemoved ChangeType = "removed"
+	// ChangeTypeModified represents a modified element.
 	ChangeTypeModified ChangeType = "modified"
 )
 
@@ -44,9 +47,12 @@ const (
 type ChangeSeverity string
 
 const (
-	ChangeSeverityBreaking  ChangeSeverity = "breaking"
+	// ChangeSeverityBreaking represents a breaking change.
+	ChangeSeverityBreaking ChangeSeverity = "breaking"
+	// ChangeSeverityDangerous represents a potentially dangerous change.
 	ChangeSeverityDangerous ChangeSeverity = "dangerous"
-	ChangeSeveritySafe      ChangeSeverity = "safe"
+	// ChangeSeveritySafe represents a safe change.
+	ChangeSeveritySafe ChangeSeverity = "safe"
 )
 
 // DetectChanges compares two specs and returns detected changes.
@@ -393,6 +399,7 @@ func (cd *ChangeDetector) compareSecurity(oldSpec, newSpec *openapi3.T) []*Detec
 }
 
 // IsBreaking returns true if any changes are breaking.
+// It iterates through all detected changes and returns true if any have breaking severity.
 func IsBreaking(changes []*DetectedChange) bool {
 	for _, change := range changes {
 		if change.Severity == ChangeSeverityBreaking {
@@ -402,7 +409,8 @@ func IsBreaking(changes []*DetectedChange) bool {
 	return false
 }
 
-// GroupByType groups changes by their type.
+// GroupByType groups changes by their type (added, removed, modified).
+// It returns a map where keys are change types and values are slices of changes.
 func GroupByType(changes []*DetectedChange) map[ChangeType][]*DetectedChange {
 	groups := make(map[ChangeType][]*DetectedChange)
 	for _, change := range changes {
@@ -411,7 +419,8 @@ func GroupByType(changes []*DetectedChange) map[ChangeType][]*DetectedChange {
 	return groups
 }
 
-// GroupBySeverity groups changes by their severity.
+// GroupBySeverity groups changes by their severity (breaking, dangerous, safe).
+// It returns a map where keys are severity levels and values are slices of changes.
 func GroupBySeverity(changes []*DetectedChange) map[ChangeSeverity][]*DetectedChange {
 	groups := make(map[ChangeSeverity][]*DetectedChange)
 	for _, change := range changes {
@@ -420,7 +429,8 @@ func GroupBySeverity(changes []*DetectedChange) map[ChangeSeverity][]*DetectedCh
 	return groups
 }
 
-// FormatChangelog formats detected changes into a human-readable changelog.
+// FormatChangelog formats detected changes into a human-readable changelog string.
+// It groups changes by severity and formats them as breaking changes, warnings, and new features.
 func FormatChangelog(changes []*DetectedChange) string {
 	if len(changes) == 0 {
 		return "No changes detected"
@@ -462,7 +472,8 @@ func FormatChangelog(changes []*DetectedChange) string {
 	return sb.String()
 }
 
-// GetChangelog extracts changelog entries from a spec.
+// GetChangelog extracts changelog entries from a spec and returns them sorted by version.
+// It returns changelog entries in descending order (newest first).
 func GetChangelog(spec *ParsedSpec) []ChangelogEntry {
 	if spec.Extensions == nil {
 		return nil
@@ -480,6 +491,7 @@ func GetChangelog(spec *ParsedSpec) []ChangelogEntry {
 }
 
 // GetLatestChanges returns changes since a specific version.
+// It filters changelog entries to include only versions newer than sinceVersion.
 func GetLatestChanges(spec *ParsedSpec, sinceVersion string) []ChangelogEntry {
 	allEntries := GetChangelog(spec)
 	var result []ChangelogEntry

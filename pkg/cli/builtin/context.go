@@ -82,9 +82,9 @@ func newContextCurrentCommand(opts *ContextOptions) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			current := opts.ContextManager.CurrentName()
 			if current == "" {
-				fmt.Fprintln(opts.Output, "No current context")
+				_, _ = fmt.Fprintln(opts.Output, "No current context")
 			} else {
-				fmt.Fprintln(opts.Output, current)
+				_, _ = fmt.Fprintln(opts.Output, current)
 			}
 			return nil
 		},
@@ -102,7 +102,7 @@ func newContextUseCommand(opts *ContextOptions) *cobra.Command {
 			if err := opts.ContextManager.SwitchTo(name); err != nil {
 				return err
 			}
-			fmt.Fprintf(opts.Output, "Switched to context %q\n", name)
+			_, _ = fmt.Fprintf(opts.Output, "Switched to context %q\n", name)
 			return nil
 		},
 	}
@@ -121,7 +121,7 @@ func newContextCreateCommand(opts *ContextOptions) *cobra.Command {
 			if err := opts.ContextManager.Create(name, description, make(map[string]string)); err != nil {
 				return err
 			}
-			fmt.Fprintf(opts.Output, "Created context %q\n", name)
+			_, _ = fmt.Fprintf(opts.Output, "Created context %q\n", name)
 			return nil
 		},
 	}
@@ -149,7 +149,7 @@ func newContextDeleteCommand(opts *ContextOptions) *cobra.Command {
 			if err := opts.ContextManager.Delete(name); err != nil {
 				return err
 			}
-			fmt.Fprintf(opts.Output, "Deleted context %q\n", name)
+			_, _ = fmt.Fprintf(opts.Output, "Deleted context %q\n", name)
 			return nil
 		},
 	}
@@ -171,7 +171,7 @@ func newContextSetCommand(opts *ContextOptions) *cobra.Command {
 				return err
 			}
 
-			fmt.Fprintf(opts.Output, "Set %s.%s = %s\n", name, key, value)
+			_, _ = fmt.Fprintf(opts.Output, "Set %s.%s = %s\n", name, key, value)
 			return nil
 		},
 	}
@@ -202,7 +202,7 @@ func newContextGetCommand(opts *ContextOptions) *cobra.Command {
 				return fmt.Errorf("key %q not found in context %q", key, name)
 			}
 
-			fmt.Fprintln(opts.Output, value)
+			_, _ = fmt.Fprintln(opts.Output, value)
 			return nil
 		},
 	}
@@ -223,7 +223,7 @@ func newContextRenameCommand(opts *ContextOptions) *cobra.Command {
 				return err
 			}
 
-			fmt.Fprintf(opts.Output, "Renamed context %q to %q\n", oldName, newName)
+			_, _ = fmt.Fprintf(opts.Output, "Renamed context %q to %q\n", oldName, newName)
 			return nil
 		},
 	}
@@ -256,7 +256,7 @@ func runContextList(opts *ContextOptions, outputFormat string) error {
 	}
 
 	if len(contexts) == 0 {
-		fmt.Fprintln(opts.Output, "No contexts found")
+		_, _ = fmt.Fprintln(opts.Output, "No contexts found")
 		return nil
 	}
 
@@ -290,20 +290,20 @@ func runContextShow(opts *ContextOptions, name, outputFormat string) error {
 		encoder.SetIndent("", "  ")
 		return encoder.Encode(ctx)
 	default: // yaml
-		fmt.Fprintf(opts.Output, "name: %s\n", ctx.Name)
+		_, _ = fmt.Fprintf(opts.Output, "name: %s\n", ctx.Name)
 		if ctx.Description != "" {
-			fmt.Fprintf(opts.Output, "description: %s\n", ctx.Description)
+			_, _ = fmt.Fprintf(opts.Output, "description: %s\n", ctx.Description)
 		}
-		fmt.Fprintf(opts.Output, "created_at: %s\n", ctx.CreatedAt.Format(time.RFC3339))
+		_, _ = fmt.Fprintf(opts.Output, "created_at: %s\n", ctx.CreatedAt.Format(time.RFC3339))
 		if !ctx.LastUsed.IsZero() {
-			fmt.Fprintf(opts.Output, "last_used: %s\n", ctx.LastUsed.Format(time.RFC3339))
+			_, _ = fmt.Fprintf(opts.Output, "last_used: %s\n", ctx.LastUsed.Format(time.RFC3339))
 		}
 		if ctx.UseCount > 0 {
-			fmt.Fprintf(opts.Output, "use_count: %d\n", ctx.UseCount)
+			_, _ = fmt.Fprintf(opts.Output, "use_count: %d\n", ctx.UseCount)
 		}
 
 		if len(ctx.Fields) > 0 {
-			fmt.Fprintln(opts.Output, "fields:")
+			_, _ = fmt.Fprintln(opts.Output, "fields:")
 			// Sort keys for consistent output
 			keys := make([]string, 0, len(ctx.Fields))
 			for k := range ctx.Fields {
@@ -312,7 +312,7 @@ func runContextShow(opts *ContextOptions, name, outputFormat string) error {
 			sort.Strings(keys)
 
 			for _, k := range keys {
-				fmt.Fprintf(opts.Output, "  %s: %s\n", k, ctx.Fields[k])
+				_, _ = fmt.Fprintf(opts.Output, "  %s: %s\n", k, ctx.Fields[k])
 			}
 		}
 	}
@@ -330,8 +330,8 @@ func formatContextsTable(contexts map[string]*state.Context, currentName string,
 	sort.Strings(names)
 
 	// Print header
-	fmt.Fprintf(w, "%-20s %-10s %-30s %s\n", "NAME", "CURRENT", "DESCRIPTION", "FIELDS")
-	fmt.Fprintln(w, strings.Repeat("-", 80))
+	_, _ = fmt.Fprintf(w, "%-20s %-10s %-30s %s\n", "NAME", "CURRENT", "DESCRIPTION", "FIELDS")
+	_, _ = fmt.Fprintln(w, strings.Repeat("-", 80))
 
 	// Print contexts
 	for _, name := range names {
@@ -348,7 +348,7 @@ func formatContextsTable(contexts map[string]*state.Context, currentName string,
 
 		fieldCount := fmt.Sprintf("%d fields", len(ctx.Fields))
 
-		fmt.Fprintf(w, "%-20s %-10s %-30s %s\n", name, current, desc, fieldCount)
+		_, _ = fmt.Fprintf(w, "%-20s %-10s %-30s %s\n", name, current, desc, fieldCount)
 	}
 
 	return nil
@@ -368,8 +368,8 @@ func formatContextsJSON(contexts map[string]*state.Context, currentName string, 
 
 // formatContextsYAML formats contexts as YAML.
 func formatContextsYAML(contexts map[string]*state.Context, currentName string, w io.Writer) error {
-	fmt.Fprintf(w, "current: %s\n", currentName)
-	fmt.Fprintln(w, "contexts:")
+	_, _ = fmt.Fprintf(w, "current: %s\n", currentName)
+	_, _ = fmt.Fprintln(w, "contexts:")
 
 	// Sort context names
 	names := make([]string, 0, len(contexts))
@@ -380,16 +380,16 @@ func formatContextsYAML(contexts map[string]*state.Context, currentName string, 
 
 	for _, name := range names {
 		ctx := contexts[name]
-		fmt.Fprintf(w, "  %s:\n", name)
+		_, _ = fmt.Fprintf(w, "  %s:\n", name)
 		if ctx.Description != "" {
-			fmt.Fprintf(w, "    description: %s\n", ctx.Description)
+			_, _ = fmt.Fprintf(w, "    description: %s\n", ctx.Description)
 		}
-		fmt.Fprintf(w, "    created_at: %s\n", ctx.CreatedAt.Format(time.RFC3339))
+		_, _ = fmt.Fprintf(w, "    created_at: %s\n", ctx.CreatedAt.Format(time.RFC3339))
 		if !ctx.LastUsed.IsZero() {
-			fmt.Fprintf(w, "    last_used: %s\n", ctx.LastUsed.Format(time.RFC3339))
+			_, _ = fmt.Fprintf(w, "    last_used: %s\n", ctx.LastUsed.Format(time.RFC3339))
 		}
 		if len(ctx.Fields) > 0 {
-			fmt.Fprintln(w, "    fields:")
+			_, _ = fmt.Fprintln(w, "    fields:")
 			// Sort keys
 			keys := make([]string, 0, len(ctx.Fields))
 			for k := range ctx.Fields {
@@ -398,7 +398,7 @@ func formatContextsYAML(contexts map[string]*state.Context, currentName string, 
 			sort.Strings(keys)
 
 			for _, k := range keys {
-				fmt.Fprintf(w, "      %s: %s\n", k, ctx.Fields[k])
+				_, _ = fmt.Fprintf(w, "      %s: %s\n", k, ctx.Fields[k])
 			}
 		}
 	}

@@ -273,7 +273,7 @@ func (b *ConfigBuilder) MustBuild() *Config {
 }
 
 // LoadConfigFromCLIConfig loads secrets config from a CLI configuration.
-func LoadConfigFromCLIConfig(cliConfig *cli.CLIConfig) *Config {
+func LoadConfigFromCLIConfig(cliConfig *cli.Config) *Config {
 	if cliConfig == nil || cliConfig.Behaviors == nil || cliConfig.Behaviors.Secrets == nil {
 		return NewConfig()
 	}

@@ -296,9 +296,9 @@ func TestCalculateDaysRemaining(t *testing.T) {
 
 func TestCalculateWarningLevel(t *testing.T) {
 	tests := []struct {
-		name           string
-		daysRemaining  int
-		expectedLevel  WarningLevel
+		name          string
+		daysRemaining int
+		expectedLevel WarningLevel
 	}{
 		{
 			name:          "removed (past sunset)",

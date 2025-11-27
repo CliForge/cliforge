@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -129,7 +130,7 @@ func TestStepExecutor_CalculateBackoff_ExponentialWithMultiplier(t *testing.T) {
 	}
 
 	duration := executor.calculateBackoff(step, 2)
-	expected := time.Duration(1*time.Second) * time.Duration(9) // 1 * 3^2
+	expected := 1 * time.Second * 9 // 1 * 3^2
 	if duration != expected {
 		t.Errorf("expected %v, got %v", expected, duration)
 	}
@@ -468,9 +469,13 @@ func TestStepExecutor_ExecutePolling_Success(t *testing.T) {
 		pollCount++
 		w.Header().Set("Content-Type", "application/json")
 		if pollCount >= 1 {
-			w.Write([]byte(`{"status": "ready"}`))
+			if _, err := w.Write([]byte(`{"status": "ready"}`)); err != nil {
+				t.Errorf("failed to write response: %v", err)
+			}
 		} else {
-			w.Write([]byte(`{"status": "pending"}`))
+			if _, err := w.Write([]byte(`{"status": "pending"}`)); err != nil {
+				t.Errorf("failed to write response: %v", err)
+			}
 		}
 	}))
 	defer server.Close()
@@ -508,9 +513,11 @@ func TestStepExecutor_ExecutePolling_Success(t *testing.T) {
 }
 
 func TestStepExecutor_ExecutePolling_Timeout(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status": "pending"}`))
+		if _, err := w.Write([]byte(`{"status": "pending"}`)); err != nil {
+			t.Errorf("failed to write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -549,7 +556,9 @@ func TestStepExecutor_ExecutePolling_WithCondition(t *testing.T) {
 		pollCount++
 		w.Header().Set("Content-Type", "application/json")
 		// Return count that satisfies condition on first poll
-		w.Write([]byte(`{"count": 2}`))
+		if _, err := w.Write([]byte(`{"count": 2}`)); err != nil {
+			t.Errorf("failed to write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -582,11 +591,13 @@ func TestStepExecutor_ExecutePolling_WithCondition(t *testing.T) {
 }
 
 func TestStepExecutor_ExecuteParallel(t *testing.T) {
-	callCount := 0
+	var callCount atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		callCount++
+		callCount.Add(1)
 		time.Sleep(10 * time.Millisecond)
-		w.Write([]byte(`{"status": "ok"}`))
+		if _, err := w.Write([]byte(`{"status": "ok"}`)); err != nil {
+			t.Errorf("failed to write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -842,7 +853,9 @@ func TestStepExecutor_ExecuteStep_WithRetry(t *testing.T) {
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"status": "ok"}`))
+			if _, err := w.Write([]byte(`{"status": "ok"}`)); err != nil {
+				t.Errorf("failed to write response: %v", err)
+			}
 		}
 	}))
 	defer server.Close()
@@ -884,7 +897,9 @@ func TestStepExecutor_ExecuteStep_WithRetry(t *testing.T) {
 func TestStepExecutor_ExecutePolling_WithOutputMapping(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status": "ready", "id": "12345"}`))
+		if _, err := w.Write([]byte(`{"status": "ready", "id": "12345"}`)); err != nil {
+			t.Errorf("failed to write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -922,9 +937,13 @@ func TestStepExecutor_ExecutePolling_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		pollCount++
 		if pollCount < 2 {
-			w.Write([]byte("invalid json"))
+			if _, err := w.Write([]byte("invalid json")); err != nil {
+				t.Errorf("failed to write response: %v", err)
+			}
 		} else {
-			w.Write([]byte(`{"status": "ready"}`))
+			if _, err := w.Write([]byte(`{"status": "ready"}`)); err != nil {
+				t.Errorf("failed to write response: %v", err)
+			}
 		}
 	}))
 	defer server.Close()
@@ -968,7 +987,9 @@ func TestStepExecutor_ExecuteAPICall_WithQueryParams(t *testing.T) {
 		if query.Get("key1") != "value1" || query.Get("key2") != "value2" {
 			t.Errorf("unexpected query params: %v", query)
 		}
-		w.Write([]byte(`{"status": "ok"}`))
+		if _, err := w.Write([]byte(`{"status": "ok"}`)); err != nil {
+			t.Errorf("failed to write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -1000,11 +1021,15 @@ func TestStepExecutor_ExecuteAPICall_WithQueryParams(t *testing.T) {
 func TestStepExecutor_ExecuteAPICall_WithBody(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body map[string]interface{}
-		json.NewDecoder(r.Body).Decode(&body)
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Errorf("failed to decode body: %v", err)
+		}
 		if body["key"] != "value" {
 			t.Errorf("unexpected body: %v", body)
 		}
-		w.Write([]byte(`{"status": "ok"}`))
+		if _, err := w.Write([]byte(`{"status": "ok"}`)); err != nil {
+			t.Errorf("failed to write response: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -1034,7 +1059,9 @@ func TestStepExecutor_ExecuteAPICall_WithBody(t *testing.T) {
 
 func TestStepExecutor_ExecuteAPICall_NonJSONResponse(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("plain text response"))
+		if _, err := w.Write([]byte("plain text response")); err != nil {
+			t.Errorf("failed to write response: %v", err)
+		}
 	}))
 	defer server.Close()
 

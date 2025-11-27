@@ -66,13 +66,13 @@ This command checks:
 	return cmd
 }
 
-func loadConfig(path string) (*cli.CLIConfig, error) {
+func loadConfig(path string) (*cli.Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	var config cli.CLIConfig
+	var config cli.Config
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("failed to parse config: %w", err)
 	}
@@ -80,7 +80,7 @@ func loadConfig(path string) (*cli.CLIConfig, error) {
 	return &config, nil
 }
 
-func validateConfig(cfg *cli.CLIConfig) error {
+func validateConfig(cfg *cli.Config) error {
 	validator := config.NewValidator()
 	return validator.Validate(cfg)
 }

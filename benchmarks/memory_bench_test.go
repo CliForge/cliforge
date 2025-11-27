@@ -22,8 +22,8 @@ import (
 func BenchmarkMemorySpecCaching(b *testing.B) {
 	tmpDir := b.TempDir()
 	specCache := &cache.SpecCache{
-		BaseDir:    tmpDir,
-		AppName:    "test",
+		BaseDir: tmpDir,
+		AppName: "test",
 	}
 
 	ctx := context.Background()
@@ -98,7 +98,7 @@ func BenchmarkMemorySpecLoadingLarge(b *testing.B) {
 func BenchmarkMemoryWorkflowExecution(b *testing.B) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 	}))
 	defer server.Close()
 
@@ -137,7 +137,7 @@ func BenchmarkMemoryWorkflowExecution(b *testing.B) {
 func BenchmarkMemoryWorkflowMultiStep(b *testing.B) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"id":   "123",
 			"data": "test data",
 		})
@@ -270,7 +270,7 @@ func BenchmarkMemoryLargeResponseHandling(b *testing.B) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(largeData)
+		_ = json.NewEncoder(w).Encode(largeData)
 	}))
 	defer server.Close()
 
@@ -291,7 +291,7 @@ func BenchmarkMemoryLargeResponseHandling(b *testing.B) {
 		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 			b.Fatalf("failed to decode response: %v", err)
 		}
-		resp.Body.Close()
+		_ = resp.Body.Close()
 
 		buf.Reset()
 		if err := manager.Format(buf, result, "json"); err != nil {
@@ -304,8 +304,8 @@ func BenchmarkMemoryLargeResponseHandling(b *testing.B) {
 func BenchmarkMemoryCacheFootprint(b *testing.B) {
 	tmpDir := b.TempDir()
 	specCache := &cache.SpecCache{
-		BaseDir:    tmpDir,
-		AppName:    "test",
+		BaseDir: tmpDir,
+		AppName: "test",
 	}
 
 	ctx := context.Background()

@@ -11,7 +11,7 @@ import (
 )
 
 func TestNewUpdateCommand(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name:    "testcli",
 			Version: "1.0.0",
@@ -300,7 +300,7 @@ func TestRunUpdate_VersionDisplay(t *testing.T) {
 }
 
 func TestDefaultCheckUpdateFunc(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Version: "1.0.0",
 		},

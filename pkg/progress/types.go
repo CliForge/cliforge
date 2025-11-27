@@ -6,18 +6,18 @@ import (
 	"time"
 )
 
-// ProgressType defines the type of progress indicator.
-type ProgressType string
+// Type defines the type of progress indicator.
+type Type string
 
 const (
-	// ProgressTypeSpinner shows a spinner for single operations.
-	ProgressTypeSpinner ProgressType = "spinner"
-	// ProgressTypeBar shows a progress bar for known step counts.
-	ProgressTypeBar ProgressType = "bar"
-	// ProgressTypeSteps shows multi-step tree display for workflows.
-	ProgressTypeSteps ProgressType = "steps"
-	// ProgressTypeNone disables progress indicators.
-	ProgressTypeNone ProgressType = "none"
+	// TypeSpinner shows a spinner for single operations.
+	TypeSpinner Type = "spinner"
+	// TypeBar shows a progress bar for known step counts.
+	TypeBar Type = "bar"
+	// TypeSteps shows multi-step tree display for workflows.
+	TypeSteps Type = "steps"
+	// TypeNone disables progress indicators.
+	TypeNone Type = "none"
 )
 
 // Progress is the interface for all progress indicators.
@@ -29,7 +29,7 @@ type Progress interface {
 	Update(message string) error
 
 	// UpdateWithData updates progress with structured data.
-	UpdateWithData(data *ProgressData) error
+	UpdateWithData(data *Data) error
 
 	// Success marks the progress as successful.
 	Success(message string) error
@@ -44,8 +44,8 @@ type Progress interface {
 	IsActive() bool
 }
 
-// ProgressData contains structured progress information.
-type ProgressData struct {
+// Data contains structured progress information.
+type Data struct {
 	// Message is the current progress message.
 	Message string
 
@@ -115,7 +115,7 @@ type StepInfo struct {
 // Config contains configuration for progress indicators.
 type Config struct {
 	// Type is the type of progress indicator to use.
-	Type ProgressType
+	Type Type
 
 	// Enabled determines if progress indicators are shown.
 	Enabled bool
@@ -139,7 +139,7 @@ type Config struct {
 // DefaultConfig returns a default configuration.
 func DefaultConfig() *Config {
 	return &Config{
-		Type:                 ProgressTypeSpinner,
+		Type:                 TypeSpinner,
 		Enabled:              true,
 		ShowTimestamps:       false,
 		ShowStepDescriptions: true,
