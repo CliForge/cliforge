@@ -108,8 +108,7 @@ func (l *Loader) LoadFromURL(ctx context.Context, specURL string, options *LoadO
 					// If fetch fails, use stale cache if available
 					if cached.Data != nil {
 						data = cached.Data
-						etag = cached.ETag
-						err = nil
+						// Use stale cache data, continue without error
 					} else {
 						return nil, fmt.Errorf("failed to fetch spec and no cache available: %w", err)
 					}
@@ -226,7 +225,7 @@ func (l *Loader) fetchSpec(ctx context.Context, specURL string) ([]byte, string,
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to fetch spec: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, "", fmt.Errorf("HTTP %d: %s", resp.StatusCode, resp.Status)
@@ -256,7 +255,7 @@ func (l *Loader) fetchWithETag(ctx context.Context, specURL, etag string) ([]byt
 	if err != nil {
 		return nil, "", false, fmt.Errorf("failed to fetch spec: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode == http.StatusNotModified {
 		// Content not modified, use cached version

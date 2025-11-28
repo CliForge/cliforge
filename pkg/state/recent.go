@@ -234,12 +234,12 @@ func (r *Recent) GetList(listName string) (*RecentList, bool) {
 }
 
 // SetMax sets the maximum entries for a specific list.
-func (r *Recent) SetMax(listName string, max int) {
+func (r *Recent) SetMax(listName string, maxEntries int) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if max <= 0 {
-		max = DefaultMaxRecentEntries
+	if maxEntries <= 0 {
+		maxEntries = DefaultMaxRecentEntries
 	}
 
 	list, exists := r.Lists[listName]
@@ -247,17 +247,17 @@ func (r *Recent) SetMax(listName string, max int) {
 		list = &RecentList{
 			Name:    listName,
 			Entries: make([]*RecentItem, 0),
-			Max:     max,
+			Max:     maxEntries,
 		}
 		r.Lists[listName] = list
 		return
 	}
 
-	list.Max = max
+	list.Max = maxEntries
 
 	// Trim if needed
-	if len(list.Entries) > max {
-		list.Entries = list.Entries[:max]
+	if len(list.Entries) > maxEntries {
+		list.Entries = list.Entries[:maxEntries]
 	}
 }
 

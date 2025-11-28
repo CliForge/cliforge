@@ -94,10 +94,10 @@ type State struct {
 
 // ResourcePreference represents preferences for a specific resource instance.
 type ResourcePreference struct {
-	LastUsed  time.Time         `yaml:"last_used" json:"last_used"`
-	Favorite  bool              `yaml:"favorite,omitempty" json:"favorite,omitempty"`
-	Metadata  map[string]string `yaml:"metadata,omitempty" json:"metadata,omitempty"`
-	UseCount  int               `yaml:"use_count,omitempty" json:"use_count,omitempty"`
+	LastUsed time.Time         `yaml:"last_used" json:"last_used"`
+	Favorite bool              `yaml:"favorite,omitempty" json:"favorite,omitempty"`
+	Metadata map[string]string `yaml:"metadata,omitempty" json:"metadata,omitempty"`
+	UseCount int               `yaml:"use_count,omitempty" json:"use_count,omitempty"`
 }
 
 // Session represents current session data.
@@ -109,10 +109,7 @@ type Session struct {
 
 // NewManager creates a new state manager.
 func NewManager(cliName string) (*Manager, error) {
-	statePath, err := getStatePath(cliName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get state path: %w", err)
-	}
+	statePath := getStatePath(cliName)
 
 	m := &Manager{
 		cliName:   cliName,
@@ -138,7 +135,7 @@ func newDefaultState() *State {
 		Contexts: map[string]*Context{
 			"default": NewContext("default"),
 		},
-		Recent: NewRecent(),
+		Recent:      NewRecent(),
 		Preferences: make(map[string]map[string]*ResourcePreference),
 		Session: &Session{
 			WorkingDir: ".",
@@ -231,7 +228,7 @@ func (m *Manager) Save() error {
 	}
 
 	if err := os.Rename(tmpPath, m.statePath); err != nil {
-		os.Remove(tmpPath) // Clean up on error
+		_ = os.Remove(tmpPath) // Clean up on error
 		return fmt.Errorf("failed to save state file: %w", err)
 	}
 
@@ -425,10 +422,10 @@ func (m *Manager) GetSession() *Session {
 }
 
 // getStatePath returns the path to the state file.
-func getStatePath(cliName string) (string, error) {
+func getStatePath(cliName string) string {
 	// Use XDG state directory
 	stateDir := filepath.Join(xdg.StateHome, cliName)
-	return filepath.Join(stateDir, "state.yaml"), nil
+	return filepath.Join(stateDir, "state.yaml")
 }
 
 // GetStatePath returns the path to the state file (for external use).

@@ -283,10 +283,10 @@ func TestContextManagerRename(t *testing.T) {
 	cm := NewContextManager(mgr)
 
 	// Create and switch to a context
-	cm.Create("old-name", "Test context", map[string]string{
+	_ = cm.Create("old-name", "Test context", map[string]string{
 		"cluster": "test-cluster",
 	})
-	cm.SwitchTo("old-name")
+	_ = cm.SwitchTo("old-name")
 
 	// Rename
 	err := cm.Rename("old-name", "new-name")
@@ -322,7 +322,7 @@ func TestContextManagerExportImport(t *testing.T) {
 	cm := NewContextManager(mgr)
 
 	// Create a context
-	cm.Create("export-test", "Test export", map[string]string{
+	_ = cm.Create("export-test", "Test export", map[string]string{
 		"cluster": "test-cluster",
 		"region":  "us-east-1",
 	})
@@ -347,7 +347,7 @@ func TestContextManagerExportImport(t *testing.T) {
 	}
 
 	// Delete original
-	cm.Delete("export-test")
+	_ = cm.Delete("export-test")
 
 	// Import
 	err = cm.Import(exported)
@@ -371,7 +371,7 @@ func TestContextManagerDelete(t *testing.T) {
 	mgr, _ := NewManager("testcli")
 	cm := NewContextManager(mgr)
 
-	cm.Create("delete-test", "Test delete", map[string]string{})
+	_ = cm.Create("delete-test", "Test delete", map[string]string{})
 
 	err := cm.Delete("delete-test")
 	if err != nil {

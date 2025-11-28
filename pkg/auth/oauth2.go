@@ -20,9 +20,9 @@ import (
 
 // OAuth2Auth implements OAuth2 authentication with support for multiple flows.
 type OAuth2Auth struct {
-	config      *OAuth2Config
+	config       *OAuth2Config
 	oauth2Config *oauth2.Config
-	ccConfig    *clientcredentials.Config
+	ccConfig     *clientcredentials.Config
 	pkceVerifier string
 }
 
@@ -196,7 +196,7 @@ func (o *OAuth2Auth) authenticateAuthorizationCode(ctx context.Context) (*Token,
 	if err != nil {
 		return nil, err
 	}
-	defer server.Close()
+	defer func() { _ = server.Close() }()
 
 	// Build authorization URL
 	authURL := o.buildAuthURL()
@@ -297,7 +297,7 @@ func (o *OAuth2Auth) startCallbackServer() (*http.Server, chan string, error) {
 		}
 
 		w.Header().Set("Content-Type", "text/html")
-		fmt.Fprintf(w, "<html><body><h1>Authorization successful!</h1><p>You can close this window.</p></body></html>")
+		_, _ = fmt.Fprintf(w, "<html><body><h1>Authorization successful!</h1><p>You can close this window.</p></body></html>")
 		callbackChan <- code
 	})
 
@@ -316,7 +316,7 @@ func (o *OAuth2Auth) startCallbackServer() (*http.Server, chan string, error) {
 		return nil, nil, fmt.Errorf("failed to start callback server: %w", err)
 	}
 
-	go server.Serve(listener)
+	go func() { _ = server.Serve(listener) }()
 
 	return server, callbackChan, nil
 }
@@ -379,7 +379,7 @@ func (o *OAuth2Auth) requestDeviceCode(ctx context.Context) (*DeviceAuthResponse
 	if err != nil {
 		return nil, fmt.Errorf("failed to request device code: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -457,7 +457,7 @@ func (o *OAuth2Auth) checkDeviceToken(ctx context.Context, deviceCode string) (*
 	if err != nil {
 		return nil, fmt.Errorf("failed to check device token: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

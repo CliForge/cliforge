@@ -24,17 +24,17 @@ CliForge is a dynamic CLI generator that creates branded command-line tools from
    - User configuration file structure
    - Debug mode and overrides
 
-2. **Built-in Commands** (`../design/architecture/builtin-commands-design.md`)
+2. **Built-in Commands** ([builtin-commands-design.md](https://github.com/wgordon17/cliforge/blob/main/design/architecture/builtin-commands-design.md))
    - Standard commands: version, help, info, config
    - Global flags configuration
    - CLI styles: subcommand, flag, hybrid
 
-3. **Deprecation Strategy** (`../design/architecture/deprecation-strategy.md`)
+3. **Deprecation Strategy** ([deprecation-strategy.md](https://github.com/wgordon17/cliforge/blob/main/design/architecture/deprecation-strategy.md))
    - Handling API deprecations
    - CLI deprecations
    - Migration assistance
 
-4. **Secrets Handling** (`../design/architecture/secrets-handling-design.md`)
+4. **Secrets Handling** ([secrets-handling-design.md](https://github.com/wgordon17/cliforge/blob/main/design/architecture/secrets-handling-design.md))
    - Sensitive data detection and masking
    - Security best practices
 
@@ -81,13 +81,13 @@ Detailed documentation on:
 ### Internal Documentation
 
 For contributors and maintainers, see:
-- `../design/` - Design and architecture documents
-- `../research/` - Research and analysis
-- `../branding/` - Brand guidelines
+- [Design documents](https://github.com/wgordon17/cliforge/tree/main/design) - Design and architecture documents
+- Research and analysis (internal)
+- Brand guidelines (internal)
 
 ### Decision Records
 
-Architectural decisions are documented as ADRs in `../design/decisions/`:
+Architectural decisions are documented as ADRs in [design/decisions/](https://github.com/wgordon17/cliforge/tree/main/design/decisions):
 - ADR-000: Use Architecture Decision Records
 - ADR-100: Use Cobra for CLI Framework
 - ADR-101: Use expr for Templating Language

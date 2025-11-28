@@ -52,9 +52,9 @@ package cli
 
 import "time"
 
-// CLIConfig represents the complete CLI configuration as defined in cli-config.yaml.
+// Config represents the complete CLI configuration as defined in cli-config.yaml.
 // This is the root configuration structure that encompasses all aspects of a CLI tool.
-type CLIConfig struct {
+type Config struct {
 	Metadata  Metadata   `yaml:"metadata" json:"metadata"`
 	Branding  *Branding  `yaml:"branding,omitempty" json:"branding,omitempty"`
 	API       API        `yaml:"api" json:"api"`
@@ -120,21 +120,21 @@ type Theme struct {
 
 // API defines the API endpoints and connection settings.
 type API struct {
-	OpenAPIURL     string              `yaml:"openapi_url" json:"openapi_url"`
-	BaseURL        string              `yaml:"base_url" json:"base_url"`
-	Version        string              `yaml:"version,omitempty" json:"version,omitempty"`
-	Environments   []Environment       `yaml:"environments,omitempty" json:"environments,omitempty"`
-	DefaultHeaders map[string]string   `yaml:"default_headers,omitempty" json:"default_headers,omitempty"`
-	UserAgent      string              `yaml:"user_agent,omitempty" json:"user_agent,omitempty"`
-	TelemetryURL   string              `yaml:"telemetry_url,omitempty" json:"telemetry_url,omitempty"`
+	OpenAPIURL     string            `yaml:"openapi_url" json:"openapi_url"`
+	BaseURL        string            `yaml:"base_url" json:"base_url"`
+	Version        string            `yaml:"version,omitempty" json:"version,omitempty"`
+	Environments   []Environment     `yaml:"environments,omitempty" json:"environments,omitempty"`
+	DefaultHeaders map[string]string `yaml:"default_headers,omitempty" json:"default_headers,omitempty"`
+	UserAgent      string            `yaml:"user_agent,omitempty" json:"user_agent,omitempty"`
+	TelemetryURL   string            `yaml:"telemetry_url,omitempty" json:"telemetry_url,omitempty"`
 }
 
 // Environment represents a multi-environment configuration.
 type Environment struct {
-	Name        string `yaml:"name" json:"name"`
-	OpenAPIURL  string `yaml:"openapi_url" json:"openapi_url"`
-	BaseURL     string `yaml:"base_url" json:"base_url"`
-	Default     bool   `yaml:"default,omitempty" json:"default,omitempty"`
+	Name       string `yaml:"name" json:"name"`
+	OpenAPIURL string `yaml:"openapi_url" json:"openapi_url"`
+	BaseURL    string `yaml:"base_url" json:"base_url"`
+	Default    bool   `yaml:"default,omitempty" json:"default,omitempty"`
 }
 
 // Defaults contains user-overridable default settings.
@@ -164,9 +164,9 @@ type DefaultsPagination struct {
 
 // DefaultsOutput contains output formatting defaults.
 type DefaultsOutput struct {
-	Format      string `yaml:"format,omitempty" json:"format,omitempty"`           // json, yaml, table, csv
+	Format      string `yaml:"format,omitempty" json:"format,omitempty"` // json, yaml, table, csv
 	PrettyPrint bool   `yaml:"pretty_print,omitempty" json:"pretty_print,omitempty"`
-	Color       string `yaml:"color,omitempty" json:"color,omitempty"`             // auto, always, never
+	Color       string `yaml:"color,omitempty" json:"color,omitempty"` // auto, always, never
 	Paging      bool   `yaml:"paging,omitempty" json:"paging,omitempty"`
 }
 
@@ -191,21 +191,21 @@ type Updates struct {
 
 // Behaviors defines locked runtime behaviors.
 type Behaviors struct {
-	Auth            *AuthBehavior            `yaml:"auth,omitempty" json:"auth,omitempty"`
-	Caching         *CachingBehavior         `yaml:"caching,omitempty" json:"caching,omitempty"`
-	Retry           *RetryBehavior           `yaml:"retry,omitempty" json:"retry,omitempty"`
-	Pagination      *PaginationBehavior      `yaml:"pagination,omitempty" json:"pagination,omitempty"`
-	Secrets         *SecretsBehavior         `yaml:"secrets,omitempty" json:"secrets,omitempty"`
-	BuiltinCommands *BuiltinCommands         `yaml:"builtin_commands,omitempty" json:"builtin_commands,omitempty"`
-	GlobalFlags     *GlobalFlags             `yaml:"global_flags,omitempty" json:"global_flags,omitempty"`
+	Auth            *AuthBehavior       `yaml:"auth,omitempty" json:"auth,omitempty"`
+	Caching         *CachingBehavior    `yaml:"caching,omitempty" json:"caching,omitempty"`
+	Retry           *RetryBehavior      `yaml:"retry,omitempty" json:"retry,omitempty"`
+	Pagination      *PaginationBehavior `yaml:"pagination,omitempty" json:"pagination,omitempty"`
+	Secrets         *SecretsBehavior    `yaml:"secrets,omitempty" json:"secrets,omitempty"`
+	BuiltinCommands *BuiltinCommands    `yaml:"builtin_commands,omitempty" json:"builtin_commands,omitempty"`
+	GlobalFlags     *GlobalFlags        `yaml:"global_flags,omitempty" json:"global_flags,omitempty"`
 }
 
 // AuthBehavior defines authentication behavior.
 type AuthBehavior struct {
-	Type   string        `yaml:"type" json:"type"` // none, api_key, oauth2, basic
-	APIKey *APIKeyAuth   `yaml:"api_key,omitempty" json:"api_key,omitempty"`
-	OAuth2 *OAuth2Auth   `yaml:"oauth2,omitempty" json:"oauth2,omitempty"`
-	Basic  *BasicAuth    `yaml:"basic,omitempty" json:"basic,omitempty"`
+	Type   string      `yaml:"type" json:"type"` // none, api_key, oauth2, basic
+	APIKey *APIKeyAuth `yaml:"api_key,omitempty" json:"api_key,omitempty"`
+	OAuth2 *OAuth2Auth `yaml:"oauth2,omitempty" json:"oauth2,omitempty"`
+	Basic  *BasicAuth  `yaml:"basic,omitempty" json:"basic,omitempty"`
 }
 
 // APIKeyAuth defines API key authentication.
@@ -240,11 +240,11 @@ type CachingBehavior struct {
 
 // RetryBehavior defines retry behavior.
 type RetryBehavior struct {
-	Enabled            bool    `yaml:"enabled,omitempty" json:"enabled,omitempty"`
-	InitialDelay       string  `yaml:"initial_delay,omitempty" json:"initial_delay,omitempty"` // duration string
-	MaxDelay           string  `yaml:"max_delay,omitempty" json:"max_delay,omitempty"`         // duration string
-	BackoffMultiplier  float64 `yaml:"backoff_multiplier,omitempty" json:"backoff_multiplier,omitempty"`
-	RetryOnStatus      []int   `yaml:"retry_on_status,omitempty" json:"retry_on_status,omitempty"`
+	Enabled           bool    `yaml:"enabled,omitempty" json:"enabled,omitempty"`
+	InitialDelay      string  `yaml:"initial_delay,omitempty" json:"initial_delay,omitempty"` // duration string
+	MaxDelay          string  `yaml:"max_delay,omitempty" json:"max_delay,omitempty"`         // duration string
+	BackoffMultiplier float64 `yaml:"backoff_multiplier,omitempty" json:"backoff_multiplier,omitempty"`
+	RetryOnStatus     []int   `yaml:"retry_on_status,omitempty" json:"retry_on_status,omitempty"`
 }
 
 // PaginationBehavior defines pagination behavior.
@@ -255,18 +255,18 @@ type PaginationBehavior struct {
 
 // SecretsBehavior defines secrets handling behavior.
 type SecretsBehavior struct {
-	Enabled        bool             `yaml:"enabled,omitempty" json:"enabled,omitempty"`
-	Masking        *SecretsMasking  `yaml:"masking,omitempty" json:"masking,omitempty"`
-	FieldPatterns  []string         `yaml:"field_patterns,omitempty" json:"field_patterns,omitempty"`
-	ValuePatterns  []ValuePattern   `yaml:"value_patterns,omitempty" json:"value_patterns,omitempty"`
-	ExplicitFields []string         `yaml:"explicit_fields,omitempty" json:"explicit_fields,omitempty"`
-	Headers        []string         `yaml:"headers,omitempty" json:"headers,omitempty"`
-	MaskIn         *SecretsMaskIn   `yaml:"mask_in,omitempty" json:"mask_in,omitempty"`
+	Enabled        bool            `yaml:"enabled,omitempty" json:"enabled,omitempty"`
+	Masking        *SecretsMasking `yaml:"masking,omitempty" json:"masking,omitempty"`
+	FieldPatterns  []string        `yaml:"field_patterns,omitempty" json:"field_patterns,omitempty"`
+	ValuePatterns  []ValuePattern  `yaml:"value_patterns,omitempty" json:"value_patterns,omitempty"`
+	ExplicitFields []string        `yaml:"explicit_fields,omitempty" json:"explicit_fields,omitempty"`
+	Headers        []string        `yaml:"headers,omitempty" json:"headers,omitempty"`
+	MaskIn         *SecretsMaskIn  `yaml:"mask_in,omitempty" json:"mask_in,omitempty"`
 }
 
 // SecretsMasking defines masking strategy.
 type SecretsMasking struct {
-	Style            string `yaml:"style,omitempty" json:"style,omitempty"`               // partial, full, hash
+	Style            string `yaml:"style,omitempty" json:"style,omitempty"` // partial, full, hash
 	PartialShowChars int    `yaml:"partial_show_chars,omitempty" json:"partial_show_chars,omitempty"`
 	Replacement      string `yaml:"replacement,omitempty" json:"replacement,omitempty"`
 }
@@ -333,12 +333,12 @@ type UpdateCommand struct {
 
 // ChangelogCommand defines the changelog command.
 type ChangelogCommand struct {
-	Enabled             bool               `yaml:"enabled,omitempty" json:"enabled,omitempty"`
-	ShowBinaryChanges   bool               `yaml:"show_binary_changes,omitempty" json:"show_binary_changes,omitempty"`
-	ShowAPIChanges      bool               `yaml:"show_api_changes,omitempty" json:"show_api_changes,omitempty"`
-	BinaryChangelog     *ChangelogSource   `yaml:"binary_changelog,omitempty" json:"binary_changelog,omitempty"`
-	APIChangelog        *ChangelogSource   `yaml:"api_changelog,omitempty" json:"api_changelog,omitempty"`
-	DefaultLimit        int                `yaml:"default_limit,omitempty" json:"default_limit,omitempty"`
+	Enabled           bool             `yaml:"enabled,omitempty" json:"enabled,omitempty"`
+	ShowBinaryChanges bool             `yaml:"show_binary_changes,omitempty" json:"show_binary_changes,omitempty"`
+	ShowAPIChanges    bool             `yaml:"show_api_changes,omitempty" json:"show_api_changes,omitempty"`
+	BinaryChangelog   *ChangelogSource `yaml:"binary_changelog,omitempty" json:"binary_changelog,omitempty"`
+	APIChangelog      *ChangelogSource `yaml:"api_changelog,omitempty" json:"api_changelog,omitempty"`
+	DefaultLimit      int              `yaml:"default_limit,omitempty" json:"default_limit,omitempty"`
 }
 
 // ChangelogSource defines where to fetch changelog data.
@@ -371,19 +371,19 @@ type AuthCommand struct {
 
 // GlobalFlags defines global flag configuration.
 type GlobalFlags struct {
-	Config   *GlobalFlag   `yaml:"config,omitempty" json:"config,omitempty"`
-	Profile  *GlobalFlag   `yaml:"profile,omitempty" json:"profile,omitempty"`
-	Region   *GlobalFlag   `yaml:"region,omitempty" json:"region,omitempty"`
-	Output   *GlobalFlag   `yaml:"output,omitempty" json:"output,omitempty"`
-	Verbose  *GlobalFlag   `yaml:"verbose,omitempty" json:"verbose,omitempty"`
-	Quiet    *GlobalFlag   `yaml:"quiet,omitempty" json:"quiet,omitempty"`
-	Debug    *GlobalFlag   `yaml:"debug,omitempty" json:"debug,omitempty"`
-	NoColor  *GlobalFlag   `yaml:"no_color,omitempty" json:"no_color,omitempty"`
-	Timeout  *GlobalFlag   `yaml:"timeout,omitempty" json:"timeout,omitempty"`
-	Retry    *GlobalFlag   `yaml:"retry,omitempty" json:"retry,omitempty"`
-	NoCache  *GlobalFlag   `yaml:"no_cache,omitempty" json:"no_cache,omitempty"`
-	Yes      *GlobalFlag   `yaml:"yes,omitempty" json:"yes,omitempty"`
-	Custom   []CustomFlag  `yaml:"custom,omitempty" json:"custom,omitempty"`
+	Config  *GlobalFlag  `yaml:"config,omitempty" json:"config,omitempty"`
+	Profile *GlobalFlag  `yaml:"profile,omitempty" json:"profile,omitempty"`
+	Region  *GlobalFlag  `yaml:"region,omitempty" json:"region,omitempty"`
+	Output  *GlobalFlag  `yaml:"output,omitempty" json:"output,omitempty"`
+	Verbose *GlobalFlag  `yaml:"verbose,omitempty" json:"verbose,omitempty"`
+	Quiet   *GlobalFlag  `yaml:"quiet,omitempty" json:"quiet,omitempty"`
+	Debug   *GlobalFlag  `yaml:"debug,omitempty" json:"debug,omitempty"`
+	NoColor *GlobalFlag  `yaml:"no_color,omitempty" json:"no_color,omitempty"`
+	Timeout *GlobalFlag  `yaml:"timeout,omitempty" json:"timeout,omitempty"`
+	Retry   *GlobalFlag  `yaml:"retry,omitempty" json:"retry,omitempty"`
+	NoCache *GlobalFlag  `yaml:"no_cache,omitempty" json:"no_cache,omitempty"`
+	Yes     *GlobalFlag  `yaml:"yes,omitempty" json:"yes,omitempty"`
+	Custom  []CustomFlag `yaml:"custom,omitempty" json:"custom,omitempty"`
 }
 
 // GlobalFlag defines a global flag configuration.
@@ -416,15 +416,15 @@ type CustomFlag struct {
 
 // Features defines optional feature flags.
 type Features struct {
-	ConfigFile       bool   `yaml:"config_file,omitempty" json:"config_file,omitempty"`
-	ConfigFilePath   string `yaml:"config_file_path,omitempty" json:"config_file_path,omitempty"`
-	InteractiveMode  bool   `yaml:"interactive_mode,omitempty" json:"interactive_mode,omitempty"`
+	ConfigFile      bool   `yaml:"config_file,omitempty" json:"config_file,omitempty"`
+	ConfigFilePath  string `yaml:"config_file_path,omitempty" json:"config_file_path,omitempty"`
+	InteractiveMode bool   `yaml:"interactive_mode,omitempty" json:"interactive_mode,omitempty"`
 }
 
 // UserConfig represents user-specific configuration overrides.
 type UserConfig struct {
 	Preferences   *UserPreferences `yaml:"preferences,omitempty" json:"preferences,omitempty"`
-	DebugOverride *CLIConfig       `yaml:"debug_override,omitempty" json:"debug_override,omitempty"`
+	DebugOverride *Config          `yaml:"debug_override,omitempty" json:"debug_override,omitempty"`
 }
 
 // UserPreferences represents user preferences that can override defaults.
@@ -441,12 +441,12 @@ type UserPreferences struct {
 
 // PreferencesHTTP contains HTTP preferences.
 type PreferencesHTTP struct {
-	Timeout     string              `yaml:"timeout,omitempty" json:"timeout,omitempty"`
-	Proxy       string              `yaml:"proxy,omitempty" json:"proxy,omitempty"`
-	HTTPSProxy  string              `yaml:"https_proxy,omitempty" json:"https_proxy,omitempty"`
-	NoProxy     []string            `yaml:"no_proxy,omitempty" json:"no_proxy,omitempty"`
-	CABundle    string              `yaml:"ca_bundle,omitempty" json:"ca_bundle,omitempty"`
-	TLS         *PreferencesTLS     `yaml:"tls,omitempty" json:"tls,omitempty"`
+	Timeout    string          `yaml:"timeout,omitempty" json:"timeout,omitempty"`
+	Proxy      string          `yaml:"proxy,omitempty" json:"proxy,omitempty"`
+	HTTPSProxy string          `yaml:"https_proxy,omitempty" json:"https_proxy,omitempty"`
+	NoProxy    []string        `yaml:"no_proxy,omitempty" json:"no_proxy,omitempty"`
+	CABundle   string          `yaml:"ca_bundle,omitempty" json:"ca_bundle,omitempty"`
+	TLS        *PreferencesTLS `yaml:"tls,omitempty" json:"tls,omitempty"`
 }
 
 // PreferencesTLS contains TLS preferences.
@@ -496,29 +496,29 @@ type PreferencesUpdates struct {
 
 // OpenAPIExtensions represents custom OpenAPI extensions for CLI generation.
 type OpenAPIExtensions struct {
-	CLIVersion       string            `yaml:"x-cli-version,omitempty" json:"x-cli-version,omitempty"`
-	CLIMinVersion    string            `yaml:"x-cli-min-version,omitempty" json:"x-cli-min-version,omitempty"`
-	CLIChangelog     []ChangelogEntry  `yaml:"x-cli-changelog,omitempty" json:"x-cli-changelog,omitempty"`
-	CLIAliases       []string          `yaml:"x-cli-aliases,omitempty" json:"x-cli-aliases,omitempty"`
-	CLIExamples      []Example         `yaml:"x-cli-examples,omitempty" json:"x-cli-examples,omitempty"`
-	CLIHidden        bool              `yaml:"x-cli-hidden,omitempty" json:"x-cli-hidden,omitempty"`
-	CLIAuth          *CLIAuth          `yaml:"x-cli-auth,omitempty" json:"x-cli-auth,omitempty"`
-	CLIWorkflow      *Workflow         `yaml:"x-cli-workflow,omitempty" json:"x-cli-workflow,omitempty"`
-	CLIDeprecation   *Deprecation      `yaml:"x-cli-deprecation,omitempty" json:"x-cli-deprecation,omitempty"`
-	CLISecret        bool              `yaml:"x-cli-secret,omitempty" json:"x-cli-secret,omitempty"`
+	CLIVersion     string           `yaml:"x-cli-version,omitempty" json:"x-cli-version,omitempty"`
+	CLIMinVersion  string           `yaml:"x-cli-min-version,omitempty" json:"x-cli-min-version,omitempty"`
+	CLIChangelog   []ChangelogEntry `yaml:"x-cli-changelog,omitempty" json:"x-cli-changelog,omitempty"`
+	CLIAliases     []string         `yaml:"x-cli-aliases,omitempty" json:"x-cli-aliases,omitempty"`
+	CLIExamples    []Example        `yaml:"x-cli-examples,omitempty" json:"x-cli-examples,omitempty"`
+	CLIHidden      bool             `yaml:"x-cli-hidden,omitempty" json:"x-cli-hidden,omitempty"`
+	CLIAuth        *Auth            `yaml:"x-cli-auth,omitempty" json:"x-cli-auth,omitempty"`
+	CLIWorkflow    *Workflow        `yaml:"x-cli-workflow,omitempty" json:"x-cli-workflow,omitempty"`
+	CLIDeprecation *Deprecation     `yaml:"x-cli-deprecation,omitempty" json:"x-cli-deprecation,omitempty"`
+	CLISecret      bool             `yaml:"x-cli-secret,omitempty" json:"x-cli-secret,omitempty"`
 }
 
 // ChangelogEntry represents a single changelog entry.
 type ChangelogEntry struct {
-	Date    string           `yaml:"date" json:"date"`
-	Version string           `yaml:"version" json:"version"`
+	Date    string            `yaml:"date" json:"date"`
+	Version string            `yaml:"version" json:"version"`
 	Changes []ChangelogChange `yaml:"changes" json:"changes"`
 }
 
 // ChangelogChange represents a single change within a changelog entry.
 type ChangelogChange struct {
-	Type        string `yaml:"type" json:"type"`               // added, removed, modified, deprecated, security
-	Severity    string `yaml:"severity" json:"severity"`       // breaking, dangerous, safe
+	Type        string `yaml:"type" json:"type"`         // added, removed, modified, deprecated, security
+	Severity    string `yaml:"severity" json:"severity"` // breaking, dangerous, safe
 	Description string `yaml:"description" json:"description"`
 	Path        string `yaml:"path,omitempty" json:"path,omitempty"`
 	Migration   string `yaml:"migration,omitempty" json:"migration,omitempty"`
@@ -531,8 +531,8 @@ type Example struct {
 	Command     string `yaml:"command" json:"command"`
 }
 
-// CLIAuth represents authentication requirements for an operation.
-type CLIAuth struct {
+// Auth represents authentication requirements for an operation.
+type Auth struct {
 	Required bool     `yaml:"required,omitempty" json:"required,omitempty"`
 	Scopes   []string `yaml:"scopes,omitempty" json:"scopes,omitempty"`
 }
@@ -547,8 +547,8 @@ type Workflow struct {
 type WorkflowStep struct {
 	ID        string           `yaml:"id" json:"id"`
 	Request   *WorkflowRequest `yaml:"request,omitempty" json:"request,omitempty"`
-	Foreach   string           `yaml:"foreach,omitempty" json:"foreach,omitempty"` // expr expression
-	As        string           `yaml:"as,omitempty" json:"as,omitempty"`           // loop variable name
+	Foreach   string           `yaml:"foreach,omitempty" json:"foreach,omitempty"`     // expr expression
+	As        string           `yaml:"as,omitempty" json:"as,omitempty"`               // loop variable name
 	Condition string           `yaml:"condition,omitempty" json:"condition,omitempty"` // expr expression
 }
 
@@ -569,12 +569,12 @@ type WorkflowOutput struct {
 
 // Deprecation represents deprecation information for an operation.
 type Deprecation struct {
-	Severity    string    `yaml:"severity" json:"severity"`                             // info, warning, urgent, critical, removed
-	Sunset      string    `yaml:"sunset,omitempty" json:"sunset,omitempty"`             // ISO 8601 date
-	Message     string    `yaml:"message" json:"message"`
-	Replacement *string   `yaml:"replacement,omitempty" json:"replacement,omitempty"`   // alternative operation
-	Migration   *string   `yaml:"migration,omitempty" json:"migration,omitempty"`       // migration guide
-	Links       []string  `yaml:"links,omitempty" json:"links,omitempty"`
+	Severity    string   `yaml:"severity" json:"severity"`                 // info, warning, urgent, critical, removed
+	Sunset      string   `yaml:"sunset,omitempty" json:"sunset,omitempty"` // ISO 8601 date
+	Message     string   `yaml:"message" json:"message"`
+	Replacement *string  `yaml:"replacement,omitempty" json:"replacement,omitempty"` // alternative operation
+	Migration   *string  `yaml:"migration,omitempty" json:"migration,omitempty"`     // migration guide
+	Links       []string `yaml:"links,omitempty" json:"links,omitempty"`
 }
 
 // PluginManifest represents a plugin's manifest file.
@@ -598,18 +598,24 @@ type PluginCommand struct {
 type ConfigPriority int
 
 const (
+	// PriorityDefault is the lowest priority for default configuration values.
 	PriorityDefault ConfigPriority = iota
+	// PriorityEmbedded is the priority for embedded configuration in the binary.
 	PriorityEmbedded
+	// PriorityUserConfig is the priority for user configuration files.
 	PriorityUserConfig
+	// PriorityDebugOverride is the priority for debug override configuration.
 	PriorityDebugOverride
+	// PriorityFlag is the priority for command-line flags.
 	PriorityFlag
+	// PriorityEnv is the highest priority for environment variables.
 	PriorityEnv
 )
 
 // LoadedConfig represents a fully loaded and merged configuration.
 type LoadedConfig struct {
-	Final              *CLIConfig
-	EmbeddedConfig     *CLIConfig
+	Final              *Config
+	EmbeddedConfig     *Config
 	UserConfig         *UserConfig
 	DebugOverrides     map[string]any
 	EffectiveTimestamp time.Time

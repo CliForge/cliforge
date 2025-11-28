@@ -37,7 +37,7 @@ func (c *Checker) Check(ctx context.Context) (*CheckResult, error) {
 	currentVersion, err := ParseVersion(c.config.CurrentVersion)
 	if err != nil {
 		return &CheckResult{
-			Status:    UpdateStatusFailed,
+			Status:    StatusFailed,
 			Error:     fmt.Errorf("invalid current version: %w", err),
 			CheckedAt: time.Now(),
 		}, err
@@ -47,7 +47,7 @@ func (c *Checker) Check(ctx context.Context) (*CheckResult, error) {
 	release, err := c.fetchReleaseInfo(ctx)
 	if err != nil {
 		return &CheckResult{
-			Status:         UpdateStatusFailed,
+			Status:         StatusFailed,
 			CurrentVersion: currentVersion,
 			Error:          fmt.Errorf("failed to fetch release info: %w", err),
 			CheckedAt:      time.Now(),
@@ -58,7 +58,7 @@ func (c *Checker) Check(ctx context.Context) (*CheckResult, error) {
 	latestVersion, err := ParseVersion(release.Version)
 	if err != nil {
 		return &CheckResult{
-			Status:         UpdateStatusFailed,
+			Status:         StatusFailed,
 			CurrentVersion: currentVersion,
 			Error:          fmt.Errorf("invalid latest version: %w", err),
 			CheckedAt:      time.Now(),
@@ -68,7 +68,7 @@ func (c *Checker) Check(ctx context.Context) (*CheckResult, error) {
 	// Skip prerelease versions if not allowed
 	if latestVersion.IsPrerelease() && !c.config.AllowPrerelease {
 		return &CheckResult{
-			Status:         UpdateStatusUpToDate,
+			Status:         StatusUpToDate,
 			CurrentVersion: currentVersion,
 			LatestVersion:  latestVersion,
 			Release:        release,
@@ -77,9 +77,9 @@ func (c *Checker) Check(ctx context.Context) (*CheckResult, error) {
 	}
 
 	// Determine status
-	status := UpdateStatusUpToDate
+	status := StatusUpToDate
 	if latestVersion.IsNewer(currentVersion) {
-		status = UpdateStatusAvailable
+		status = StatusAvailable
 	}
 
 	result := &CheckResult{
@@ -113,7 +113,7 @@ func (c *Checker) fetchReleaseInfo(ctx context.Context) (*ReleaseInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch update info: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)

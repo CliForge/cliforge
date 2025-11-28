@@ -25,8 +25,8 @@ func NewValidator() *Validator {
 
 // ValidationResult contains validation results.
 type ValidationResult struct {
-	Valid   bool
-	Errors  []ValidationError
+	Valid    bool
+	Errors   []ValidationError
 	Warnings []ValidationWarning
 }
 

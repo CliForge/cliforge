@@ -234,7 +234,7 @@ func NewAcknowledgmentTracker(appName string) (*AcknowledgmentTracker, error) {
 
 	// Load existing data
 	if fileData, err := os.ReadFile(trackingPath); err == nil {
-		yaml.Unmarshal(fileData, data)
+		_ = yaml.Unmarshal(fileData, data)
 	}
 
 	return &AcknowledgmentTracker{
@@ -320,7 +320,7 @@ func ShowDeprecationNotice(info *DeprecationInfo, manager *WarningManager) {
 	fmt.Fprint(os.Stderr, FormatWarning(info))
 
 	// Mark as shown
-	manager.MarkShown(info)
+	_ = manager.MarkShown(info)
 }
 
 // ShowShortNotice displays a short deprecation notice.
@@ -333,7 +333,7 @@ func ShowShortNotice(info *DeprecationInfo, manager *WarningManager) {
 	fmt.Fprintln(os.Stderr, FormatShortWarning(info))
 
 	// Mark as shown
-	manager.MarkShown(info)
+	_ = manager.MarkShown(info)
 }
 
 // ShowBlockedNotice displays a notice for blocked operations.

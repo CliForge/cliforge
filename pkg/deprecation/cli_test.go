@@ -24,12 +24,12 @@ func TestFlagMapper_MapFlag(t *testing.T) {
 	})
 
 	tests := []struct {
-		name          string
-		command       string
-		flagName      string
-		wantNewFlag   string
-		wantMapped    bool
-		wantWarning   bool
+		name        string
+		command     string
+		flagName    string
+		wantNewFlag string
+		wantMapped  bool
+		wantWarning bool
 	}{
 		{
 			name:        "map deprecated flag for specific command",
@@ -291,10 +291,10 @@ func TestAutoFixer_FixLine(t *testing.T) {
 	fixer := NewAutoFixer(false)
 
 	tests := []struct {
-		name    string
-		line    string
-		issues  []*ScriptIssue
-		want    string
+		name   string
+		line   string
+		issues []*ScriptIssue
+		want   string
 	}{
 		{
 			name: "fix with auto-fix enabled",
@@ -347,10 +347,10 @@ func TestParseCLIDeprecations(t *testing.T) {
 			name: "valid deprecations",
 			data: []interface{}{
 				map[string]interface{}{
-					"type":        "flag",
-					"old_flag":    "--filter",
-					"new_flag":    "--search",
-					"sunset":      "2025-12-31",
+					"type":     "flag",
+					"old_flag": "--filter",
+					"new_flag": "--search",
+					"sunset":   "2025-12-31",
 				},
 				map[string]interface{}{
 					"type":        "command",
@@ -368,9 +368,9 @@ func TestParseCLIDeprecations(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "empty array",
-			data: []interface{}{},
-			want: 0,
+			name:    "empty array",
+			data:    []interface{}{},
+			want:    0,
 			wantErr: false,
 		},
 	}

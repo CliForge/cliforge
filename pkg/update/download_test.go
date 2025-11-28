@@ -3,6 +3,7 @@ package update
 import (
 	"context"
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/hex"
 	"net/http"
 	"net/http/httptest"
@@ -16,9 +17,9 @@ func TestDownloader_Download(t *testing.T) {
 	checksum := sha256.Sum256(testData)
 	checksumStr := hex.EncodeToString(checksum[:])
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write(testData)
+		_, _ = w.Write(testData)
 	}))
 	defer server.Close()
 
@@ -75,7 +76,7 @@ func TestDownloader_Download(t *testing.T) {
 			}
 
 			if !tt.wantErr {
-				defer os.Remove(path)
+				defer func() { _ = os.Remove(path) }()
 
 				// Verify file exists and has correct content
 				data, err := os.ReadFile(path)
@@ -278,5 +279,261 @@ func TestDownloader_CleanupOldDownloads(t *testing.T) {
 	// New file should still exist
 	if _, err := os.Stat(newFile); err != nil {
 		t.Error("New file should still exist")
+	}
+}
+
+func TestDownloader_Download_HTTPError(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	config := &UpdateConfig{
+		CurrentVersion: "1.0.0",
+		CacheDir:       tmpDir,
+		HTTPTimeout:    5 * time.Second,
+	}
+
+	downloader := NewDownloader(config)
+
+	release := &ReleaseInfo{
+		URL:          server.URL,
+		Checksum:     "abc123",
+		ChecksumAlgo: "sha256",
+		Size:         100,
+	}
+
+	_, err := downloader.Download(context.Background(), release, nil)
+	if err == nil {
+		t.Error("Download() should return error for HTTP error")
+	}
+}
+
+func TestDownloader_Download_ContextCanceled(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Server that delays response
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		time.Sleep(2 * time.Second)
+		_, _ = w.Write([]byte("data"))
+	}))
+	defer server.Close()
+
+	config := &UpdateConfig{
+		CurrentVersion: "1.0.0",
+		CacheDir:       tmpDir,
+		HTTPTimeout:    5 * time.Second,
+	}
+
+	downloader := NewDownloader(config)
+
+	release := &ReleaseInfo{
+		URL:          server.URL,
+		Checksum:     "abc123",
+		ChecksumAlgo: "sha256",
+		Size:         100,
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately
+
+	_, err := downloader.Download(ctx, release, nil)
+	if err == nil {
+		t.Error("Download() should return error when context is canceled")
+	}
+}
+
+func TestDownloader_Download_WithProgress(t *testing.T) {
+	testData := []byte("test binary content for progress tracking")
+	checksum := sha256.Sum256(testData)
+	checksumStr := hex.EncodeToString(checksum[:])
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(testData)
+	}))
+	defer server.Close()
+
+	tmpDir := t.TempDir()
+
+	config := &UpdateConfig{
+		CurrentVersion: "1.0.0",
+		CacheDir:       tmpDir,
+		HTTPTimeout:    5 * time.Second,
+	}
+
+	downloader := NewDownloader(config)
+
+	release := &ReleaseInfo{
+		URL:          server.URL,
+		Checksum:     checksumStr,
+		ChecksumAlgo: "sha256",
+		Size:         int64(len(testData)),
+	}
+
+	progressCalled := false
+	callback := func(p *DownloadProgress) {
+		progressCalled = true
+		if p.TotalBytes != int64(len(testData)) {
+			t.Errorf("Progress TotalBytes = %d, want %d", p.TotalBytes, len(testData))
+		}
+	}
+
+	path, err := downloader.Download(context.Background(), release, callback)
+	if err != nil {
+		t.Fatalf("Download() error = %v", err)
+	}
+	defer func() { _ = os.Remove(path) }()
+
+	if !progressCalled {
+		t.Error("Progress callback was not called")
+	}
+}
+
+func TestDownloader_DownloadWithProgress(t *testing.T) {
+	testData := []byte("test binary content")
+	checksum := sha256.Sum256(testData)
+	checksumStr := hex.EncodeToString(checksum[:])
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(testData)
+	}))
+	defer server.Close()
+
+	tmpDir := t.TempDir()
+
+	config := &UpdateConfig{
+		CurrentVersion: "1.0.0",
+		CacheDir:       tmpDir,
+		HTTPTimeout:    5 * time.Second,
+	}
+
+	downloader := NewDownloader(config)
+
+	release := &ReleaseInfo{
+		URL:          server.URL,
+		Checksum:     checksumStr,
+		ChecksumAlgo: "sha256",
+		Size:         int64(len(testData)),
+	}
+
+	path, err := downloader.DownloadWithProgress(context.Background(), release)
+	if err != nil {
+		t.Fatalf("DownloadWithProgress() error = %v", err)
+	}
+	defer func() { _ = os.Remove(path) }()
+
+	// Verify file exists
+	if _, err := os.Stat(path); err != nil {
+		t.Errorf("Downloaded file does not exist: %v", err)
+	}
+}
+
+func TestDownloader_DownloadWithProgress_Error(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	config := &UpdateConfig{
+		CurrentVersion: "1.0.0",
+		CacheDir:       tmpDir,
+		HTTPTimeout:    5 * time.Second,
+	}
+
+	downloader := NewDownloader(config)
+
+	release := &ReleaseInfo{
+		URL:          server.URL,
+		Checksum:     "abc123",
+		ChecksumAlgo: "sha256",
+		Size:         100,
+	}
+
+	_, err := downloader.DownloadWithProgress(context.Background(), release)
+	if err == nil {
+		t.Error("DownloadWithProgress() should return error on HTTP error")
+	}
+}
+
+func TestDownloader_VerifyChecksum_SHA512(t *testing.T) {
+	tmpDir := t.TempDir()
+	testData := []byte("test content for sha512")
+	testFile := tmpDir + "/test.bin"
+
+	if err := os.WriteFile(testFile, testData, 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	checksum := sha512.Sum512(testData)
+	validChecksum := hex.EncodeToString(checksum[:])
+
+	config := &UpdateConfig{
+		CacheDir: tmpDir,
+	}
+	downloader := NewDownloader(config)
+
+	err := downloader.verifyChecksum(testFile, validChecksum, "sha512")
+	if err != nil {
+		t.Errorf("verifyChecksum() with sha512 error = %v", err)
+	}
+}
+
+func TestDownloader_CleanupOldDownloads_NonExistentDir(t *testing.T) {
+	config := &UpdateConfig{
+		CacheDir: "/nonexistent/path",
+	}
+	downloader := NewDownloader(config)
+
+	// Should not error on non-existent directory
+	err := downloader.CleanupOldDownloads()
+	if err != nil {
+		t.Errorf("CleanupOldDownloads() should not error on non-existent directory, got: %v", err)
+	}
+}
+
+func TestDownloader_CleanupOldDownloads_EmptyCacheDir(t *testing.T) {
+	config := &UpdateConfig{
+		CacheDir: "",
+	}
+	downloader := NewDownloader(config)
+
+	err := downloader.CleanupOldDownloads()
+	if err != nil {
+		t.Errorf("CleanupOldDownloads() error = %v", err)
+	}
+}
+
+func TestDownloader_CleanupOldDownloads_SkipsDirectories(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create an old directory
+	oldDir := tmpDir + "/olddir"
+	if err := os.Mkdir(oldDir, 0755); err != nil {
+		t.Fatalf("Failed to create old directory: %v", err)
+	}
+
+	oldTime := time.Now().Add(-8 * 24 * time.Hour)
+	if err := os.Chtimes(oldDir, oldTime, oldTime); err != nil {
+		t.Fatalf("Failed to set directory time: %v", err)
+	}
+
+	config := &UpdateConfig{
+		CacheDir: tmpDir,
+	}
+	downloader := NewDownloader(config)
+
+	if err := downloader.CleanupOldDownloads(); err != nil {
+		t.Fatalf("CleanupOldDownloads() error = %v", err)
+	}
+
+	// Directory should still exist (not removed)
+	if _, err := os.Stat(oldDir); os.IsNotExist(err) {
+		t.Error("Old directory should not be removed")
 	}
 }

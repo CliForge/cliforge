@@ -38,12 +38,13 @@ import (
 	"sync"
 	"time"
 
+	spinnerlib "github.com/briandowns/spinner"
 	"github.com/pterm/pterm"
 )
 
 // Spinner implements a spinner progress indicator.
 type Spinner struct {
-	spinner *pterm.SpinnerPrinter
+	spinner *spinnerlib.Spinner
 	config  *Config
 	active  bool
 	mu      sync.Mutex
@@ -65,21 +66,27 @@ func (s *Spinner) Start(message string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if !s.config.Enabled {
-		return nil
-	}
-
 	if s.active {
 		return fmt.Errorf("spinner already active")
 	}
 
-	var err error
-	s.spinner, err = pterm.DefaultSpinner.Start(message)
-	if err != nil {
-		return fmt.Errorf("failed to start spinner: %w", err)
+	// Always track active state, even when disabled (for testing)
+	s.active = true
+
+	if !s.config.Enabled {
+		return nil
 	}
 
-	s.active = true
+	// Create briandowns/spinner (race-safe with RWMutex)
+	writer := s.config.Writer
+	if writer == nil {
+		writer = os.Stderr
+	}
+
+	s.spinner = spinnerlib.New(spinnerlib.CharSets[14], 100*time.Millisecond, spinnerlib.WithWriter(writer))
+	s.spinner.Suffix = " " + message
+	s.spinner.Start()
+
 	return nil
 }
 
@@ -92,12 +99,12 @@ func (s *Spinner) Update(message string) error {
 		return nil
 	}
 
-	s.spinner.UpdateText(message)
+	s.spinner.Suffix = " " + message
 	return nil
 }
 
 // UpdateWithData updates the spinner with structured data.
-func (s *Spinner) UpdateWithData(data *ProgressData) error {
+func (s *Spinner) UpdateWithData(data *Data) error {
 	return s.Update(data.Message)
 }
 
@@ -106,12 +113,19 @@ func (s *Spinner) Success(message string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if !s.config.Enabled || !s.active || s.spinner == nil {
+	if !s.active {
 		return nil
 	}
 
-	s.spinner.Success(message)
+	// Always update state, even when disabled
 	s.active = false
+
+	if !s.config.Enabled || s.spinner == nil {
+		return nil
+	}
+
+	s.spinner.FinalMSG = "✓ " + message + "\n"
+	s.spinner.Stop()
 	return nil
 }
 
@@ -120,12 +134,19 @@ func (s *Spinner) Failure(message string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if !s.config.Enabled || !s.active || s.spinner == nil {
+	if !s.active {
 		return nil
 	}
 
-	s.spinner.Fail(message)
+	// Always update state, even when disabled
 	s.active = false
+
+	if !s.config.Enabled || s.spinner == nil {
+		return nil
+	}
+
+	s.spinner.FinalMSG = "✗ " + message + "\n"
+	s.spinner.Stop()
 	return nil
 }
 
@@ -134,12 +155,18 @@ func (s *Spinner) Stop() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if !s.active || s.spinner == nil {
+	if !s.active {
+		return nil
+	}
+
+	// Always update state, even when disabled
+	s.active = false
+
+	if !s.config.Enabled || s.spinner == nil {
 		return nil
 	}
 
 	s.spinner.Stop()
-	s.active = false
 	return nil
 }
 
@@ -216,7 +243,7 @@ func (p *ProgressBar) Update(message string) error {
 }
 
 // UpdateWithData updates the progress bar with structured data.
-func (p *ProgressBar) UpdateWithData(data *ProgressData) error {
+func (p *ProgressBar) UpdateWithData(data *Data) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
@@ -425,7 +452,7 @@ func (m *MultiStep) Update(message string) error {
 }
 
 // UpdateWithData updates with structured data.
-func (m *MultiStep) UpdateWithData(data *ProgressData) error {
+func (m *MultiStep) UpdateWithData(data *Data) error {
 	// Extract step information from metadata if present
 	if data.Metadata != nil {
 		if stepID, ok := data.Metadata["step_id"].(string); ok {
@@ -448,7 +475,7 @@ func (m *MultiStep) Success(message string) error {
 	}
 
 	if m.active && m.rootArea != nil {
-		m.rootArea.Stop()
+		_ = m.rootArea.Stop()
 	}
 
 	if message != "" {
@@ -469,7 +496,7 @@ func (m *MultiStep) Failure(message string) error {
 	}
 
 	if m.active && m.rootArea != nil {
-		m.rootArea.Stop()
+		_ = m.rootArea.Stop()
 	}
 
 	if message != "" {
@@ -490,7 +517,7 @@ func (m *MultiStep) Stop() error {
 	}
 
 	if m.rootArea != nil {
-		m.rootArea.Stop()
+		_ = m.rootArea.Stop()
 	}
 
 	m.active = false
@@ -591,7 +618,7 @@ func (n *NoopProgress) Start(message string) error { return nil }
 func (n *NoopProgress) Update(message string) error { return nil }
 
 // UpdateWithData does nothing.
-func (n *NoopProgress) UpdateWithData(data *ProgressData) error { return nil }
+func (n *NoopProgress) UpdateWithData(data *Data) error { return nil }
 
 // Success does nothing.
 func (n *NoopProgress) Success(message string) error { return nil }
@@ -616,13 +643,13 @@ func New(config *Config, total int) Progress {
 	}
 
 	switch config.Type {
-	case ProgressTypeSpinner:
+	case TypeSpinner:
 		return NewSpinner(config)
-	case ProgressTypeBar:
+	case TypeBar:
 		return NewProgressBar(config, total)
-	case ProgressTypeSteps:
+	case TypeSteps:
 		return NewMultiStep(config)
-	case ProgressTypeNone:
+	case TypeNone:
 		return NewNoopProgress()
 	default:
 		return NewSpinner(config)

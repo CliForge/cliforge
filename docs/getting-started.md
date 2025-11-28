@@ -589,22 +589,22 @@ my-cli completion fish > ~/.config/fish/completions/my-cli.fish
 ### Example Projects
 
 1. **Petstore CLI** - Complete example with all features
-   - Location: `examples/petstore/`
-   - Run: `cd examples/petstore && ./demo.sh`
+   - Location: Available in the [GitHub repository](https://github.com/CliForge/cliforge/tree/main/examples/petstore)
    - Shows: All OpenAPI extensions, workflows, streaming, plugins
+   - Note: Clone the repository to run the examples locally
 
 ### Documentation
 
 - [Installation Guide](installation.md) - Detailed installation instructions
 - [Configuration DSL](configuration-dsl.md) - Complete configuration reference
 - [Technical Specification](technical-specification.md) - System architecture and design
-- [Contributing Guide](../CONTRIBUTING.md) - How to contribute to CliForge
+- [Contributing Guide](https://github.com/CliForge/cliforge/blob/main/CONTRIBUTING.md) - How to contribute to CliForge
 
 ### Getting Help
 
 - **GitHub Issues**: [github.com/cliforge/cliforge/issues](https://github.com/cliforge/cliforge/issues)
 - **Documentation**: [docs/](.)
-- **Examples**: [examples/](../examples/)
+- **Examples**: Available in the [GitHub repository](https://github.com/CliForge/cliforge/tree/main/examples)
 
 ---
 
@@ -732,7 +732,7 @@ You now have everything you need to create and use a CliForge CLI. Here's what t
 
 1. **Read the [Installation Guide](installation.md)** for detailed setup instructions
 2. **Review the [Configuration DSL](configuration-dsl.md)** for all available options
-3. **Study the [Petstore Example](../examples/petstore/)** for real-world patterns
+3. **Study the Petstore Example** in the [GitHub repository](https://github.com/CliForge/cliforge/tree/main/examples/petstore) for real-world patterns
 4. **Check the [Technical Specification](technical-specification.md)** for advanced features
 
 Happy CLI building with CliForge!

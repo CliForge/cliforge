@@ -9,8 +9,8 @@ import (
 
 // DefaultsProvider provides smart defaults based on usage, context, and configuration.
 type DefaultsProvider struct {
-	stateMgr   *Manager
-	configDefaults map[string]string
+	stateMgr        *Manager
+	configDefaults  map[string]string
 	builtinDefaults map[string]string
 }
 
@@ -406,14 +406,14 @@ func ValidateDefaults(defaults map[string]string, allowedKeys []string) error {
 
 // DefaultsSnapshot captures a snapshot of all defaults for debugging.
 type DefaultsSnapshot struct {
-	Timestamp      string                 `json:"timestamp"`
-	Context        string                 `json:"context"`
-	BuiltinDefaults map[string]string     `json:"builtin_defaults"`
-	ConfigDefaults  map[string]string     `json:"config_defaults"`
-	ContextDefaults map[string]string     `json:"context_defaults"`
-	RecentDefaults  map[string]string     `json:"recent_defaults"`
-	MergedDefaults  map[string]string     `json:"merged_defaults"`
-	Priorities      map[string]string     `json:"priorities"`
+	Timestamp       string            `json:"timestamp"`
+	Context         string            `json:"context"`
+	BuiltinDefaults map[string]string `json:"builtin_defaults"`
+	ConfigDefaults  map[string]string `json:"config_defaults"`
+	ContextDefaults map[string]string `json:"context_defaults"`
+	RecentDefaults  map[string]string `json:"recent_defaults"`
+	MergedDefaults  map[string]string `json:"merged_defaults"`
+	Priorities      map[string]string `json:"priorities"`
 }
 
 // Snapshot creates a snapshot of all defaults.

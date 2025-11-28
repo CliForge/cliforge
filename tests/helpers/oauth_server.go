@@ -194,7 +194,7 @@ func (ms *MockOAuth2Server) handleAuthCodeGrant(w http.ResponseWriter, r *http.R
 
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(token)
+	_ = json.NewEncoder(w).Encode(token)
 }
 
 // handleRefreshTokenGrant handles refresh token grant.
@@ -224,7 +224,7 @@ func (ms *MockOAuth2Server) handleRefreshTokenGrant(w http.ResponseWriter, r *ht
 
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(token)
+	_ = json.NewEncoder(w).Encode(token)
 }
 
 // handleClientCredentialsGrant handles client credentials grant.
@@ -245,7 +245,7 @@ func (ms *MockOAuth2Server) handleClientCredentialsGrant(w http.ResponseWriter, 
 
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(token)
+	_ = json.NewEncoder(w).Encode(token)
 }
 
 // handleRevoke handles token revocation.
@@ -289,7 +289,7 @@ func (ms *MockOAuth2Server) handleIntrospect(w http.ResponseWriter, r *http.Requ
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 // generateAuthCode generates a new authorization code.
@@ -336,7 +336,7 @@ func (ms *MockOAuth2Server) generateToken(scope string) *OAuth2Token {
 func (ms *MockOAuth2Server) sendError(w http.ResponseWriter, errorCode, description string, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(map[string]string{
+	_ = json.NewEncoder(w).Encode(map[string]string{
 		"error":             errorCode,
 		"error_description": description,
 	})
@@ -345,7 +345,7 @@ func (ms *MockOAuth2Server) sendError(w http.ResponseWriter, errorCode, descript
 // generateRandomString generates a random string of the specified length.
 func generateRandomString(length int) string {
 	b := make([]byte, length)
-	rand.Read(b)
+	_, _ = rand.Read(b)
 	return base64.URLEncoding.EncodeToString(b)[:length]
 }
 

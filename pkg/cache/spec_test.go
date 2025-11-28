@@ -11,7 +11,7 @@ import (
 func TestSpecCache_SetAndGet(t *testing.T) {
 	// Create temporary cache directory
 	tmpDir := filepath.Join(os.TempDir(), "cliforge-test-cache")
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Ensure directory exists
 	if err := os.MkdirAll(tmpDir, 0755); err != nil {
@@ -63,7 +63,7 @@ func TestSpecCache_SetAndGet(t *testing.T) {
 
 func TestSpecCache_CacheMiss(t *testing.T) {
 	tmpDir := filepath.Join(os.TempDir(), "cliforge-test-cache-miss")
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	cache := &SpecCache{
 		BaseDir:    tmpDir,
@@ -85,7 +85,7 @@ func TestSpecCache_CacheMiss(t *testing.T) {
 
 func TestSpecCache_Invalidate(t *testing.T) {
 	tmpDir := filepath.Join(os.TempDir(), "cliforge-test-cache-invalidate")
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Ensure directory exists
 	if err := os.MkdirAll(tmpDir, 0755); err != nil {
@@ -185,7 +185,7 @@ func TestSpecCache_IsValid(t *testing.T) {
 
 func TestSpecCache_Clear(t *testing.T) {
 	tmpDir := filepath.Join(os.TempDir(), "cliforge-test-cache-clear")
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Ensure directory exists
 	if err := os.MkdirAll(tmpDir, 0755); err != nil {
@@ -231,7 +231,7 @@ func TestSpecCache_Clear(t *testing.T) {
 
 func TestSpecCache_Prune(t *testing.T) {
 	tmpDir := filepath.Join(os.TempDir(), "cliforge-test-cache-prune")
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Ensure directory exists
 	if err := os.MkdirAll(tmpDir, 0755); err != nil {

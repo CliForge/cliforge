@@ -25,7 +25,7 @@ type VersionInfo struct {
 
 // VersionOptions configures the version command behavior.
 type VersionOptions struct {
-	Config         *cli.CLIConfig
+	Config         *cli.Config
 	BuildTime      time.Time
 	ShowAPIVersion bool
 	OutputFormat   string
@@ -88,27 +88,27 @@ func runVersion(opts *VersionOptions) error {
 
 // formatVersionText formats version info as human-readable text.
 func formatVersionText(info *VersionInfo, w io.Writer) error {
-	fmt.Fprintf(w, "Client Version: %s\n", info.ClientVersion)
+	_, _ = fmt.Fprintf(w, "Client Version: %s\n", info.ClientVersion)
 
 	if info.ServerVersion != "" {
-		fmt.Fprintf(w, "Server Version: %s", info.ServerVersion)
+		_, _ = fmt.Fprintf(w, "Server Version: %s", info.ServerVersion)
 		if info.APITitle != "" {
-			fmt.Fprintf(w, " (%s)", info.APITitle)
+			_, _ = fmt.Fprintf(w, " (%s)", info.APITitle)
 		}
-		fmt.Fprintln(w)
+		_, _ = fmt.Fprintln(w)
 	}
 
 	if info.OpenAPISpec != "" {
-		fmt.Fprintf(w, "OpenAPI Spec: %s\n", info.OpenAPISpec)
+		_, _ = fmt.Fprintf(w, "OpenAPI Spec: %s\n", info.OpenAPISpec)
 	}
 
 	if !info.Built.IsZero() {
-		fmt.Fprintf(w, "Built: %s\n", info.Built.Format(time.RFC3339))
+		_, _ = fmt.Fprintf(w, "Built: %s\n", info.Built.Format(time.RFC3339))
 	}
 
-	fmt.Fprintf(w, "Go: %s\n", info.GoVersion)
-	fmt.Fprintf(w, "Platform: %s\n", info.Platform)
-	fmt.Fprintf(w, "Compiler: %s\n", info.Compiler)
+	_, _ = fmt.Fprintf(w, "Go: %s\n", info.GoVersion)
+	_, _ = fmt.Fprintf(w, "Platform: %s\n", info.Platform)
+	_, _ = fmt.Fprintf(w, "Compiler: %s\n", info.Compiler)
 
 	return nil
 }
@@ -122,33 +122,33 @@ func formatVersionJSON(info *VersionInfo, w io.Writer) error {
 
 // formatVersionYAML formats version info as YAML.
 func formatVersionYAML(info *VersionInfo, w io.Writer) error {
-	fmt.Fprintf(w, "client_version: %s\n", info.ClientVersion)
+	_, _ = fmt.Fprintf(w, "client_version: %s\n", info.ClientVersion)
 
 	if info.ServerVersion != "" {
-		fmt.Fprintf(w, "server_version: %s\n", info.ServerVersion)
+		_, _ = fmt.Fprintf(w, "server_version: %s\n", info.ServerVersion)
 	}
 
 	if info.APITitle != "" {
-		fmt.Fprintf(w, "api_title: %s\n", info.APITitle)
+		_, _ = fmt.Fprintf(w, "api_title: %s\n", info.APITitle)
 	}
 
 	if info.OpenAPISpec != "" {
-		fmt.Fprintf(w, "openapi_spec: %s\n", info.OpenAPISpec)
+		_, _ = fmt.Fprintf(w, "openapi_spec: %s\n", info.OpenAPISpec)
 	}
 
 	if !info.Built.IsZero() {
-		fmt.Fprintf(w, "built: %s\n", info.Built.Format(time.RFC3339))
+		_, _ = fmt.Fprintf(w, "built: %s\n", info.Built.Format(time.RFC3339))
 	}
 
-	fmt.Fprintf(w, "go_version: %s\n", info.GoVersion)
-	fmt.Fprintf(w, "platform: %s\n", info.Platform)
-	fmt.Fprintf(w, "compiler: %s\n", info.Compiler)
+	_, _ = fmt.Fprintf(w, "go_version: %s\n", info.GoVersion)
+	_, _ = fmt.Fprintf(w, "platform: %s\n", info.Platform)
+	_, _ = fmt.Fprintf(w, "compiler: %s\n", info.Compiler)
 
 	return nil
 }
 
 // GetVersionShort returns a short version string suitable for --version flag.
-func GetVersionShort(config *cli.CLIConfig) string {
+func GetVersionShort(config *cli.Config) string {
 	clientVer := config.Metadata.Version
 	serverVer := config.API.Version
 

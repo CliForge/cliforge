@@ -185,3 +185,154 @@ func TestNewConfigCommand(t *testing.T) {
 		}
 	}
 }
+
+func TestConfigShow(t *testing.T) {
+	config := &cli.UserConfig{
+		Preferences: &cli.UserPreferences{
+			Output: &cli.PreferencesOutput{
+				Format: "json",
+			},
+		},
+	}
+
+	output := &bytes.Buffer{}
+	opts := &ConfigOptions{
+		CLIName:    "testcli",
+		Output:     output,
+		UserConfig: config,
+	}
+
+	cmd := newConfigShowCommand(opts)
+	err := cmd.RunE(cmd, []string{})
+	if err != nil {
+		t.Fatalf("config show failed: %v", err)
+	}
+
+	result := output.String()
+	if !strings.Contains(result, "preferences:") {
+		t.Error("expected YAML output with preferences")
+	}
+}
+
+func TestConfigGet(t *testing.T) {
+	config := &cli.UserConfig{
+		Preferences: &cli.UserPreferences{
+			Output: &cli.PreferencesOutput{
+				Format: "json",
+			},
+		},
+	}
+
+	output := &bytes.Buffer{}
+	opts := &ConfigOptions{
+		CLIName:    "testcli",
+		Output:     output,
+		UserConfig: config,
+	}
+
+	cmd := newConfigGetCommand(opts)
+	err := cmd.RunE(cmd, []string{"preferences.output.format"})
+	if err != nil {
+		t.Fatalf("config get failed: %v", err)
+	}
+
+	result := output.String()
+	if !strings.Contains(result, "json") {
+		t.Errorf("expected 'json' in output, got: %s", result)
+	}
+}
+
+func TestConfigSet(t *testing.T) {
+	config := &cli.UserConfig{
+		Preferences: &cli.UserPreferences{},
+	}
+
+	saveCalled := false
+	output := &bytes.Buffer{}
+	opts := &ConfigOptions{
+		CLIName:    "testcli",
+		Output:     output,
+		UserConfig: config,
+		SaveFunc: func(c *cli.UserConfig) error {
+			saveCalled = true
+			return nil
+		},
+	}
+
+	cmd := newConfigSetCommand(opts)
+	err := cmd.RunE(cmd, []string{"preferences.output.format", "yaml"})
+	if err != nil {
+		t.Fatalf("config set failed: %v", err)
+	}
+
+	if !saveCalled {
+		t.Error("expected SaveFunc to be called")
+	}
+
+	result := output.String()
+	if !strings.Contains(result, "Set preferences.output.format") {
+		t.Errorf("expected success message, got: %s", result)
+	}
+}
+
+func TestConfigUnset(t *testing.T) {
+	config := &cli.UserConfig{
+		Preferences: &cli.UserPreferences{
+			Output: &cli.PreferencesOutput{
+				Format: "json",
+			},
+		},
+	}
+
+	saveCalled := false
+	output := &bytes.Buffer{}
+	opts := &ConfigOptions{
+		CLIName:    "testcli",
+		Output:     output,
+		UserConfig: config,
+		SaveFunc: func(c *cli.UserConfig) error {
+			saveCalled = true
+			return nil
+		},
+	}
+
+	cmd := newConfigUnsetCommand(opts)
+	err := cmd.RunE(cmd, []string{"preferences.output.format"})
+	if err != nil {
+		t.Fatalf("config unset failed: %v", err)
+	}
+
+	if !saveCalled {
+		t.Error("expected SaveFunc to be called")
+	}
+
+	result := output.String()
+	if !strings.Contains(result, "Unset preferences.output.format") {
+		t.Errorf("expected success message, got: %s", result)
+	}
+}
+
+func TestConfigPath(t *testing.T) {
+	config := &cli.UserConfig{}
+
+	output := &bytes.Buffer{}
+	opts := &ConfigOptions{
+		CLIName:    "testcli",
+		Output:     output,
+		UserConfig: config,
+	}
+
+	cmd := newConfigPathCommand(opts)
+	err := cmd.RunE(cmd, []string{})
+	if err != nil {
+		t.Fatalf("config path failed: %v", err)
+	}
+
+	result := output.String()
+	if !strings.Contains(result, "testcli") {
+		t.Errorf("expected CLI name in path, got: %s", result)
+	}
+	if !strings.Contains(result, "config.yaml") {
+		t.Errorf("expected 'config.yaml' in path, got: %s", result)
+	}
+}

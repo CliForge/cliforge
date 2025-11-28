@@ -764,7 +764,7 @@ cliforge build --config cli-config.yaml --output dist/
 **Next steps:**
 - Read the [Getting Started Guide](getting-started.md) for a complete tutorial
 - Review the [Configuration DSL](configuration-dsl.md) for all options
-- Explore the [Petstore Example](../examples/petstore/) for real-world patterns
+- Explore the Petstore Example in the [GitHub repository](https://github.com/CliForge/cliforge/tree/main/examples/petstore) for real-world patterns
 
 ---
 
@@ -775,7 +775,7 @@ cliforge build --config cli-config.yaml --output dist/
 - [Getting Started Guide](getting-started.md)
 - [Configuration DSL Reference](configuration-dsl.md)
 - [Technical Specification](technical-specification.md)
-- [Contributing Guide](../CONTRIBUTING.md)
+- [Contributing Guide](https://github.com/CliForge/cliforge/blob/main/CONTRIBUTING.md)
 
 ### Community
 
@@ -810,7 +810,7 @@ cliforge --version
 Installation complete! Here's what to do next:
 
 1. **Tutorial**: Follow the [Getting Started Guide](getting-started.md) to build your first CLI
-2. **Example**: Run the [Petstore Example](../examples/petstore/) to see all features
+2. **Example**: See the Petstore Example in the [GitHub repository](https://github.com/CliForge/cliforge/tree/main/examples/petstore) to explore all features
 3. **Configuration**: Review the [Configuration DSL](configuration-dsl.md) for customization options
 4. **Community**: Join discussions and share your CLI creations
 

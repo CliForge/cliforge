@@ -8,7 +8,7 @@ import (
 
 // mergeConfigs merges embedded and user configurations according to override rules.
 // Returns the merged config and a map of debug overrides (if any).
-func (l *Loader) mergeConfigs(embedded *cli.CLIConfig, user *cli.UserConfig) (*cli.CLIConfig, map[string]any, error) {
+func (l *Loader) mergeConfigs(embedded *cli.Config, user *cli.UserConfig) (*cli.Config, map[string]any, error) {
 	// Start with a copy of embedded config
 	merged := copyConfig(embedded)
 	debugOverrides := make(map[string]any)
@@ -28,7 +28,7 @@ func (l *Loader) mergeConfigs(embedded *cli.CLIConfig, user *cli.UserConfig) (*c
 
 // applyDebugOverrides applies debug overrides to the configuration.
 // This allows overriding ANY embedded config when metadata.debug is true.
-func (l *Loader) applyDebugOverrides(config *cli.CLIConfig, override *cli.CLIConfig) (*cli.CLIConfig, map[string]any) {
+func (l *Loader) applyDebugOverrides(config *cli.Config, override *cli.Config) (*cli.Config, map[string]any) {
 	overrides := make(map[string]any)
 
 	// Override API settings
@@ -79,7 +79,7 @@ func (l *Loader) applyDebugOverrides(config *cli.CLIConfig, override *cli.CLICon
 }
 
 // applyUserPreferences applies user preferences to override defaults.
-func (l *Loader) applyUserPreferences(config *cli.CLIConfig, prefs *cli.UserPreferences) *cli.CLIConfig {
+func (l *Loader) applyUserPreferences(config *cli.Config, prefs *cli.UserPreferences) *cli.Config {
 	// Initialize defaults if not present
 	if config.Defaults == nil {
 		config.Defaults = &cli.Defaults{}
@@ -160,12 +160,12 @@ func (l *Loader) applyUserPreferences(config *cli.CLIConfig, prefs *cli.UserPref
 }
 
 // copyConfig creates a deep copy of a CLIConfig.
-func copyConfig(src *cli.CLIConfig) *cli.CLIConfig {
+func copyConfig(src *cli.Config) *cli.Config {
 	if src == nil {
 		return nil
 	}
 
-	dst := &cli.CLIConfig{
+	dst := &cli.Config{
 		Metadata: src.Metadata,
 		API:      src.API,
 	}
@@ -308,7 +308,7 @@ func copyConfig(src *cli.CLIConfig) *cli.CLIConfig {
 }
 
 // MergeDefaults applies built-in defaults to a config for any missing values.
-func MergeDefaults(config *cli.CLIConfig) error {
+func MergeDefaults(config *cli.Config) error {
 	if config == nil {
 		return fmt.Errorf("config is nil")
 	}

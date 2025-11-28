@@ -12,7 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"time"
-
 )
 
 // Downloader handles downloading updates.
@@ -49,17 +48,17 @@ func (d *Downloader) Download(ctx context.Context, release *ReleaseInfo, progres
 		return "", fmt.Errorf("failed to create temp file: %w", err)
 	}
 	tempPath := tempFile.Name()
-	defer tempFile.Close()
+	defer func() { _ = tempFile.Close() }()
 
 	// Download the file
 	if err := d.downloadToFile(ctx, release.URL, tempFile, release.Size, progressCallback); err != nil {
-		os.Remove(tempPath)
+		_ = os.Remove(tempPath)
 		return "", fmt.Errorf("failed to download: %w", err)
 	}
 
 	// Verify checksum
 	if err := d.verifyChecksum(tempPath, release.Checksum, release.ChecksumAlgo); err != nil {
-		os.Remove(tempPath)
+		_ = os.Remove(tempPath)
 		return "", fmt.Errorf("checksum verification failed: %w", err)
 	}
 
@@ -79,7 +78,7 @@ func (d *Downloader) downloadToFile(ctx context.Context, url string, dest io.Wri
 	if err != nil {
 		return fmt.Errorf("failed to fetch: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
@@ -123,7 +122,7 @@ func (d *Downloader) verifyChecksum(filePath, expectedChecksum, algo string) err
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	// Create hasher
 	var hasher hash.Hash
@@ -214,7 +213,7 @@ func (d *Downloader) CleanupOldDownloads() error {
 
 		if now.Sub(info.ModTime()) > 7*24*time.Hour {
 			path := filepath.Join(d.config.CacheDir, entry.Name())
-			os.Remove(path)
+			_ = os.Remove(path)
 		}
 	}
 

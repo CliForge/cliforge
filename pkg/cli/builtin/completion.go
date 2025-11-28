@@ -9,9 +9,9 @@ import (
 
 // CompletionOptions configures the completion command behavior.
 type CompletionOptions struct {
-	CLIName      string
+	CLIName       string
 	EnabledShells []string
-	Output       io.Writer
+	Output        io.Writer
 }
 
 // NewCompletionCommand creates a new completion command.
@@ -92,11 +92,11 @@ func runCompletion(rootCmd *cobra.Command, shell string, opts *CompletionOptions
 // SetupCompletionFunctions configures dynamic completion for a command.
 func SetupCompletionFunctions(cmd *cobra.Command) {
 	// Add completion for common flags
-	cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	_ = cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"json", "yaml", "table", "csv", "text"}, cobra.ShellCompDirectiveNoFileComp
 	})
 
-	cmd.RegisterFlagCompletionFunc("format", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	_ = cmd.RegisterFlagCompletionFunc("format", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"json", "yaml", "table", "csv", "text"}, cobra.ShellCompDirectiveNoFileComp
 	})
 }

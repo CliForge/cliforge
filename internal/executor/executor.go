@@ -7,13 +7,13 @@
 //
 // # Execution Flow
 //
-//	1. Extract operation metadata from command annotations
-//	2. Build HTTP request from command flags and args
-//	3. Apply authentication headers
-//	4. Execute HTTP request
-//	5. Handle response (sync, async, workflow)
-//	6. Format and display output
-//	7. Update state and history
+//  1. Extract operation metadata from command annotations
+//  2. Build HTTP request from command flags and args
+//  3. Apply authentication headers
+//  4. Execute HTTP request
+//  5. Handle response (sync, async, workflow)
+//  6. Format and display output
+//  7. Update state and history
 //
 // # Features
 //
@@ -85,24 +85,24 @@ import (
 
 // Executor executes OpenAPI operations from Cobra commands.
 type Executor struct {
-	spec           *openapi.ParsedSpec
-	httpClient     *http.Client
-	baseURL        string
-	authManager    *auth.Manager
-	outputManager  *output.Manager
-	stateManager   *state.Manager
-	progressMgr    *progress.Manager
-	workflowExec   *workflow.Executor
+	spec          *openapi.ParsedSpec
+	httpClient    *http.Client
+	baseURL       string
+	authManager   *auth.Manager
+	outputManager *output.Manager
+	stateManager  *state.Manager
+	progressMgr   *progress.Manager
+	workflowExec  *workflow.Executor
 }
 
 // ExecutorConfig configures the executor.
 type ExecutorConfig struct {
-	BaseURL        string
-	HTTPClient     *http.Client
-	AuthManager    *auth.Manager
-	OutputManager  *output.Manager
-	StateManager   *state.Manager
-	ProgressMgr    *progress.Manager
+	BaseURL       string
+	HTTPClient    *http.Client
+	AuthManager   *auth.Manager
+	OutputManager *output.Manager
+	StateManager  *state.Manager
+	ProgressMgr   *progress.Manager
 }
 
 // NewExecutor creates a new command executor.
@@ -120,13 +120,13 @@ func NewExecutor(spec *openapi.ParsedSpec, config *ExecutorConfig) (*Executor, e
 	}
 
 	return &Executor{
-		spec:           spec,
-		httpClient:     httpClient,
-		baseURL:        config.BaseURL,
-		authManager:    config.AuthManager,
-		outputManager:  config.OutputManager,
-		stateManager:   config.StateManager,
-		progressMgr:    config.ProgressMgr,
+		spec:          spec,
+		httpClient:    httpClient,
+		baseURL:       config.BaseURL,
+		authManager:   config.AuthManager,
+		outputManager: config.OutputManager,
+		stateManager:  config.StateManager,
+		progressMgr:   config.ProgressMgr,
 	}, nil
 }
 
@@ -175,7 +175,7 @@ func (e *Executor) executeHTTPOperation(ctx context.Context, cmd *cobra.Command,
 		var err error
 		prog, err = e.progressMgr.StartProgress(op.Summary, 0)
 		if err == nil {
-			defer prog.Stop()
+			defer func() { _ = prog.Stop() }()
 		}
 	}
 
@@ -183,7 +183,7 @@ func (e *Executor) executeHTTPOperation(ctx context.Context, cmd *cobra.Command,
 	req, err := e.buildRequest(ctx, cmd, op, args)
 	if err != nil {
 		if prog != nil {
-			prog.Failure("Failed to build request")
+			_ = prog.Failure("Failed to build request")
 		}
 		return fmt.Errorf("failed to build request: %w", err)
 	}
@@ -192,7 +192,7 @@ func (e *Executor) executeHTTPOperation(ctx context.Context, cmd *cobra.Command,
 	if e.authManager != nil {
 		if err := e.applyAuth(ctx, req); err != nil {
 			if prog != nil {
-				prog.Failure("Authentication failed")
+				_ = prog.Failure("Authentication failed")
 			}
 			return fmt.Errorf("failed to apply authentication: %w", err)
 		}
@@ -200,23 +200,23 @@ func (e *Executor) executeHTTPOperation(ctx context.Context, cmd *cobra.Command,
 
 	// Execute request
 	if prog != nil {
-		prog.Update("Sending request...")
+		_ = prog.Update("Sending request...")
 	}
 
 	resp, err := e.httpClient.Do(req)
 	if err != nil {
 		if prog != nil {
-			prog.Failure("Request failed")
+			_ = prog.Failure("Request failed")
 		}
 		return fmt.Errorf("HTTP request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Read response
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		if prog != nil {
-			prog.Failure("Failed to read response")
+			_ = prog.Failure("Failed to read response")
 		}
 		return fmt.Errorf("failed to read response: %w", err)
 	}
@@ -224,7 +224,7 @@ func (e *Executor) executeHTTPOperation(ctx context.Context, cmd *cobra.Command,
 	// Check for errors
 	if resp.StatusCode >= 400 {
 		if prog != nil {
-			prog.Failure(fmt.Sprintf("Request failed with status %d", resp.StatusCode))
+			_ = prog.Failure(fmt.Sprintf("Request failed with status %d", resp.StatusCode))
 		}
 		return e.handleErrorResponse(resp, body, op)
 	}
@@ -236,7 +236,7 @@ func (e *Executor) executeHTTPOperation(ctx context.Context, cmd *cobra.Command,
 
 	// Success
 	if prog != nil {
-		prog.Success("Request completed")
+		_ = prog.Success("Request completed")
 	}
 
 	// Format and output response
@@ -447,7 +447,7 @@ func (e *Executor) handleAsyncOperation(ctx context.Context, resp *http.Response
 
 			// Update progress
 			if prog != nil {
-				prog.Update(fmt.Sprintf("Status: %s", status))
+				_ = prog.Update(fmt.Sprintf("Status: %s", status))
 			}
 
 			// Check if terminal state
@@ -461,7 +461,7 @@ func (e *Executor) handleAsyncOperation(ctx context.Context, resp *http.Response
 
 			if isTerminal {
 				if prog != nil {
-					prog.Success(fmt.Sprintf("Operation completed with status: %s", status))
+					_ = prog.Success(fmt.Sprintf("Operation completed with status: %s", status))
 				}
 				// Return the final response data
 				return nil
@@ -494,7 +494,7 @@ func (e *Executor) pollStatus(ctx context.Context, statusEndpoint string, initia
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -533,7 +533,7 @@ func (e *Executor) formatOutput(cmd *cobra.Command, resp *http.Response, body []
 
 	// Fallback to simple JSON output
 	formatted, _ := json.MarshalIndent(data, "", "  ")
-	fmt.Fprintln(cmd.OutOrStdout(), string(formatted))
+	_, _ = fmt.Fprintln(cmd.OutOrStdout(), string(formatted))
 
 	return nil
 }
@@ -557,7 +557,7 @@ func (e *Executor) executeWorkflow(ctx context.Context, cmd *cobra.Command, op *
 	if e.progressMgr != nil {
 		prog, _ = e.progressMgr.StartProgress("Executing workflow", len(wf.Steps))
 		if prog != nil {
-			defer prog.Stop()
+			defer func() { _ = prog.Stop() }()
 		}
 	}
 
@@ -566,14 +566,14 @@ func (e *Executor) executeWorkflow(ctx context.Context, cmd *cobra.Command, op *
 	state, err := workflowExec.Execute(execCtx)
 	if err != nil {
 		if prog != nil {
-			prog.Failure("Workflow failed")
+			_ = prog.Failure("Workflow failed")
 		}
 		return fmt.Errorf("workflow execution failed: %w", err)
 	}
 
 	// Success
 	if prog != nil {
-		prog.Success("Workflow completed")
+		_ = prog.Success("Workflow completed")
 	}
 
 	// Format output

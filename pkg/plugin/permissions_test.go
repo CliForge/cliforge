@@ -26,14 +26,17 @@ func TestNewPermissionManager(t *testing.T) {
 
 func TestPermissionManager_GrantPermissions(t *testing.T) {
 	tmpDir := t.TempDir()
-	pm, _ := NewPermissionManager(tmpDir, &AutoApprover{})
+	pm, err := NewPermissionManager(tmpDir, &AutoApprover{})
+	if err != nil {
+		t.Fatalf("NewPermissionManager() error = %v", err)
+	}
 
 	permissions := []Permission{
 		{Type: PermissionExecute, Resource: "aws"},
 		{Type: PermissionReadFile, Resource: "/tmp/*"},
 	}
 
-	err := pm.GrantPermissions("test-plugin", permissions, "1.0.0")
+	err = pm.GrantPermissions("test-plugin", permissions, "1.0.0")
 	if err != nil {
 		t.Fatalf("GrantPermissions() error = %v", err)
 	}
@@ -50,17 +53,20 @@ func TestPermissionManager_GrantPermissions(t *testing.T) {
 
 	// Verify permissions file was created
 	permFile := filepath.Join(tmpDir, "plugin-permissions.yaml")
-	if _, err := os.Stat(permFile); os.IsNotExist(err) {
+	if _, err = os.Stat(permFile); os.IsNotExist(err) {
 		t.Error("Permissions file was not created")
 	}
 }
 
 func TestPermissionManager_CheckPermissions(t *testing.T) {
 	tmpDir := t.TempDir()
-	pm, _ := NewPermissionManager(tmpDir, &AutoApprover{})
+	pm, err := NewPermissionManager(tmpDir, &AutoApprover{})
+	if err != nil {
+		t.Fatalf("NewPermissionManager() error = %v", err)
+	}
 
 	// Test built-in plugin (should pass without approval)
-	err := pm.CheckPermissions("exec", []Permission{
+	err = pm.CheckPermissions("exec", []Permission{
 		{Type: PermissionExecute, Resource: "*"},
 	})
 	if err != nil {
@@ -90,13 +96,18 @@ func TestPermissionManager_CheckPermissions(t *testing.T) {
 
 func TestPermissionManager_RevokePermissions(t *testing.T) {
 	tmpDir := t.TempDir()
-	pm, _ := NewPermissionManager(tmpDir, &AutoApprover{})
+	pm, err := NewPermissionManager(tmpDir, &AutoApprover{})
+	if err != nil {
+		t.Fatalf("NewPermissionManager() error = %v", err)
+	}
 
 	// Grant permissions first
 	permissions := []Permission{
 		{Type: PermissionExecute, Resource: "test"},
 	}
-	pm.GrantPermissions("test-plugin", permissions, "1.0.0")
+	if err := pm.GrantPermissions("test-plugin", permissions, "1.0.0"); err != nil {
+		t.Fatalf("GrantPermissions() error = %v", err)
+	}
 
 	// Verify permissions exist
 	_, exists := pm.GetApprovedPermissions("test-plugin")
@@ -105,7 +116,7 @@ func TestPermissionManager_RevokePermissions(t *testing.T) {
 	}
 
 	// Revoke permissions
-	err := pm.RevokePermissions("test-plugin")
+	err = pm.RevokePermissions("test-plugin")
 	if err != nil {
 		t.Fatalf("RevokePermissions() error = %v", err)
 	}
@@ -119,11 +130,18 @@ func TestPermissionManager_RevokePermissions(t *testing.T) {
 
 func TestPermissionManager_ListApprovedPlugins(t *testing.T) {
 	tmpDir := t.TempDir()
-	pm, _ := NewPermissionManager(tmpDir, &AutoApprover{})
+	pm, err := NewPermissionManager(tmpDir, &AutoApprover{})
+	if err != nil {
+		t.Fatalf("NewPermissionManager() error = %v", err)
+	}
 
 	// Grant permissions to multiple plugins
-	pm.GrantPermissions("plugin1", []Permission{{Type: PermissionExecute, Resource: "test1"}}, "1.0.0")
-	pm.GrantPermissions("plugin2", []Permission{{Type: PermissionExecute, Resource: "test2"}}, "1.0.0")
+	if err := pm.GrantPermissions("plugin1", []Permission{{Type: PermissionExecute, Resource: "test1"}}, "1.0.0"); err != nil {
+		t.Fatalf("GrantPermissions() error = %v", err)
+	}
+	if err := pm.GrantPermissions("plugin2", []Permission{{Type: PermissionExecute, Resource: "test2"}}, "1.0.0"); err != nil {
+		t.Fatalf("GrantPermissions() error = %v", err)
+	}
 
 	approved := pm.ListApprovedPlugins()
 	if len(approved) != 2 {
@@ -143,11 +161,16 @@ func TestPermissionManager_Persistence(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create first manager and grant permissions
-	pm1, _ := NewPermissionManager(tmpDir, &AutoApprover{})
+	pm1, err := NewPermissionManager(tmpDir, &AutoApprover{})
+	if err != nil {
+		t.Fatalf("NewPermissionManager() error = %v", err)
+	}
 	permissions := []Permission{
 		{Type: PermissionExecute, Resource: "aws"},
 	}
-	pm1.GrantPermissions("test-plugin", permissions, "1.0.0")
+	if err := pm1.GrantPermissions("test-plugin", permissions, "1.0.0"); err != nil {
+		t.Fatalf("GrantPermissions() error = %v", err)
+	}
 
 	// Create second manager and verify permissions persisted
 	pm2, err := NewPermissionManager(tmpDir, &AutoApprover{})
@@ -171,12 +194,17 @@ func TestPermissionManager_Persistence(t *testing.T) {
 
 func TestPermissionManager_MissingPermissions(t *testing.T) {
 	tmpDir := t.TempDir()
-	pm, _ := NewPermissionManager(tmpDir, &AutoApprover{})
+	pm, err := NewPermissionManager(tmpDir, &AutoApprover{})
+	if err != nil {
+		t.Fatalf("NewPermissionManager() error = %v", err)
+	}
 
 	// Grant initial permissions
-	pm.GrantPermissions("test-plugin", []Permission{
+	if err := pm.GrantPermissions("test-plugin", []Permission{
 		{Type: PermissionExecute, Resource: "aws"},
-	}, "1.0.0")
+	}, "1.0.0"); err != nil {
+		t.Fatalf("GrantPermissions() error = %v", err)
+	}
 
 	// Request additional permissions
 	allPermissions := []Permission{
@@ -184,7 +212,7 @@ func TestPermissionManager_MissingPermissions(t *testing.T) {
 		{Type: PermissionReadFile, Resource: "/tmp/*"},
 	}
 
-	err := pm.CheckPermissions("test-plugin", allPermissions)
+	err = pm.CheckPermissions("test-plugin", allPermissions)
 	if err != nil {
 		t.Fatalf("CheckPermissions() error = %v", err)
 	}
