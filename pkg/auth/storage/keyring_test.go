@@ -2,11 +2,32 @@ package storage
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/CliForge/cliforge/pkg/auth/types"
+	"github.com/zalando/go-keyring"
 )
+
+// isKeyringAvailable checks if the system keyring is available.
+// Returns false in CI environments without keyring services.
+func isKeyringAvailable() bool {
+	// Try to get a non-existent key to test if keyring service is available
+	_, err := keyring.Get("test-availability-check", "test")
+	if err != nil {
+		// ErrNotFound is expected and means keyring is working
+		if err == keyring.ErrNotFound {
+			return true
+		}
+		// Any other error (like D-Bus service unavailable) means keyring isn't available
+		if strings.Contains(err.Error(), "org.freedesktop.secrets") ||
+			strings.Contains(err.Error(), "not provided by any .service files") {
+			return false
+		}
+	}
+	return true
+}
 
 func TestNewKeyringStorage(t *testing.T) {
 	tests := []struct {
@@ -150,6 +171,10 @@ func TestKeyringStorage_LoadTokenNotFound(t *testing.T) {
 }
 
 func TestKeyringStorage_DeleteTokenNotFound(t *testing.T) {
+	if !isKeyringAvailable() {
+		t.Skip("Skipping keyring test: system keyring service not available (expected in CI)")
+	}
+
 	config := &types.StorageConfig{
 		Type:           types.StorageTypeKeyring,
 		KeyringService: "nonexistent-service-" + time.Now().String(),

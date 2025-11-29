@@ -28,6 +28,7 @@ func TestWarningManager_ShouldShowWarning(t *testing.T) {
 			name: "warnings enabled, should show",
 			config: &WarningConfig{
 				Enabled:     true,
+				ShowInCI:    true, // Enable for CI tests
 				MinSeverity: SeverityInfo,
 				MinLevel:    WarningLevelInfo,
 			},
