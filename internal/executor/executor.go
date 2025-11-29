@@ -92,7 +92,6 @@ type Executor struct {
 	outputManager *output.Manager
 	stateManager  *state.Manager
 	progressMgr   *progress.Manager
-	workflowExec  *workflow.Executor
 }
 
 // ExecutorConfig configures the executor.
