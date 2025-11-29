@@ -109,7 +109,7 @@ func TestMemoryStorage_Clear(t *testing.T) {
 	}
 
 	// Save token
-	storage.SaveToken(ctx, token)
+	_ = storage.SaveToken(ctx, token)
 
 	// Clear storage
 	storage.Clear()
@@ -121,7 +121,7 @@ func TestMemoryStorage_Clear(t *testing.T) {
 	}
 }
 
-func TestMemoryStorage_Concurrent(t *testing.T) {
+func TestMemoryStorage_Concurrent(_ *testing.T) {
 	storage := NewMemoryStorage()
 	ctx := context.Background()
 
@@ -135,9 +135,9 @@ func TestMemoryStorage_Concurrent(t *testing.T) {
 					"id": id,
 				},
 			}
-			storage.SaveToken(ctx, token)
-			storage.LoadToken(ctx)
-			storage.DeleteToken(ctx)
+			_ = storage.SaveToken(ctx, token)
+			_, _ = storage.LoadToken(ctx)
+			_ = storage.DeleteToken(ctx)
 			done <- true
 		}(i)
 	}
@@ -161,7 +161,7 @@ func TestMemoryStorage_IsolatedCopies(t *testing.T) {
 	}
 
 	// Save token
-	storage.SaveToken(ctx, token)
+	_ = storage.SaveToken(ctx, token)
 
 	// Modify original token
 	token.AccessToken = "modified"

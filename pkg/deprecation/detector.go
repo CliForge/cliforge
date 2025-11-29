@@ -119,11 +119,11 @@ type DeprecationInfo struct {
 	Replacement *Replacement
 
 	// Documentation
-	Reason      string
-	DocsURL     string
-	Migration   string
-	Severity    Severity
-	Level       WarningLevel // Calculated based on days remaining
+	Reason    string
+	DocsURL   string
+	Migration string
+	Severity  Severity
+	Level     WarningLevel // Calculated based on days remaining
 
 	// Breaking changes
 	BreakingChanges []string
@@ -510,12 +510,14 @@ func extractSuccessorFromLink(linkHeader string) string {
 	return ""
 }
 
-// IsDeprecated checks if any deprecations are present.
+// IsDeprecated checks if any deprecations are present in the provided slice.
+// It returns true if the slice contains at least one deprecation, false otherwise.
 func IsDeprecated(deprecations []*DeprecationInfo) bool {
 	return len(deprecations) > 0
 }
 
-// FilterByType filters deprecations by type.
+// FilterByType filters deprecations by type (operation, parameter, schema, flag, command).
+// It returns a new slice containing only deprecations matching the specified type.
 func FilterByType(deprecations []*DeprecationInfo, depType DeprecationType) []*DeprecationInfo {
 	var filtered []*DeprecationInfo
 	for _, dep := range deprecations {
@@ -526,7 +528,8 @@ func FilterByType(deprecations []*DeprecationInfo, depType DeprecationType) []*D
 	return filtered
 }
 
-// FilterBySeverity filters deprecations by severity.
+// FilterBySeverity filters deprecations by severity level (info, warning, breaking).
+// It returns a new slice containing only deprecations matching the specified severity.
 func FilterBySeverity(deprecations []*DeprecationInfo, severity Severity) []*DeprecationInfo {
 	var filtered []*DeprecationInfo
 	for _, dep := range deprecations {
@@ -537,7 +540,8 @@ func FilterBySeverity(deprecations []*DeprecationInfo, severity Severity) []*Dep
 	return filtered
 }
 
-// FilterByLevel filters deprecations by warning level.
+// FilterByLevel filters deprecations by warning level based on days remaining until sunset.
+// It returns a new slice containing only deprecations matching the specified warning level.
 func FilterByLevel(deprecations []*DeprecationInfo, level WarningLevel) []*DeprecationInfo {
 	var filtered []*DeprecationInfo
 	for _, dep := range deprecations {
@@ -548,7 +552,8 @@ func FilterByLevel(deprecations []*DeprecationInfo, level WarningLevel) []*Depre
 	return filtered
 }
 
-// GetMostUrgent returns the most urgent deprecation (by warning level).
+// GetMostUrgent returns the most urgent deprecation based on warning level.
+// It compares all deprecations and returns the one with the highest urgency (closest to sunset).
 func GetMostUrgent(deprecations []*DeprecationInfo) *DeprecationInfo {
 	if len(deprecations) == 0 {
 		return nil

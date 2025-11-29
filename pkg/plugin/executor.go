@@ -280,12 +280,12 @@ type PluginExecutionResult struct {
 
 // ExecutionStats tracks plugin execution statistics.
 type ExecutionStats struct {
-	PluginName    string
-	TotalRuns     int64
-	SuccessRuns   int64
-	FailedRuns    int64
+	PluginName      string
+	TotalRuns       int64
+	SuccessRuns     int64
+	FailedRuns      int64
 	AverageDuration time.Duration
-	LastExecuted  time.Time
+	LastExecuted    time.Time
 }
 
 // StatsCollector collects plugin execution statistics.

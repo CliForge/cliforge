@@ -263,7 +263,8 @@ type CLIDeprecationConfig struct {
 	Deprecations []*CLIDeprecation `yaml:"cli_deprecations"`
 }
 
-// ParseCLIDeprecations parses CLI deprecation config.
+// ParseCLIDeprecations parses CLI deprecation configuration from raw data.
+// It accepts an array of deprecation entries and returns a slice of CLIDeprecation objects.
 func ParseCLIDeprecations(data interface{}) ([]*CLIDeprecation, error) {
 	depList, ok := data.([]interface{})
 	if !ok {
@@ -339,7 +340,8 @@ func ParseCLIDeprecations(data interface{}) ([]*CLIDeprecation, error) {
 	return deprecations, nil
 }
 
-// FormatCLIDeprecationList formats a list of CLI deprecations.
+// FormatCLIDeprecationList formats a list of CLI deprecations into a human-readable string.
+// It groups deprecations by type and displays them with icons, reasons, and sunset dates.
 func FormatCLIDeprecationList(deprecations []*CLIDeprecation) string {
 	if len(deprecations) == 0 {
 		return "No CLI deprecations"
@@ -358,7 +360,12 @@ func FormatCLIDeprecationList(deprecations []*CLIDeprecation) string {
 
 	// Display each type
 	for depType, deps := range byType {
-		sb.WriteString(fmt.Sprintf("%s Deprecations (%d):\n\n", strings.Title(string(depType)), len(deps)))
+		// Simple title case - capitalize first letter only
+		title := string(depType)
+		if len(title) > 0 {
+			title = strings.ToUpper(title[:1]) + title[1:]
+		}
+		sb.WriteString(fmt.Sprintf("%s Deprecations (%d):\n\n", title, len(deps)))
 
 		for _, dep := range deps {
 			icon := getWarningIcon(WarningLevelWarning)
@@ -383,7 +390,8 @@ func FormatCLIDeprecationList(deprecations []*CLIDeprecation) string {
 	return sb.String()
 }
 
-// ValidateCLIDeprecation validates a CLI deprecation entry.
+// ValidateCLIDeprecation validates a CLI deprecation entry to ensure it has required fields.
+// It returns an error if the deprecation type, old name, or new name (where applicable) is missing.
 func ValidateCLIDeprecation(dep *CLIDeprecation) error {
 	if dep.Type == "" {
 		return fmt.Errorf("deprecation type is required")

@@ -20,7 +20,7 @@ func TestNewManager(t *testing.T) {
 		{
 			name: "with custom config",
 			config: &Config{
-				Type:    ProgressTypeSpinner,
+				Type:    TypeSpinner,
 				Enabled: true,
 			},
 		},
@@ -61,7 +61,7 @@ func TestManager_SetStreamConfig(t *testing.T) {
 
 func TestManager_StartProgress(t *testing.T) {
 	manager := NewManager(&Config{
-		Type:    ProgressTypeSpinner,
+		Type:    TypeSpinner,
 		Enabled: false, // Disable for testing
 	})
 
@@ -85,12 +85,12 @@ func TestManager_StartProgress(t *testing.T) {
 		// Only check if the progress is not nil
 	}
 
-	manager.StopProgress()
+	_ = manager.StopProgress()
 }
 
 func TestManager_StartProgressForOperation(t *testing.T) {
 	manager := NewManager(&Config{
-		Type:    ProgressTypeSpinner,
+		Type:    TypeSpinner,
 		Enabled: false,
 	})
 
@@ -109,13 +109,13 @@ func TestManager_StartProgressForOperation(t *testing.T) {
 		t.Error("StartProgressForOperation() returned nil progress")
 	}
 
-	manager.StopProgress()
+	_ = manager.StopProgress()
 }
 
 func TestManager_StartWorkflowProgress(t *testing.T) {
 	manager := NewManager(&Config{
-		Type:    ProgressTypeSteps,
-		Enabled: false,
+		Type:    TypeSteps,
+		Enabled: false, // Disable to avoid race in pterm
 	})
 
 	wf := &workflow.Workflow{
@@ -157,17 +157,17 @@ func TestManager_StartWorkflowProgress(t *testing.T) {
 		t.Errorf("Expected 2 steps, got %d", len(multiStep.steps))
 	}
 
-	manager.StopProgress()
+	_ = manager.StopProgress()
 }
 
 func TestManager_StopProgress(t *testing.T) {
 	manager := NewManager(&Config{
-		Type:    ProgressTypeSpinner,
+		Type:    TypeSpinner,
 		Enabled: false,
 	})
 
 	// Start progress
-	manager.StartProgress("Testing...", 0)
+	_, _ = manager.StartProgress("Testing...", 0)
 
 	// Stop progress
 	err := manager.StopProgress()
@@ -188,11 +188,11 @@ func TestManager_StopProgress(t *testing.T) {
 
 func TestManager_SuccessProgress(t *testing.T) {
 	manager := NewManager(&Config{
-		Type:    ProgressTypeSpinner,
+		Type:    TypeSpinner,
 		Enabled: false,
 	})
 
-	manager.StartProgress("Testing...", 0)
+	_, _ = manager.StartProgress("Testing...", 0)
 
 	err := manager.SuccessProgress("Done!")
 	if err != nil {
@@ -202,11 +202,11 @@ func TestManager_SuccessProgress(t *testing.T) {
 
 func TestManager_FailureProgress(t *testing.T) {
 	manager := NewManager(&Config{
-		Type:    ProgressTypeSpinner,
+		Type:    TypeSpinner,
 		Enabled: false,
 	})
 
-	manager.StartProgress("Testing...", 0)
+	_, _ = manager.StartProgress("Testing...", 0)
 
 	err := manager.FailureProgress("Failed!")
 	if err != nil {
@@ -216,29 +216,29 @@ func TestManager_FailureProgress(t *testing.T) {
 
 func TestManager_UpdateProgress(t *testing.T) {
 	manager := NewManager(&Config{
-		Type:    ProgressTypeSpinner,
+		Type:    TypeSpinner,
 		Enabled: false,
 	})
 
-	manager.StartProgress("Testing...", 0)
+	_, _ = manager.StartProgress("Testing...", 0)
 
 	err := manager.UpdateProgress("Updated message")
 	if err != nil {
 		t.Errorf("UpdateProgress() error = %v", err)
 	}
 
-	manager.StopProgress()
+	_ = manager.StopProgress()
 }
 
 func TestManager_UpdateProgressWithData(t *testing.T) {
 	manager := NewManager(&Config{
-		Type:    ProgressTypeBar,
+		Type:    TypeBar,
 		Enabled: false,
 	})
 
-	manager.StartProgress("Testing...", 10)
+	_, _ = manager.StartProgress("Testing...", 10)
 
-	data := &ProgressData{
+	data := &Data{
 		Message: "Step 5",
 		Current: 5,
 		Total:   10,
@@ -249,26 +249,26 @@ func TestManager_UpdateProgressWithData(t *testing.T) {
 		t.Errorf("UpdateProgressWithData() error = %v", err)
 	}
 
-	manager.StopProgress()
+	_ = manager.StopProgress()
 }
 
 func TestManager_selectProgressConfig(t *testing.T) {
 	manager := NewManager(&Config{
-		Type:           ProgressTypeSpinner,
+		Type:           TypeSpinner,
 		Enabled:        true,
 		ShowTimestamps: false,
 	})
 
 	tests := []struct {
-		name      string
-		opConfig  *openapi.CLIProgress
-		wantType  ProgressType
+		name        string
+		opConfig    *openapi.CLIProgress
+		wantType    Type
 		wantEnabled bool
 	}{
 		{
 			name:        "nil operation config uses default",
 			opConfig:    nil,
-			wantType:    ProgressTypeSpinner,
+			wantType:    TypeSpinner,
 			wantEnabled: true,
 		},
 		{
@@ -276,7 +276,7 @@ func TestManager_selectProgressConfig(t *testing.T) {
 			opConfig: &openapi.CLIProgress{
 				Type: "bar",
 			},
-			wantType:    ProgressTypeBar,
+			wantType:    TypeBar,
 			wantEnabled: true,
 		},
 		{
@@ -284,7 +284,7 @@ func TestManager_selectProgressConfig(t *testing.T) {
 			opConfig: &openapi.CLIProgress{
 				Enabled: boolPtr(false),
 			},
-			wantType:    ProgressTypeSpinner,
+			wantType:    TypeSpinner,
 			wantEnabled: false,
 		},
 	}
@@ -323,7 +323,7 @@ func TestNewWorkflowIntegration(t *testing.T) {
 
 func TestWorkflowIntegration_OnWorkflowStart(t *testing.T) {
 	manager := NewManager(&Config{
-		Type:    ProgressTypeSteps,
+		Type:    TypeSteps,
 		Enabled: false,
 	})
 
@@ -358,7 +358,7 @@ func TestWorkflowIntegration_OnWorkflowStart(t *testing.T) {
 
 func TestWorkflowIntegration_StepLifecycle(t *testing.T) {
 	manager := NewManager(&Config{
-		Type:    ProgressTypeSteps,
+		Type:    TypeSteps,
 		Enabled: false,
 	})
 
@@ -370,7 +370,7 @@ func TestWorkflowIntegration_StepLifecycle(t *testing.T) {
 		},
 	}
 
-	integration.OnWorkflowStart(wf)
+	_ = integration.OnWorkflowStart(wf)
 
 	// Test OnStepStart
 	err := integration.OnStepStart("step1")
@@ -385,15 +385,15 @@ func TestWorkflowIntegration_StepLifecycle(t *testing.T) {
 	}
 
 	// Test OnStepFail
-	integration.OnWorkflowStart(wf) // Reset
-	integration.OnStepStart("step1")
+	_ = integration.OnWorkflowStart(wf) // Reset
+	_ = integration.OnStepStart("step1")
 	err = integration.OnStepFail("step1", nil)
 	if err != nil {
 		t.Errorf("OnStepFail() error = %v", err)
 	}
 
 	// Test OnStepSkip
-	integration.OnWorkflowStart(wf) // Reset
+	_ = integration.OnWorkflowStart(wf) // Reset
 	err = integration.OnStepSkip("step1")
 	if err != nil {
 		t.Errorf("OnStepSkip() error = %v", err)
@@ -402,7 +402,7 @@ func TestWorkflowIntegration_StepLifecycle(t *testing.T) {
 
 func TestWorkflowIntegration_OnWorkflowComplete(t *testing.T) {
 	manager := NewManager(&Config{
-		Type:    ProgressTypeSteps,
+		Type:    TypeSteps,
 		Enabled: false,
 	})
 
@@ -414,7 +414,7 @@ func TestWorkflowIntegration_OnWorkflowComplete(t *testing.T) {
 		},
 	}
 
-	integration.OnWorkflowStart(wf)
+	_ = integration.OnWorkflowStart(wf)
 
 	// Test success
 	err := integration.OnWorkflowComplete(true, "Workflow completed successfully")
@@ -423,7 +423,7 @@ func TestWorkflowIntegration_OnWorkflowComplete(t *testing.T) {
 	}
 
 	// Reset and test failure
-	integration.OnWorkflowStart(wf)
+	_ = integration.OnWorkflowStart(wf)
 	err = integration.OnWorkflowComplete(false, "Workflow failed")
 	if err != nil {
 		t.Errorf("OnWorkflowComplete(failure) error = %v", err)
@@ -452,7 +452,7 @@ func TestPackageLevelFunctions(t *testing.T) {
 	}()
 
 	// Clean up any existing progress
-	StopProgress()
+	_ = StopProgress()
 
 	// Test StartProgress
 	progress, err := StartProgress("Test", 0)
@@ -470,18 +470,18 @@ func TestPackageLevelFunctions(t *testing.T) {
 	_ = SuccessProgress("Done")
 
 	// Clean up
-	StopProgress()
+	_ = StopProgress()
 
 	// Test FailureProgress
-	StartProgress("Test", 0)
+	_, _ = StartProgress("Test", 0)
 	_ = FailureProgress("Failed")
 
-	StopProgress()
+	_ = StopProgress()
 }
 
 func TestManager_GetCurrentProgress(t *testing.T) {
 	manager := NewManager(&Config{
-		Type:    ProgressTypeSpinner,
+		Type:    TypeSpinner,
 		Enabled: false,
 	})
 
@@ -489,13 +489,13 @@ func TestManager_GetCurrentProgress(t *testing.T) {
 		t.Error("Current progress should be nil initially")
 	}
 
-	manager.StartProgress("Test", 0)
+	_, _ = manager.StartProgress("Test", 0)
 
 	if manager.GetCurrentProgress() == nil {
 		t.Error("Current progress should not be nil after start")
 	}
 
-	manager.StopProgress()
+	_ = manager.StopProgress()
 
 	if manager.GetCurrentProgress() != nil {
 		t.Error("Current progress should be nil after stop")
@@ -525,7 +525,7 @@ func TestWatchConfig(t *testing.T) {
 	}
 
 	progressConfig := &Config{
-		Type:    ProgressTypeSteps,
+		Type:    TypeSteps,
 		Enabled: true,
 	}
 
@@ -552,7 +552,7 @@ func TestWatchConfig(t *testing.T) {
 		t.Errorf("Expected stream type SSE, got %s", watchConfig.StreamConfig.Type)
 	}
 
-	if watchConfig.ProgressConfig.Type != ProgressTypeSteps {
+	if watchConfig.ProgressConfig.Type != TypeSteps {
 		t.Errorf("Expected progress type Steps, got %s", watchConfig.ProgressConfig.Type)
 	}
 
@@ -592,7 +592,7 @@ func TestExitCondition(t *testing.T) {
 func TestManager_Concurrency(t *testing.T) {
 	// Test that manager handles concurrent operations safely
 	manager := NewManager(&Config{
-		Type:    ProgressTypeSpinner,
+		Type:    TypeSpinner,
 		Enabled: false,
 	})
 
@@ -601,9 +601,9 @@ func TestManager_Concurrency(t *testing.T) {
 	// Start multiple goroutines trying to start progress
 	for i := 0; i < 10; i++ {
 		go func() {
-			manager.StartProgress("Test", 0)
+			_, _ = manager.StartProgress("Test", 0)
 			time.Sleep(10 * time.Millisecond)
-			manager.StopProgress()
+			_ = manager.StopProgress()
 			done <- true
 		}()
 	}

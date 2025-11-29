@@ -78,12 +78,12 @@ type Error struct {
 
 // Mock database
 type MockDB struct {
-	mu      sync.RWMutex
-	pets    map[int64]*Pet
-	stores  map[int64]*Store
-	orders  map[int64]*Order
-	users   map[int64]*User
-	nextID  int64
+	mu     sync.RWMutex
+	pets   map[int64]*Pet
+	stores map[int64]*Store
+	orders map[int64]*Order
+	users  map[int64]*User
+	nextID int64
 }
 
 var db = &MockDB{
@@ -254,7 +254,7 @@ func serveOpenAPISpec(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/x-yaml")
-	w.Write(data)
+	_, _ = w.Write(data)
 }
 
 func listPets(w http.ResponseWriter, r *http.Request) {
@@ -302,7 +302,7 @@ func listPets(w http.ResponseWriter, r *http.Request) {
 	result := pets[start:end]
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	_ = json.NewEncoder(w).Encode(result)
 }
 
 func createPet(w http.ResponseWriter, r *http.Request) {
@@ -335,7 +335,7 @@ func createPet(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(pet)
+	_ = json.NewEncoder(w).Encode(pet)
 }
 
 func getPet(w http.ResponseWriter, r *http.Request) {
@@ -355,7 +355,7 @@ func getPet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(pet)
+	_ = json.NewEncoder(w).Encode(pet)
 }
 
 func updatePet(w http.ResponseWriter, r *http.Request) {
@@ -393,7 +393,7 @@ func updatePet(w http.ResponseWriter, r *http.Request) {
 	pet.UpdatedAt = time.Now()
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(pet)
+	_ = json.NewEncoder(w).Encode(pet)
 }
 
 func deletePet(w http.ResponseWriter, r *http.Request) {
@@ -443,8 +443,8 @@ func streamPetStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Send initial event
-	fmt.Fprintf(w, "event: status-change\n")
-	fmt.Fprintf(w, "data: {\"timestamp\":\"%s\",\"event\":\"status-change\",\"data\":{\"message\":\"Current status: %s\",\"petId\":%d}}\n\n", time.Now().Format(time.RFC3339), pet.Status, pet.ID)
+	_, _ = fmt.Fprintf(w, "event: status-change\n")
+	_, _ = fmt.Fprintf(w, "data: {\"timestamp\":\"%s\",\"event\":\"status-change\",\"data\":{\"message\":\"Current status: %s\",\"petId\":%d}}\n\n", time.Now().Format(time.RFC3339), pet.Status, pet.ID)
 	flusher.Flush()
 
 	// Simulate periodic updates
@@ -467,8 +467,8 @@ func streamPetStatus(w http.ResponseWriter, r *http.Request) {
 			event := events[count%len(events)]
 			message := messages[count%len(messages)]
 
-			fmt.Fprintf(w, "event: %s\n", event)
-			fmt.Fprintf(w, "data: {\"timestamp\":\"%s\",\"event\":\"%s\",\"data\":{\"message\"%s\",\"petId\":%d}}\n\n",
+			_, _ = fmt.Fprintf(w, "event: %s\n", event)
+			_, _ = fmt.Fprintf(w, "data: {\"timestamp\":\"%s\",\"event\":\"%s\",\"data\":{\"message\"%s\",\"petId\":%d}}\n\n",
 				time.Now().Format(time.RFC3339), event, message, pet.ID)
 			flusher.Flush()
 
@@ -493,7 +493,7 @@ func listStores(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(stores)
+	_ = json.NewEncoder(w).Encode(stores)
 }
 
 func getStoreCapacity(w http.ResponseWriter, r *http.Request) {
@@ -509,7 +509,7 @@ func getStoreCapacity(w http.ResponseWriter, r *http.Request) {
 	available := total - used
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"total":     total,
 		"used":      used,
 		"available": available,
@@ -532,7 +532,7 @@ func createOrder(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(order)
+	_ = json.NewEncoder(w).Encode(order)
 
 	// Simulate async status updates
 	go func() {
@@ -570,7 +570,7 @@ func getOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(order)
+	_ = json.NewEncoder(w).Encode(order)
 }
 
 func listUsers(w http.ResponseWriter, r *http.Request) {
@@ -583,7 +583,7 @@ func listUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(users)
+	_ = json.NewEncoder(w).Encode(users)
 }
 
 func getUser(w http.ResponseWriter, r *http.Request) {
@@ -603,7 +603,7 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
+	_ = json.NewEncoder(w).Encode(user)
 }
 
 func listContexts(w http.ResponseWriter, r *http.Request) {
@@ -614,7 +614,7 @@ func listContexts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(contexts)
+	_ = json.NewEncoder(w).Encode(contexts)
 }
 
 func listRegions(w http.ResponseWriter, r *http.Request) {
@@ -626,27 +626,27 @@ func listRegions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(regions)
+	_ = json.NewEncoder(w).Encode(regions)
 }
 
 func verifyCredentials(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]bool{"valid": true})
+	_ = json.NewEncoder(w).Encode(map[string]bool{"valid": true})
 }
 
 func verifyQuotas(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]bool{"sufficient": true})
+	_ = json.NewEncoder(w).Encode(map[string]bool{"sufficient": true})
 }
 
 func getDeploymentReadiness(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]bool{"ready": true})
+	_ = json.NewEncoder(w).Encode(map[string]bool{"ready": true})
 }
 
 func createDeployment(w http.ResponseWriter, r *http.Request) {
 	var body map[string]interface{}
-	json.NewDecoder(r.Body).Decode(&body)
+	_ = json.NewDecoder(r.Body).Decode(&body)
 
 	deployment := map[string]interface{}{
 		"id":      db.getNextID(),
@@ -658,7 +658,7 @@ func createDeployment(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(deployment)
+	_ = json.NewEncoder(w).Encode(deployment)
 }
 
 func getDeployment(w http.ResponseWriter, r *http.Request) {
@@ -670,7 +670,7 @@ func getDeployment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(deployment)
+	_ = json.NewEncoder(w).Encode(deployment)
 }
 
 // Helper functions
@@ -686,7 +686,7 @@ func extractID(path, prefix string) (int64, error) {
 func sendError(w http.ResponseWriter, code int, message string, details interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	json.NewEncoder(w).Encode(Error{
+	_ = json.NewEncoder(w).Encode(Error{
 		Code:    code,
 		Message: message,
 		Details: details,

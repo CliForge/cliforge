@@ -139,7 +139,7 @@ func JSONResponse(statusCode int, data interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(data)
+		_ = json.NewEncoder(w).Encode(data)
 	}
 }
 
@@ -148,7 +148,7 @@ func ErrorResponse(statusCode int, message string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(map[string]string{
+		_ = json.NewEncoder(w).Encode(map[string]string{
 			"error": message,
 		})
 	}
@@ -244,12 +244,12 @@ func (ss *SSEServer) handleSSE(w http.ResponseWriter, r *http.Request) {
 		select {
 		case event := <-ss.events:
 			if event.Event != "" {
-				fmt.Fprintf(w, "event: %s\n", event.Event)
+				_, _ = fmt.Fprintf(w, "event: %s\n", event.Event)
 			}
 			if event.ID != "" {
-				fmt.Fprintf(w, "id: %s\n", event.ID)
+				_, _ = fmt.Fprintf(w, "id: %s\n", event.ID)
 			}
-			fmt.Fprintf(w, "data: %s\n\n", event.Data)
+			_, _ = fmt.Fprintf(w, "data: %s\n\n", event.Data)
 			flusher.Flush()
 
 		case <-r.Context().Done():

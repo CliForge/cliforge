@@ -274,7 +274,7 @@ func (e *StepExecutor) executeAPICall(step *Step, ctx *ExecutionContext) (*StepR
 		result.Success = false
 		return result, result.Error
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -656,7 +656,7 @@ func (e *StepExecutor) executePolling(step *Step, ctx *ExecutionContext, result 
 		}
 
 		body, err := io.ReadAll(resp.Body)
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		if err != nil {
 			time.Sleep(time.Duration(interval) * time.Second)
 			continue

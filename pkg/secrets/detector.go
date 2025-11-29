@@ -30,11 +30,11 @@ type compiledValuePattern struct {
 
 // DetectionResult contains information about detected secrets.
 type DetectionResult struct {
-	IsSecret     bool
-	DetectedBy   string // "field_pattern", "value_pattern", "explicit_path", "header", "x-cli-secret"
-	PatternName  string // Name of the pattern that matched
-	FieldPath    string // JSONPath-like field path
-	MaskedValue  string // Pre-masked value for convenience
+	IsSecret    bool
+	DetectedBy  string // "field_pattern", "value_pattern", "explicit_path", "header", "x-cli-secret"
+	PatternName string // Name of the pattern that matched
+	FieldPath   string // JSONPath-like field path
+	MaskedValue string // Pre-masked value for convenience
 }
 
 // NewDetector creates a new secret detector from configuration.

@@ -34,8 +34,8 @@ type CLIConfig struct {
 
 // BrandingConfig contains branding settings.
 type BrandingConfig struct {
-	ASCIIArt string        `json:"ascii-art"`
-	Colors   *ColorScheme  `json:"colors"`
+	ASCIIArt string                 `json:"ascii-art"`
+	Colors   *ColorScheme           `json:"colors"`
 	Raw      map[string]interface{} `json:"-"`
 }
 
@@ -47,7 +47,7 @@ type ColorScheme struct {
 
 // AuthSettings contains authentication settings.
 type AuthSettings struct {
-	Type        string `json:"type"` // oauth2, apikey, basic
+	Type        string `json:"type"`    // oauth2, apikey, basic
 	Storage     string `json:"storage"` // file, keyring, memory
 	AutoRefresh bool   `json:"auto-refresh"`
 }
@@ -97,10 +97,10 @@ type OAuth2Flow struct {
 
 // TokenStorage represents token storage configuration.
 type TokenStorage struct {
-	Type            string                    `json:"type"` // file, keyring
-	Path            string                    `json:"path"`
-	Service         string                    `json:"service"`
-	KeyringBackends map[string]string         `json:"keyring-backends"`
+	Type            string            `json:"type"` // file, keyring
+	Path            string            `json:"path"`
+	Service         string            `json:"service"`
+	KeyringBackends map[string]string `json:"keyring-backends"`
 }
 
 // CLIFlag represents a single x-cli-flags entry.
@@ -118,19 +118,19 @@ type CLIFlag struct {
 
 // CLIInteractive represents the x-cli-interactive extension.
 type CLIInteractive struct {
-	Enabled bool              `json:"enabled"`
+	Enabled bool                 `json:"enabled"`
 	Prompts []*InteractivePrompt `json:"prompts"`
 }
 
 // InteractivePrompt represents a single interactive prompt.
 type InteractivePrompt struct {
-	Parameter         string               `json:"parameter"`
-	Type              string               `json:"type"` // text, select, confirm, number, password
-	Message           string               `json:"message"`
-	Default           interface{}          `json:"default"`
-	Validation        string               `json:"validation"`
-	ValidationMessage string               `json:"validation-message"`
-	Source            *PromptSource        `json:"source"`
+	Parameter         string        `json:"parameter"`
+	Type              string        `json:"type"` // text, select, confirm, number, password
+	Message           string        `json:"message"`
+	Default           interface{}   `json:"default"`
+	Validation        string        `json:"validation"`
+	ValidationMessage string        `json:"validation-message"`
+	Source            *PromptSource `json:"source"`
 }
 
 // PromptSource defines where to fetch select options from.
@@ -183,11 +183,11 @@ type BackoffConfig struct {
 
 // CLIOutput represents the x-cli-output extension.
 type CLIOutput struct {
-	Format         string         `json:"format"`
-	SuccessMessage string         `json:"success-message"`
-	ErrorMessage   string         `json:"error-message"`
-	WatchStatus    bool           `json:"watch-status"`
-	Table          *TableConfig   `json:"table"`
+	Format         string       `json:"format"`
+	SuccessMessage string       `json:"success-message"`
+	ErrorMessage   string       `json:"error-message"`
+	WatchStatus    bool         `json:"watch-status"`
+	Table          *TableConfig `json:"table"`
 }
 
 // TableConfig defines table output configuration.
@@ -205,17 +205,17 @@ type TableColumn struct {
 
 // CLIWorkflow represents the x-cli-workflow extension.
 type CLIWorkflow struct {
-	Steps  []*WorkflowStep  `json:"steps"`
-	Output *WorkflowOutput  `json:"output"`
+	Steps  []*WorkflowStep `json:"steps"`
+	Output *WorkflowOutput `json:"output"`
 }
 
 // WorkflowStep represents a single workflow step.
 type WorkflowStep struct {
-	ID        string                 `json:"id"`
-	Request   *WorkflowRequest       `json:"request"`
-	Condition string                 `json:"condition"`
-	ForEach   string                 `json:"foreach"`
-	As        string                 `json:"as"`
+	ID        string           `json:"id"`
+	Request   *WorkflowRequest `json:"request"`
+	Condition string           `json:"condition"`
+	ForEach   string           `json:"foreach"`
+	As        string           `json:"as"`
 }
 
 // WorkflowRequest defines an HTTP request in a workflow.
@@ -270,12 +270,12 @@ type CLIFileInput struct {
 
 // CLIWatch represents the x-cli-watch extension.
 type CLIWatch struct {
-	Enabled        bool              `json:"enabled"`
-	Type           string            `json:"type"` // sse, websocket, polling
-	Endpoint       string            `json:"endpoint"`
-	Events         []string          `json:"events"`
-	ExitConditions []*ExitCondition  `json:"exit-on"`
-	Reconnect      *ReconnectConfig  `json:"reconnect"`
+	Enabled        bool             `json:"enabled"`
+	Type           string           `json:"type"` // sse, websocket, polling
+	Endpoint       string           `json:"endpoint"`
+	Events         []string         `json:"events"`
+	ExitConditions []*ExitCondition `json:"exit-on"`
+	Reconnect      *ReconnectConfig `json:"reconnect"`
 }
 
 // ExitCondition defines when to exit watch mode.
@@ -303,20 +303,20 @@ type CLIProgress struct {
 
 // ChangelogEntry represents a single x-cli-changelog entry.
 type ChangelogEntry struct {
-	Date        string    `json:"date"`
-	Version     string    `json:"version"`
-	Changes     []*Change `json:"changes"`
-	Added       []string  `json:"added,omitempty"`
-	Changed     []string  `json:"changed,omitempty"`
-	Deprecated  []string  `json:"deprecated,omitempty"`
-	Removed     []string  `json:"removed,omitempty"`
-	Breaking    []string  `json:"breaking,omitempty"`
-	IsCurrent   bool      `json:"is_current,omitempty"`
+	Date       string    `json:"date"`
+	Version    string    `json:"version"`
+	Changes    []*Change `json:"changes"`
+	Added      []string  `json:"added,omitempty"`
+	Changed    []string  `json:"changed,omitempty"`
+	Deprecated []string  `json:"deprecated,omitempty"`
+	Removed    []string  `json:"removed,omitempty"`
+	Breaking   []string  `json:"breaking,omitempty"`
+	IsCurrent  bool      `json:"is_current,omitempty"`
 }
 
 // Change represents a single change in the changelog.
 type Change struct {
-	Type        string `json:"type"` // added, removed, modified, deprecated, security
+	Type        string `json:"type"`     // added, removed, modified, deprecated, security
 	Severity    string `json:"severity"` // breaking, dangerous, safe
 	Description string `json:"description"`
 	Path        string `json:"path"`

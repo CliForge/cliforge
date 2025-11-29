@@ -121,7 +121,7 @@ func (au *AutoUpdater) Update(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to download update: %w", err)
 	}
-	defer os.Remove(downloadPath)
+	defer func() { _ = os.Remove(downloadPath) }()
 
 	// Install update
 	pterm.Info.Println("Installing update...")
@@ -156,7 +156,7 @@ func (au *AutoUpdater) showUpdateInfo(result *CheckResult) {
 		}
 	}
 
-	pterm.DefaultTable.WithHasHeader(false).WithData(data).Render()
+	_ = pterm.DefaultTable.WithHasHeader(false).WithData(data).Render()
 
 	// Show changelog if available
 	if result.Release != nil && result.Release.Changelog != "" {
@@ -273,7 +273,7 @@ func (au *AutoUpdater) Status(ctx context.Context) error {
 		data = append(data, []string{"Last Checked", lastCheck.CheckedAt.Format("2006-01-02 15:04:05")})
 	}
 
-	pterm.DefaultTable.WithHasHeader(false).WithData(data).Render()
+	_ = pterm.DefaultTable.WithHasHeader(false).WithData(data).Render()
 
 	if result.UpdateAvailable() {
 		pterm.Println()

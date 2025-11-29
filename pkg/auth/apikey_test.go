@@ -229,8 +229,8 @@ func TestAPIKeyAuth_GetQueryParams(t *testing.T) {
 
 func TestAPIKeyAuth_EnvVar(t *testing.T) {
 	// Set environment variable
-	os.Setenv("TEST_API_KEY", "env-secret-key")
-	defer os.Unsetenv("TEST_API_KEY")
+	_ = os.Setenv("TEST_API_KEY", "env-secret-key")
+	defer func() { _ = os.Unsetenv("TEST_API_KEY") }()
 
 	config := &APIKeyConfig{
 		EnvVar:   "TEST_API_KEY",
@@ -430,8 +430,8 @@ func TestAPIKeyAuth_GetHeaders_QueryLocation(t *testing.T) {
 
 func TestAPIKeyAuth_EnvVarReference(t *testing.T) {
 	// Set environment variable
-	os.Setenv("MY_SECRET_KEY", "secret-from-env")
-	defer os.Unsetenv("MY_SECRET_KEY")
+	_ = os.Setenv("MY_SECRET_KEY", "secret-from-env")
+	defer func() { _ = os.Unsetenv("MY_SECRET_KEY") }()
 
 	config := &APIKeyConfig{
 		Key:      "$MY_SECRET_KEY",
@@ -469,8 +469,8 @@ func TestAPIKeyAuth_EnvVarReferenceMissing(t *testing.T) {
 }
 
 func TestAPIKeyAuth_EnvVarPreferredOverKey(t *testing.T) {
-	os.Setenv("PREFERRED_KEY", "env-key")
-	defer os.Unsetenv("PREFERRED_KEY")
+	_ = os.Setenv("PREFERRED_KEY", "env-key")
+	defer func() { _ = os.Unsetenv("PREFERRED_KEY") }()
 
 	config := &APIKeyConfig{
 		Key:      "direct-key",

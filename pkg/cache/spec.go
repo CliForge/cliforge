@@ -183,13 +183,13 @@ func (c *SpecCache) IsValid(cached *CachedSpec, ttl time.Duration) bool {
 }
 
 // GetStats returns cache statistics.
-func (c *SpecCache) GetStats(ctx context.Context) (*CacheStats, error) {
+func (c *SpecCache) GetStats(ctx context.Context) (*Stats, error) {
 	entries, err := os.ReadDir(c.BaseDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read cache directory: %w", err)
 	}
 
-	stats := &CacheStats{
+	stats := &Stats{
 		TotalEntries: 0,
 		TotalSize:    0,
 	}
@@ -254,8 +254,8 @@ func (c *SpecCache) cacheKey(key string) string {
 	return hex.EncodeToString(hash[:])
 }
 
-// CacheStats contains cache statistics.
-type CacheStats struct {
+// Stats contains cache statistics.
+type Stats struct {
 	TotalEntries int
 	TotalSize    int64
 }

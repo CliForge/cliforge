@@ -11,10 +11,10 @@ import (
 
 // Manager manages output formatting and provides high-level formatting methods.
 type Manager struct {
-	formatters      map[string]Formatter
-	defaultFormat   string
-	config          *FormatConfig
-	templateEngine  *TemplateEngine
+	formatters     map[string]Formatter
+	defaultFormat  string
+	config         *FormatConfig
+	templateEngine *TemplateEngine
 }
 
 // NewManager creates a new output manager with default formatters.
@@ -114,7 +114,9 @@ func (m *Manager) FormatResult(w io.Writer, result *Result, format string) error
 
 	// Try to use specialized FormatResult method if available
 	switch f := formatter.(type) {
-	case interface{ FormatResult(io.Writer, *Result, *FormatConfig) error }:
+	case interface {
+		FormatResult(io.Writer, *Result, *FormatConfig) error
+	}:
 		return f.FormatResult(w, result, m.config)
 	default:
 		// Fallback to regular Format
@@ -142,7 +144,9 @@ func (m *Manager) FormatError(w io.Writer, err error, format string) error {
 
 	// Try to use specialized FormatError method if available
 	switch f := formatter.(type) {
-	case interface{ FormatError(io.Writer, error, *FormatConfig) error }:
+	case interface {
+		FormatError(io.Writer, error, *FormatConfig) error
+	}:
 		return f.FormatError(w, err, m.config)
 	default:
 		// Fallback to regular Format
@@ -166,7 +170,9 @@ func (m *Manager) FormatEmpty(w io.Writer, message string, format string) error 
 
 	// Try to use specialized FormatEmpty method if available
 	switch f := formatter.(type) {
-	case interface{ FormatEmpty(io.Writer, string, *FormatConfig) error }:
+	case interface {
+		FormatEmpty(io.Writer, string, *FormatConfig) error
+	}:
 		return f.FormatEmpty(w, message, m.config)
 	default:
 		// Fallback to regular Format

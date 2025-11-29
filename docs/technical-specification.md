@@ -759,7 +759,7 @@ User: my-api-cli users create --name "John" --email "john@example.com"
 
 See separate documents:
 - **[`configuration-dsl.md`](configuration-dsl.md)** - Complete configuration schema and reference
-- **[`builtin-commands-design.md`](../design/architecture/builtin-commands-design.md)** - Built-in commands and global flags design
+- **[`builtin-commands-design.md`](https://github.com/wgordon17/cliforge/blob/main/design/architecture/builtin-commands-design.md)** - Built-in commands and global flags design
 
 **Key configuration areas:**
 - **Metadata**: CLI name, version, description, author
@@ -835,7 +835,7 @@ x-cli-changelog:
         migration: "Add 'email' to request body"
 ```
 
-**Note**: For comprehensive deprecation handling (including the `x-cli-deprecation` extension, warning levels, user controls, and migration automation), see [`deprecation-strategy.md`](../design/architecture/deprecation-strategy.md).
+**Note**: For comprehensive deprecation handling (including the `x-cli-deprecation` extension, warning levels, user controls, and migration automation), see [`deprecation-strategy.md`](https://github.com/wgordon17/cliforge/blob/main/design/architecture/deprecation-strategy.md).
 
 ---
 
@@ -1694,18 +1694,18 @@ func GetStateDir(appName string) string {
 
 **Changelog**:
 - v0.7.0 (2025-01-11): **Built-in Commands & Global Flags**
-  - Cross-referenced [`builtin-commands-design.md`](../design/architecture/builtin-commands-design.md)
+  - Cross-referenced [`builtin-commands-design.md`](https://github.com/wgordon17/cliforge/blob/main/design/architecture/builtin-commands-design.md)
   - Updated configuration DSL reference
 - v0.6.0 (2025-01-11): **Swagger/OpenAPI Compatibility**
   - Added OpenAPI & Swagger Compatibility section (Appendix B)
   - Documented auto-conversion from Swagger 2.0 to OpenAPI 3.0
 - v0.5.0 (2025-01-11): **Deprecation Strategy**
-  - Cross-referenced [`deprecation-strategy.md`](../design/architecture/deprecation-strategy.md)
+  - Cross-referenced [`deprecation-strategy.md`](https://github.com/wgordon17/cliforge/blob/main/design/architecture/deprecation-strategy.md)
 - v0.4.0 (2025-01-11): **Rebranded to CliForge**
   - Changed project name from "Alpha-Omega" to "CliForge"
   - Updated generator CLI name from `alpha-omega-gen` to `cliforge`
   - Added tagline: "Forge CLIs from APIs"
-  - Added comprehensive deprecation strategy document ([`deprecation-strategy.md`](../design/architecture/deprecation-strategy.md))
+  - Added comprehensive deprecation strategy document ([`deprecation-strategy.md`](https://github.com/wgordon17/cliforge/blob/main/design/architecture/deprecation-strategy.md))
     - Handles both API deprecations and CLI deprecations
     - Time-based severity escalation
     - User-friendly migration assistance

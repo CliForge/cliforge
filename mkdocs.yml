@@ -62,9 +62,15 @@ nav:
       - Workflows: user-guide-workflows.md
       - Examples & Recipes: examples-and-recipes.md
   - Tutorials:
+      - Overview: tutorials/README.md
       - Building a REST API CLI: tutorials/tutorial-rest-api.md
       - Cloud Infrastructure Management: tutorials/tutorial-cloud-management.md
       - CI/CD Integration: tutorials/tutorial-ci-cd-integration.md
+      - Quick Reference: tutorials/quick-reference.md
+  - Migration:
+      - Migration Guides: migration-guides.md
+  - Operations:
+      - Operations Guide: operations-guide.md
   - Reference:
       - OpenAPI Extensions: openapi-extensions-reference.md
       - Configuration DSL: configuration-dsl.md
@@ -77,24 +83,6 @@ nav:
       - FAQ: faq.md
       - Troubleshooting: troubleshooting.md
       - Quick Reference: quick-reference.md
-  - Design:
-      - Overview: ../design/README.md
-      - Architecture:
-          - Built-in Commands: ../design/architecture/builtin-commands-design.md
-          - Configuration Override: ../design/architecture/configuration-override-matrix.md
-          - Deprecation Strategy: ../design/architecture/deprecation-strategy.md
-          - Secrets Handling: ../design/architecture/secrets-handling-design.md
-          - Plugin Architecture: ../design/architecture/plugin-architecture.md
-          - Workflow Orchestration: ../design/architecture/workflow-orchestration.md
-          - File Operations: ../design/architecture/file-operations.md
-          - Progress & Streaming: ../design/architecture/progress-and-streaming.md
-          - State Management: ../design/architecture/state-management.md
-          - Gap Analysis: ../design/architecture/gap-analysis-rosa-requirements.md
-      - Decisions:
-          - ADRs: ../design/decisions/README.md
-          - ADR-000: ../design/decisions/000-use-architecture-decision-records.md
-          - ADR-100: ../design/decisions/100-use-cobra-cli-framework.md
-          - ADR-101: ../design/decisions/101-use-expr-templating-language.md
 
 plugins:
   - search

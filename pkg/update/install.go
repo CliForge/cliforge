@@ -70,7 +70,7 @@ func (i *Installer) Install(downloadedPath string) error {
 	}
 
 	// Remove backup on success
-	os.Remove(backupPath)
+	_ = os.Remove(backupPath)
 
 	return nil
 }
@@ -112,7 +112,7 @@ func (i *Installer) replaceFile(src, dst string) error {
 
 	// Atomic rename
 	if err := os.Rename(tmpPath, dst); err != nil {
-		os.Remove(tmpPath)
+		_ = os.Remove(tmpPath)
 		return fmt.Errorf("failed to rename: %w", err)
 	}
 
@@ -134,12 +134,12 @@ func (i *Installer) replaceFileWindows(src, dst string) error {
 	// Copy new executable
 	if err := i.copyFile(src, dst); err != nil {
 		// Try to restore
-		os.Rename(oldPath, dst)
+		_ = os.Rename(oldPath, dst)
 		return fmt.Errorf("failed to copy new executable: %w", err)
 	}
 
 	// Mark old file for deletion
-	os.Remove(oldPath)
+	_ = os.Remove(oldPath)
 
 	return nil
 }
@@ -197,7 +197,7 @@ func (i *Installer) rollback(currentPath, backupPath string) {
 	}
 
 	// Remove current (possibly corrupted) file
-	os.Remove(currentPath)
+	_ = os.Remove(currentPath)
 
 	// Restore backup
 	if err := os.Rename(backupPath, currentPath); err != nil {
@@ -263,7 +263,7 @@ func CanUpdate() error {
 	if err != nil {
 		return fmt.Errorf("cannot write to executable (try running with sudo): %w", err)
 	}
-	file.Close()
+	_ = file.Close()
 
 	return nil
 }

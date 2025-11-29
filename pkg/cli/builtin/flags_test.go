@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewFlagManager(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name: "testcli",
 		},
@@ -31,7 +31,7 @@ func TestNewFlagManager(t *testing.T) {
 }
 
 func TestFlagManager_Validate(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name: "testcli",
 		},
@@ -103,7 +103,7 @@ func TestFlagManager_Validate(t *testing.T) {
 }
 
 func TestFlagManager_AddGlobalFlags(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name: "testcli",
 		},
@@ -145,7 +145,7 @@ func TestFlagManager_AddGlobalFlags(t *testing.T) {
 }
 
 func TestFlagManager_IsVerbose(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name: "testcli",
 		},
@@ -165,7 +165,7 @@ func TestFlagManager_IsVerbose(t *testing.T) {
 }
 
 func TestFlagManager_GetVerbosityLevel(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name: "testcli",
 		},
@@ -185,7 +185,7 @@ func TestFlagManager_GetVerbosityLevel(t *testing.T) {
 }
 
 func TestFlagManager_ApplyToConfig(t *testing.T) {
-	baseConfig := &cli.CLIConfig{
+	baseConfig := &cli.Config{
 		Metadata: cli.Metadata{
 			Name: "testcli",
 		},
@@ -200,7 +200,7 @@ func TestFlagManager_ApplyToConfig(t *testing.T) {
 	fm.flags.Retry = 5
 	fm.flags.NoCache = true
 
-	targetConfig := &cli.CLIConfig{}
+	targetConfig := &cli.Config{}
 	fm.ApplyToConfig(targetConfig)
 
 	// Verify output format was applied
@@ -246,7 +246,7 @@ func TestFlagManager_ApplyToConfig(t *testing.T) {
 }
 
 func TestFlagManager_GetOutputFormat(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Metadata: cli.Metadata{
 			Name: "testcli",
 		},

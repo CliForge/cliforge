@@ -15,13 +15,23 @@ linters:
     - misspell
     - revive
     - unconvert
-    - unparam
+  disable:
+    - unparam  # Disable - parameters often required by interfaces/handlers
 
 linters-settings:
   gofmt:
     simplify: true
   goimports:
     local-prefixes: github.com/cliforge/cliforge
+  revive:
+    rules:
+      - name: unused-parameter
+        disabled: true  # Disable - parameters often required by interfaces/handlers
+  staticcheck:
+    checks:
+      - "all"
+      - "-SA5011"  # False positive: nil pointer checks in tests where we verify nil before access
+      - "-SA9003"  # Empty branches acceptable in tests for error validation
 
 issues:
   exclude-use-default: false

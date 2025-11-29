@@ -80,7 +80,7 @@ func NewWarningManager(appName string) (*WarningManager, error) {
 
 	// Load existing tracking data
 	if data, err := os.ReadFile(trackingPath); err == nil {
-		yaml.Unmarshal(data, tracking)
+		_ = yaml.Unmarshal(data, tracking)
 	}
 
 	return &WarningManager{

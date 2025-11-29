@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/adrg/xdg"
 )
@@ -140,9 +141,9 @@ func (sm *StateManager) CleanupOldStates(maxAge int) error {
 	now := os.Getenv("NOW") // For testing
 	var currentTime int64
 	if now != "" {
-		fmt.Sscanf(now, "%d", &currentTime)
+		_, _ = fmt.Sscanf(now, "%d", &currentTime)
 	} else {
-		currentTime = currentTime
+		currentTime = time.Now().Unix()
 	}
 
 	for _, state := range states {

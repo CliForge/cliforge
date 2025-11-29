@@ -7,17 +7,17 @@
 //
 // # Initialization Flow
 //
-//	1. Parse embedded configuration
-//	2. Initialize subsystems:
-//	   - Output manager
-//	   - State manager (contexts, history)
-//	   - Cache (OpenAPI specs)
-//	   - Auth manager
-//	3. Load OpenAPI specification
-//	4. Build Cobra command tree
-//	5. Add global flags
-//	6. Add built-in commands
-//	7. Execute CLI
+//  1. Parse embedded configuration
+//  2. Initialize subsystems:
+//     - Output manager
+//     - State manager (contexts, history)
+//     - Cache (OpenAPI specs)
+//     - Auth manager
+//  3. Load OpenAPI specification
+//  4. Build Cobra command tree
+//  5. Add global flags
+//  6. Add built-in commands
+//  7. Execute CLI
 //
 // # Example Usage
 //
@@ -39,7 +39,7 @@
 //   - AuthManager: Handles authentication flows and token storage
 //   - StateManager: Manages contexts, history, and recent values
 //   - SpecCache: Caches OpenAPI specs with ETag support
-//	OutputManager: Formats command output in multiple formats
+//     OutputManager: Formats command output in multiple formats
 //   - ProgressManager: Displays progress for long operations
 //
 // # Global Flags
@@ -87,10 +87,10 @@ import (
 
 // Runtime represents the runtime environment for a generated CLI.
 type Runtime struct {
-	config          *cli.CLIConfig
-	version         string
-	debug           bool
-	rootCmd         *cobra.Command
+	config        *cli.Config
+	version       string
+	debug         bool
+	rootCmd       *cobra.Command
 	authManager   *auth.Manager
 	outputManager *output.Manager
 	stateManager  *state.Manager
@@ -100,7 +100,7 @@ type Runtime struct {
 // NewRuntime creates a new Runtime instance from embedded configuration.
 func NewRuntime(embeddedConfig []byte, version string, debug bool) (*Runtime, error) {
 	// Parse embedded configuration
-	var config cli.CLIConfig
+	var config cli.Config
 	if err := yaml.Unmarshal(embeddedConfig, &config); err != nil {
 		return nil, fmt.Errorf("failed to parse embedded config: %w", err)
 	}
@@ -208,9 +208,7 @@ func (rt *Runtime) buildCommandTree() error {
 	rt.addGlobalFlags()
 
 	// Add built-in commands
-	if err := rt.addBuiltinCommands(); err != nil {
-		return fmt.Errorf("failed to add builtin commands: %w", err)
-	}
+	rt.addBuiltinCommands()
 
 	// Load spec and build API commands
 	if err := rt.buildAPICommands(ctx); err != nil {
@@ -246,9 +244,9 @@ func (rt *Runtime) addGlobalFlags() {
 }
 
 // addBuiltinCommands adds built-in commands to the CLI.
-func (rt *Runtime) addBuiltinCommands() error {
+func (rt *Runtime) addBuiltinCommands() {
 	if rt.config.Behaviors == nil || rt.config.Behaviors.BuiltinCommands == nil {
-		return nil
+		return
 	}
 
 	cmds := rt.config.Behaviors.BuiltinCommands
@@ -257,8 +255,6 @@ func (rt *Runtime) addBuiltinCommands() error {
 	// Version, help, completion, cache, update, context, history commands
 	// Will be implemented in future iterations
 	_ = cmds // Prevent unused variable warning
-
-	return nil
 }
 
 // buildAPICommands builds commands from the OpenAPI specification.

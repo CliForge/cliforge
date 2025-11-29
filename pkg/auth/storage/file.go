@@ -37,7 +37,7 @@ func NewFileStorage(config *types.StorageConfig, cliName string) (*FileStorage, 
 }
 
 // SaveToken saves a token to a file.
-func (f *FileStorage) SaveToken(ctx context.Context, token *types.Token) error {
+func (f *FileStorage) SaveToken(_ context.Context, token *types.Token) error {
 	if token == nil {
 		return fmt.Errorf("token is nil")
 	}

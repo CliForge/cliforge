@@ -9,12 +9,12 @@
 //
 // The Loader merges configuration from multiple sources with this priority:
 //
-//	1. Environment Variables (highest precedence)
-//	2. CLI Flags
-//	3. User Config File (~/.config/mycli/config.yaml)
-//	4. Debug Override Section (debug builds only)
-//	5. Embedded Configuration (in binary)
-//	6. Hardcoded Defaults (lowest precedence)
+//  1. Environment Variables (highest precedence)
+//  2. CLI Flags
+//  3. User Config File (~/.config/mycli/config.yaml)
+//  4. Debug Override Section (debug builds only)
+//  5. Embedded Configuration (in binary)
+//  6. Hardcoded Defaults (lowest precedence)
 //
 // # Debug Mode
 //
@@ -67,11 +67,10 @@ import (
 
 // Loader handles loading configurations from various sources.
 type Loader struct {
-	cliName          string
-	embeddedFS       *embed.FS
-	embeddedPath     string
-	userConfigPath   string
-	envPrefix        string
+	cliName      string
+	embeddedFS   *embed.FS
+	embeddedPath string
+	envPrefix    string
 }
 
 // NewLoader creates a new configuration loader.
@@ -122,7 +121,7 @@ func (l *Loader) LoadConfig() (*cli.LoadedConfig, error) {
 }
 
 // loadEmbeddedConfig loads the configuration embedded in the binary.
-func (l *Loader) loadEmbeddedConfig() (*cli.CLIConfig, error) {
+func (l *Loader) loadEmbeddedConfig() (*cli.Config, error) {
 	if l.embeddedFS == nil {
 		return nil, fmt.Errorf("no embedded filesystem provided")
 	}
@@ -132,7 +131,7 @@ func (l *Loader) loadEmbeddedConfig() (*cli.CLIConfig, error) {
 		return nil, fmt.Errorf("failed to read embedded config: %w", err)
 	}
 
-	var config cli.CLIConfig
+	var config cli.Config
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("failed to parse embedded config: %w", err)
 	}
@@ -195,7 +194,7 @@ func (l *Loader) GetStateDir() string {
 }
 
 // applyEnvironmentOverrides applies environment variable overrides.
-func (l *Loader) applyEnvironmentOverrides(config *cli.CLIConfig) (*cli.CLIConfig, error) {
+func (l *Loader) applyEnvironmentOverrides(config *cli.Config) (*cli.Config, error) {
 	v := viper.New()
 	v.SetEnvPrefix(l.envPrefix)
 	v.AutomaticEnv()
@@ -203,16 +202,16 @@ func (l *Loader) applyEnvironmentOverrides(config *cli.CLIConfig) (*cli.CLIConfi
 
 	// Map common environment variables to config paths
 	envMappings := map[string]string{
-		"OUTPUT_FORMAT":              "defaults.output.format",
-		"TIMEOUT":                    "defaults.http.timeout",
-		"NO_COLOR":                   "defaults.output.color",
-		"PRETTY_PRINT":               "defaults.output.pretty_print",
-		"PAGING":                     "defaults.output.paging",
-		"PAGE_LIMIT":                 "defaults.pagination.limit",
-		"RETRY":                      "defaults.retry.max_attempts",
-		"NO_CACHE":                   "defaults.caching.enabled",
-		"DEPRECATIONS_ALWAYS_SHOW":   "defaults.deprecations.always_show",
-		"DEPRECATIONS_MIN_SEVERITY":  "defaults.deprecations.min_severity",
+		"OUTPUT_FORMAT":             "defaults.output.format",
+		"TIMEOUT":                   "defaults.http.timeout",
+		"NO_COLOR":                  "defaults.output.color",
+		"PRETTY_PRINT":              "defaults.output.pretty_print",
+		"PAGING":                    "defaults.output.paging",
+		"PAGE_LIMIT":                "defaults.pagination.limit",
+		"RETRY":                     "defaults.retry.max_attempts",
+		"NO_CACHE":                  "defaults.caching.enabled",
+		"DEPRECATIONS_ALWAYS_SHOW":  "defaults.deprecations.always_show",
+		"DEPRECATIONS_MIN_SEVERITY": "defaults.deprecations.min_severity",
 	}
 
 	// Apply environment variable overrides
@@ -239,7 +238,7 @@ func (l *Loader) applyEnvironmentOverrides(config *cli.CLIConfig) (*cli.CLIConfi
 }
 
 // setConfigValue sets a value in the config using a dot-notation path.
-func (l *Loader) setConfigValue(config *cli.CLIConfig, path, value string) error {
+func (l *Loader) setConfigValue(config *cli.Config, path, value string) error {
 	// Handle specific known paths
 	switch {
 	case strings.HasPrefix(path, "defaults.output.format"):

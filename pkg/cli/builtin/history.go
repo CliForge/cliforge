@@ -72,7 +72,7 @@ func newHistoryClearCommand(opts *HistoryOptions) *cobra.Command {
 			if err := opts.History.Save(); err != nil {
 				return err
 			}
-			fmt.Fprintln(opts.Output, "✓ History cleared")
+			_, _ = fmt.Fprintln(opts.Output, "✓ History cleared")
 			return nil
 		},
 	}
@@ -114,7 +114,7 @@ func runHistory(opts *HistoryOptions, limit int, search string, successOnly, fai
 	}
 
 	if len(entries) == 0 {
-		fmt.Fprintln(opts.Output, "No history entries found")
+		_, _ = fmt.Fprintln(opts.Output, "No history entries found")
 		return nil
 	}
 
@@ -152,8 +152,8 @@ func runHistoryStats(opts *HistoryOptions, outputFormat string) error {
 // formatHistoryTable formats history as a table.
 func formatHistoryTable(entries []*state.HistoryEntry, w io.Writer) error {
 	// Print header
-	fmt.Fprintf(w, "%-5s %-40s %-8s %-10s %s\n", "ID", "COMMAND", "STATUS", "DURATION", "TIMESTAMP")
-	fmt.Fprintln(w, strings.Repeat("-", 100))
+	_, _ = fmt.Fprintf(w, "%-5s %-40s %-8s %-10s %s\n", "ID", "COMMAND", "STATUS", "DURATION", "TIMESTAMP")
+	_, _ = fmt.Fprintln(w, strings.Repeat("-", 100))
 
 	// Print entries
 	for _, entry := range entries {
@@ -170,7 +170,7 @@ func formatHistoryTable(entries []*state.HistoryEntry, w io.Writer) error {
 		duration := formatMilliseconds(entry.DurationMS)
 		timestamp := entry.Timestamp.Format("15:04:05")
 
-		fmt.Fprintf(w, "%-5d %-40s %-8s %-10s %s\n",
+		_, _ = fmt.Fprintf(w, "%-5d %-40s %-8s %-10s %s\n",
 			entry.ID, command, status, duration, timestamp)
 	}
 
@@ -188,21 +188,21 @@ func formatHistoryJSON(entries []*state.HistoryEntry, w io.Writer) error {
 func formatHistoryYAML(entries []*state.HistoryEntry, w io.Writer) error {
 	for i, entry := range entries {
 		if i > 0 {
-			fmt.Fprintln(w, "---")
+			_, _ = fmt.Fprintln(w, "---")
 		}
-		fmt.Fprintf(w, "id: %d\n", entry.ID)
-		fmt.Fprintf(w, "command: %s\n", entry.Command)
-		fmt.Fprintf(w, "timestamp: %s\n", entry.Timestamp.Format(time.RFC3339))
-		fmt.Fprintf(w, "exit_code: %d\n", entry.ExitCode)
-		fmt.Fprintf(w, "success: %t\n", entry.Success)
+		_, _ = fmt.Fprintf(w, "id: %d\n", entry.ID)
+		_, _ = fmt.Fprintf(w, "command: %s\n", entry.Command)
+		_, _ = fmt.Fprintf(w, "timestamp: %s\n", entry.Timestamp.Format(time.RFC3339))
+		_, _ = fmt.Fprintf(w, "exit_code: %d\n", entry.ExitCode)
+		_, _ = fmt.Fprintf(w, "success: %t\n", entry.Success)
 		if entry.DurationMS > 0 {
-			fmt.Fprintf(w, "duration_ms: %d\n", entry.DurationMS)
+			_, _ = fmt.Fprintf(w, "duration_ms: %d\n", entry.DurationMS)
 		}
 		if entry.Context != "" {
-			fmt.Fprintf(w, "context: %s\n", entry.Context)
+			_, _ = fmt.Fprintf(w, "context: %s\n", entry.Context)
 		}
 		if entry.User != "" {
-			fmt.Fprintf(w, "user: %s\n", entry.User)
+			_, _ = fmt.Fprintf(w, "user: %s\n", entry.User)
 		}
 	}
 	return nil
@@ -210,28 +210,28 @@ func formatHistoryYAML(entries []*state.HistoryEntry, w io.Writer) error {
 
 // formatStatsText formats stats as human-readable text.
 func formatStatsText(stats *state.HistoryStats, w io.Writer) error {
-	fmt.Fprintln(w, "History Statistics:")
-	fmt.Fprintln(w)
-	fmt.Fprintf(w, "  Total commands: %d\n", stats.TotalCommands)
-	fmt.Fprintf(w, "  Successful: %d\n", stats.SuccessfulCommands)
-	fmt.Fprintf(w, "  Failed: %d\n", stats.FailedCommands)
+	_, _ = fmt.Fprintln(w, "History Statistics:")
+	_, _ = fmt.Fprintln(w)
+	_, _ = fmt.Fprintf(w, "  Total commands: %d\n", stats.TotalCommands)
+	_, _ = fmt.Fprintf(w, "  Successful: %d\n", stats.SuccessfulCommands)
+	_, _ = fmt.Fprintf(w, "  Failed: %d\n", stats.FailedCommands)
 
 	if stats.TotalCommands > 0 {
 		successRate := float64(stats.SuccessfulCommands) / float64(stats.TotalCommands) * 100
-		fmt.Fprintf(w, "  Success rate: %.1f%%\n", successRate)
+		_, _ = fmt.Fprintf(w, "  Success rate: %.1f%%\n", successRate)
 	}
 
 	if stats.AverageDurationMS > 0 {
-		fmt.Fprintf(w, "  Average duration: %s\n", formatMilliseconds(stats.AverageDurationMS))
+		_, _ = fmt.Fprintf(w, "  Average duration: %s\n", formatMilliseconds(stats.AverageDurationMS))
 	}
 
-	fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w)
 
 	if !stats.FirstCommand.IsZero() {
-		fmt.Fprintf(w, "  First command: %s\n", stats.FirstCommand.Format(time.RFC3339))
+		_, _ = fmt.Fprintf(w, "  First command: %s\n", stats.FirstCommand.Format(time.RFC3339))
 	}
 	if !stats.LastCommand.IsZero() {
-		fmt.Fprintf(w, "  Last command: %s\n", stats.LastCommand.Format(time.RFC3339))
+		_, _ = fmt.Fprintf(w, "  Last command: %s\n", stats.LastCommand.Format(time.RFC3339))
 	}
 
 	return nil
@@ -239,15 +239,15 @@ func formatStatsText(stats *state.HistoryStats, w io.Writer) error {
 
 // formatStatsYAML formats stats as YAML.
 func formatStatsYAML(stats *state.HistoryStats, w io.Writer) error {
-	fmt.Fprintf(w, "total_commands: %d\n", stats.TotalCommands)
-	fmt.Fprintf(w, "successful_commands: %d\n", stats.SuccessfulCommands)
-	fmt.Fprintf(w, "failed_commands: %d\n", stats.FailedCommands)
-	fmt.Fprintf(w, "average_duration_ms: %d\n", stats.AverageDurationMS)
+	_, _ = fmt.Fprintf(w, "total_commands: %d\n", stats.TotalCommands)
+	_, _ = fmt.Fprintf(w, "successful_commands: %d\n", stats.SuccessfulCommands)
+	_, _ = fmt.Fprintf(w, "failed_commands: %d\n", stats.FailedCommands)
+	_, _ = fmt.Fprintf(w, "average_duration_ms: %d\n", stats.AverageDurationMS)
 	if !stats.FirstCommand.IsZero() {
-		fmt.Fprintf(w, "first_command: %s\n", stats.FirstCommand.Format(time.RFC3339))
+		_, _ = fmt.Fprintf(w, "first_command: %s\n", stats.FirstCommand.Format(time.RFC3339))
 	}
 	if !stats.LastCommand.IsZero() {
-		fmt.Fprintf(w, "last_command: %s\n", stats.LastCommand.Format(time.RFC3339))
+		_, _ = fmt.Fprintf(w, "last_command: %s\n", stats.LastCommand.Format(time.RFC3339))
 	}
 	return nil
 }

@@ -168,14 +168,14 @@ func TestDefaultSecretsBehavior(t *testing.T) {
 
 func TestMergeSecretsBehavior(t *testing.T) {
 	tests := []struct {
-		name    string
-		user    *cli.SecretsBehavior
+		name     string
+		user     *cli.SecretsBehavior
 		default_ *cli.SecretsBehavior
-		check   func(t *testing.T, result *cli.SecretsBehavior)
+		check    func(t *testing.T, result *cli.SecretsBehavior)
 	}{
 		{
-			name:    "nil user config uses defaults",
-			user:    nil,
+			name:     "nil user config uses defaults",
+			user:     nil,
 			default_: DefaultSecretsBehavior(),
 			check: func(t *testing.T, result *cli.SecretsBehavior) {
 				if result == nil {
@@ -187,8 +187,8 @@ func TestMergeSecretsBehavior(t *testing.T) {
 			},
 		},
 		{
-			name:    "nil default config uses user",
-			user:    DefaultSecretsBehavior(),
+			name:     "nil default config uses user",
+			user:     DefaultSecretsBehavior(),
 			default_: nil,
 			check: func(t *testing.T, result *cli.SecretsBehavior) {
 				if result == nil {

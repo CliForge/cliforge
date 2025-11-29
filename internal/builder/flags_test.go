@@ -81,7 +81,7 @@ func TestBuildRequestParams(t *testing.T) {
 	cmd.Annotations["param:limit:in"] = "query"
 
 	// Set the flag
-	cmd.Flags().Set("limit", "50")
+	_ = cmd.Flags().Set("limit", "50")
 
 	// Build params
 	params, err := BuildRequestParams(cmd)
@@ -108,8 +108,8 @@ func TestBuildRequestBody(t *testing.T) {
 	cmd.Annotations["body:region"] = "region"
 
 	// Set the flags
-	cmd.Flags().Set("cluster-name", "my-cluster")
-	cmd.Flags().Set("region", "us-east-1")
+	_ = cmd.Flags().Set("cluster-name", "my-cluster")
+	_ = cmd.Flags().Set("region", "us-east-1")
 
 	// Build body
 	body, err := BuildRequestBody(cmd)
@@ -157,16 +157,16 @@ func TestValidateEnumFlags(t *testing.T) {
 
 	// Add enum flag
 	cmd.Flags().String("state", "", "State")
-	cmd.Flags().SetAnnotation("state", "enum", []string{"pending", "ready", "error"})
+	_ = cmd.Flags().SetAnnotation("state", "enum", []string{"pending", "ready", "error"})
 
 	// Test valid value
-	cmd.Flags().Set("state", "ready")
+	_ = cmd.Flags().Set("state", "ready")
 	if err := ValidateEnumFlags(cmd); err != nil {
 		t.Errorf("Expected validation to pass for valid enum value, got error: %v", err)
 	}
 
 	// Test invalid value
-	cmd.Flags().Set("state", "invalid")
+	_ = cmd.Flags().Set("state", "invalid")
 	if err := ValidateEnumFlags(cmd); err == nil {
 		t.Error("Expected validation to fail for invalid enum value")
 	}
@@ -671,8 +671,8 @@ func TestValidateRequiredFlags(t *testing.T) {
 			name: "all required flags set",
 			setup: func(cmd *cobra.Command) {
 				cmd.Flags().String("required-flag", "", "Required flag")
-				cmd.MarkFlagRequired("required-flag")
-				cmd.Flags().Set("required-flag", "value")
+				_ = cmd.MarkFlagRequired("required-flag")
+				_ = cmd.Flags().Set("required-flag", "value")
 			},
 			wantErr: false,
 		},
@@ -680,7 +680,7 @@ func TestValidateRequiredFlags(t *testing.T) {
 			name: "required flag not set",
 			setup: func(cmd *cobra.Command) {
 				cmd.Flags().String("required-flag", "", "Required flag")
-				cmd.MarkFlagRequired("required-flag")
+				_ = cmd.MarkFlagRequired("required-flag")
 			},
 			wantErr: true,
 		},
@@ -696,9 +696,9 @@ func TestValidateRequiredFlags(t *testing.T) {
 			setup: func(cmd *cobra.Command) {
 				cmd.Flags().String("required-1", "", "Required 1")
 				cmd.Flags().String("required-2", "", "Required 2")
-				cmd.MarkFlagRequired("required-1")
-				cmd.MarkFlagRequired("required-2")
-				cmd.Flags().Set("required-1", "value")
+				_ = cmd.MarkFlagRequired("required-1")
+				_ = cmd.MarkFlagRequired("required-2")
+				_ = cmd.Flags().Set("required-1", "value")
 				// required-2 not set
 			},
 			wantErr: true,

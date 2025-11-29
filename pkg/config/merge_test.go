@@ -9,13 +9,13 @@ import (
 func TestMergeDefaults(t *testing.T) {
 	tests := []struct {
 		name     string
-		config   *cli.CLIConfig
-		expected *cli.CLIConfig
+		config   *cli.Config
+		expected *cli.Config
 	}{
 		{
 			name:   "empty config gets defaults",
-			config: &cli.CLIConfig{},
-			expected: &cli.CLIConfig{
+			config: &cli.Config{},
+			expected: &cli.Config{
 				Defaults: &cli.Defaults{
 					HTTP: &cli.DefaultsHTTP{
 						Timeout: "30s",
@@ -44,14 +44,14 @@ func TestMergeDefaults(t *testing.T) {
 		},
 		{
 			name: "partial config gets remaining defaults",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Defaults: &cli.Defaults{
 					HTTP: &cli.DefaultsHTTP{
 						Timeout: "60s",
 					},
 				},
 			},
-			expected: &cli.CLIConfig{
+			expected: &cli.Config{
 				Defaults: &cli.Defaults{
 					HTTP: &cli.DefaultsHTTP{
 						Timeout: "60s",
@@ -115,13 +115,13 @@ func TestApplyUserPreferences(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      *cli.CLIConfig
+		config      *cli.Config
 		preferences *cli.UserPreferences
 		expected    map[string]interface{}
 	}{
 		{
 			name: "apply HTTP timeout preference",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Defaults: &cli.Defaults{
 					HTTP: &cli.DefaultsHTTP{
 						Timeout: "30s",
@@ -139,7 +139,7 @@ func TestApplyUserPreferences(t *testing.T) {
 		},
 		{
 			name: "apply output format preference",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Defaults: &cli.Defaults{
 					Output: &cli.DefaultsOutput{
 						Format: "json",
@@ -157,7 +157,7 @@ func TestApplyUserPreferences(t *testing.T) {
 		},
 		{
 			name: "apply pagination limit within max_limit",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Defaults: &cli.Defaults{
 					Pagination: &cli.DefaultsPagination{
 						Limit: 20,
@@ -180,7 +180,7 @@ func TestApplyUserPreferences(t *testing.T) {
 		},
 		{
 			name: "reject pagination limit exceeding max_limit",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Defaults: &cli.Defaults{
 					Pagination: &cli.DefaultsPagination{
 						Limit: 20,
@@ -233,18 +233,18 @@ func TestApplyDebugOverrides(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		config          *cli.CLIConfig
-		override        *cli.CLIConfig
+		config          *cli.Config
+		override        *cli.Config
 		expectedChanges map[string]interface{}
 	}{
 		{
 			name: "override API base_url",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				API: cli.API{
 					BaseURL: "https://api.production.com",
 				},
 			},
-			override: &cli.CLIConfig{
+			override: &cli.Config{
 				API: cli.API{
 					BaseURL: "http://localhost:8080",
 				},
@@ -255,14 +255,14 @@ func TestApplyDebugOverrides(t *testing.T) {
 		},
 		{
 			name: "override auth type",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Behaviors: &cli.Behaviors{
 					Auth: &cli.AuthBehavior{
 						Type: "oauth2",
 					},
 				},
 			},
-			override: &cli.CLIConfig{
+			override: &cli.Config{
 				Behaviors: &cli.Behaviors{
 					Auth: &cli.AuthBehavior{
 						Type: "none",
@@ -298,7 +298,7 @@ func TestApplyDebugOverrides(t *testing.T) {
 }
 
 func TestCopyConfig(t *testing.T) {
-	original := &cli.CLIConfig{
+	original := &cli.Config{
 		Metadata: cli.Metadata{
 			Name:    "test-cli",
 			Version: "1.0.0",
@@ -314,35 +314,35 @@ func TestCopyConfig(t *testing.T) {
 		},
 	}
 
-	copy := copyConfig(original)
+	copiedConfig := copyConfig(original)
 
 	// Verify copy is not nil
-	if copy == nil {
+	if copiedConfig == nil {
 		t.Fatal("copy is nil")
 	}
 
 	// Verify values are copied
-	if copy.Metadata.Name != original.Metadata.Name {
-		t.Errorf("Name = %v, want %v", copy.Metadata.Name, original.Metadata.Name)
+	if copiedConfig.Metadata.Name != original.Metadata.Name {
+		t.Errorf("Name = %v, want %v", copiedConfig.Metadata.Name, original.Metadata.Name)
 	}
-	if copy.API.BaseURL != original.API.BaseURL {
-		t.Errorf("BaseURL = %v, want %v", copy.API.BaseURL, original.API.BaseURL)
+	if copiedConfig.API.BaseURL != original.API.BaseURL {
+		t.Errorf("BaseURL = %v, want %v", copiedConfig.API.BaseURL, original.API.BaseURL)
 	}
 
 	// Verify deep copy (modifying copy doesn't affect original)
-	copy.Metadata.Name = "modified"
+	copiedConfig.Metadata.Name = "modified"
 	if original.Metadata.Name == "modified" {
 		t.Error("original was modified when copy was changed - not a deep copy")
 	}
 
-	copy.Defaults.HTTP.Timeout = "60s"
+	copiedConfig.Defaults.HTTP.Timeout = "60s"
 	if original.Defaults.HTTP.Timeout == "60s" {
 		t.Error("original defaults were modified when copy was changed - not a deep copy")
 	}
 }
 
 func TestMergeConfigsIntegration(t *testing.T) {
-	embedded := &cli.CLIConfig{
+	embedded := &cli.Config{
 		Metadata: cli.Metadata{
 			Name:    "test-cli",
 			Version: "1.0.0",
@@ -365,7 +365,7 @@ func TestMergeConfigsIntegration(t *testing.T) {
 				Timeout: "60s",
 			},
 		},
-		DebugOverride: &cli.CLIConfig{
+		DebugOverride: &cli.Config{
 			API: cli.API{
 				BaseURL: "http://localhost:8080",
 			},
@@ -399,7 +399,7 @@ func TestMergeConfigsIntegration(t *testing.T) {
 }
 
 func TestMergeConfigsNoDebugMode(t *testing.T) {
-	embedded := &cli.CLIConfig{
+	embedded := &cli.Config{
 		Metadata: cli.Metadata{
 			Name:    "test-cli",
 			Version: "1.0.0",
@@ -411,7 +411,7 @@ func TestMergeConfigsNoDebugMode(t *testing.T) {
 	}
 
 	user := &cli.UserConfig{
-		DebugOverride: &cli.CLIConfig{
+		DebugOverride: &cli.Config{
 			API: cli.API{
 				BaseURL: "http://localhost:8080",
 			},
@@ -436,7 +436,7 @@ func TestMergeConfigsNoDebugMode(t *testing.T) {
 }
 
 func TestCopyConfig_DeepCopy(t *testing.T) {
-	original := &cli.CLIConfig{
+	original := &cli.Config{
 		Metadata: cli.Metadata{
 			Name:    "test-cli",
 			Version: "1.0.0",
@@ -482,7 +482,7 @@ func TestCopyConfig_NilInput(t *testing.T) {
 
 func TestCopyConfig_CompleteStructure(t *testing.T) {
 	// Test copying a config with all possible fields populated
-	original := &cli.CLIConfig{
+	original := &cli.Config{
 		Metadata: cli.Metadata{
 			Name:        "test-cli",
 			Version:     "1.0.0",
@@ -555,10 +555,10 @@ func TestCopyConfig_CompleteStructure(t *testing.T) {
 				ResponseTTL: "1m",
 			},
 			Retry: &cli.RetryBehavior{
-				InitialDelay:       "1s",
-				MaxDelay:           "30s",
-				BackoffMultiplier:  2.0,
-				RetryOnStatus:      []int{429, 500, 502},
+				InitialDelay:      "1s",
+				MaxDelay:          "30s",
+				BackoffMultiplier: 2.0,
+				RetryOnStatus:     []int{429, 500, 502},
 			},
 			Pagination: &cli.PaginationBehavior{
 				MaxLimit: 100,
@@ -677,12 +677,12 @@ func TestMergeDefaults_NilConfig(t *testing.T) {
 func TestMergeDefaults_BehaviorDefaults(t *testing.T) {
 	tests := []struct {
 		name     string
-		config   *cli.CLIConfig
+		config   *cli.Config
 		expected map[string]interface{}
 	}{
 		{
 			name: "apply caching behavior defaults",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Behaviors: &cli.Behaviors{
 					Caching: &cli.CachingBehavior{},
 				},
@@ -695,7 +695,7 @@ func TestMergeDefaults_BehaviorDefaults(t *testing.T) {
 		},
 		{
 			name: "apply retry behavior defaults",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Behaviors: &cli.Behaviors{
 					Retry: &cli.RetryBehavior{},
 				},
@@ -709,7 +709,7 @@ func TestMergeDefaults_BehaviorDefaults(t *testing.T) {
 		},
 		{
 			name: "apply pagination behavior defaults",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Behaviors: &cli.Behaviors{
 					Pagination: &cli.PaginationBehavior{},
 				},
@@ -721,7 +721,7 @@ func TestMergeDefaults_BehaviorDefaults(t *testing.T) {
 		},
 		{
 			name: "preserve existing behavior values",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Behaviors: &cli.Behaviors{
 					Caching: &cli.CachingBehavior{
 						SpecTTL:     "10m",
@@ -738,7 +738,7 @@ func TestMergeDefaults_BehaviorDefaults(t *testing.T) {
 		},
 		{
 			name: "partial behavior defaults",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Behaviors: &cli.Behaviors{
 					Retry: &cli.RetryBehavior{
 						InitialDelay: "2s",
@@ -806,7 +806,7 @@ func TestMergeDefaults_BehaviorDefaults(t *testing.T) {
 }
 
 func TestMergeDefaults_AllDefaultSections(t *testing.T) {
-	config := &cli.CLIConfig{
+	config := &cli.Config{
 		Defaults: &cli.Defaults{
 			HTTP:         &cli.DefaultsHTTP{},
 			Pagination:   &cli.DefaultsPagination{Limit: 0},
@@ -855,18 +855,18 @@ func TestApplyDebugOverrides_AllFields(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		config          *cli.CLIConfig
-		override        *cli.CLIConfig
+		config          *cli.Config
+		override        *cli.Config
 		expectedChanges map[string]interface{}
 	}{
 		{
 			name: "override OpenAPI URL",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				API: cli.API{
 					OpenAPIURL: "https://api.production.com/openapi.yaml",
 				},
 			},
-			override: &cli.CLIConfig{
+			override: &cli.Config{
 				API: cli.API{
 					OpenAPIURL: "http://localhost:8080/openapi.yaml",
 				},
@@ -877,12 +877,12 @@ func TestApplyDebugOverrides_AllFields(t *testing.T) {
 		},
 		{
 			name: "override metadata name",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Metadata: cli.Metadata{
 					Name: "production-cli",
 				},
 			},
-			override: &cli.CLIConfig{
+			override: &cli.Config{
 				Metadata: cli.Metadata{
 					Name: "debug-cli",
 				},
@@ -893,12 +893,12 @@ func TestApplyDebugOverrides_AllFields(t *testing.T) {
 		},
 		{
 			name: "override branding with nil branding",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Metadata: cli.Metadata{
 					Name: "test-cli",
 				},
 			},
-			override: &cli.CLIConfig{
+			override: &cli.Config{
 				Branding: &cli.Branding{
 					Colors: &cli.Colors{
 						Primary: "#FF0000",
@@ -911,7 +911,7 @@ func TestApplyDebugOverrides_AllFields(t *testing.T) {
 		},
 		{
 			name: "override auth with nil behaviors",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Metadata: cli.Metadata{
 					Name: "test-cli",
 				},
@@ -921,7 +921,7 @@ func TestApplyDebugOverrides_AllFields(t *testing.T) {
 					},
 				},
 			},
-			override: &cli.CLIConfig{
+			override: &cli.Config{
 				Behaviors: &cli.Behaviors{
 					Auth: &cli.AuthBehavior{
 						Type: "none",
@@ -934,12 +934,12 @@ func TestApplyDebugOverrides_AllFields(t *testing.T) {
 		},
 		{
 			name: "no changes when values are same",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				API: cli.API{
 					BaseURL: "https://api.example.com",
 				},
 			},
-			override: &cli.CLIConfig{
+			override: &cli.Config{
 				API: cli.API{
 					BaseURL: "https://api.example.com",
 				},
@@ -976,19 +976,19 @@ func TestApplyUserPreferences_InitializeNilDefaults(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      *cli.CLIConfig
+		config      *cli.Config
 		preferences *cli.UserPreferences
-		checkFunc   func(*testing.T, *cli.CLIConfig)
+		checkFunc   func(*testing.T, *cli.Config)
 	}{
 		{
 			name:   "initialize nil defaults",
-			config: &cli.CLIConfig{},
+			config: &cli.Config{},
 			preferences: &cli.UserPreferences{
 				HTTP: &cli.PreferencesHTTP{
 					Timeout: "60s",
 				},
 			},
-			checkFunc: func(t *testing.T, cfg *cli.CLIConfig) {
+			checkFunc: func(t *testing.T, cfg *cli.Config) {
 				if cfg.Defaults == nil {
 					t.Error("Defaults should be initialized")
 				}
@@ -1002,7 +1002,7 @@ func TestApplyUserPreferences_InitializeNilDefaults(t *testing.T) {
 		},
 		{
 			name: "initialize nil HTTP defaults",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Defaults: &cli.Defaults{},
 			},
 			preferences: &cli.UserPreferences{
@@ -1010,7 +1010,7 @@ func TestApplyUserPreferences_InitializeNilDefaults(t *testing.T) {
 					Timeout: "45s",
 				},
 			},
-			checkFunc: func(t *testing.T, cfg *cli.CLIConfig) {
+			checkFunc: func(t *testing.T, cfg *cli.Config) {
 				if cfg.Defaults.HTTP == nil {
 					t.Error("HTTP defaults should be initialized")
 				}
@@ -1018,7 +1018,7 @@ func TestApplyUserPreferences_InitializeNilDefaults(t *testing.T) {
 		},
 		{
 			name: "apply caching preference",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Defaults: &cli.Defaults{},
 			},
 			preferences: &cli.UserPreferences{
@@ -1026,7 +1026,7 @@ func TestApplyUserPreferences_InitializeNilDefaults(t *testing.T) {
 					Enabled: false,
 				},
 			},
-			checkFunc: func(t *testing.T, cfg *cli.CLIConfig) {
+			checkFunc: func(t *testing.T, cfg *cli.Config) {
 				if cfg.Defaults.Caching == nil {
 					t.Error("Caching defaults should be initialized")
 				}
@@ -1037,7 +1037,7 @@ func TestApplyUserPreferences_InitializeNilDefaults(t *testing.T) {
 		},
 		{
 			name: "apply all output preferences",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Defaults: &cli.Defaults{},
 			},
 			preferences: &cli.UserPreferences{
@@ -1048,7 +1048,7 @@ func TestApplyUserPreferences_InitializeNilDefaults(t *testing.T) {
 					Paging:      false,
 				},
 			},
-			checkFunc: func(t *testing.T, cfg *cli.CLIConfig) {
+			checkFunc: func(t *testing.T, cfg *cli.Config) {
 				if cfg.Defaults.Output == nil {
 					t.Fatal("Output defaults should be initialized")
 				}
@@ -1068,7 +1068,7 @@ func TestApplyUserPreferences_InitializeNilDefaults(t *testing.T) {
 		},
 		{
 			name: "apply deprecations preference",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Defaults: &cli.Defaults{},
 			},
 			preferences: &cli.UserPreferences{
@@ -1077,7 +1077,7 @@ func TestApplyUserPreferences_InitializeNilDefaults(t *testing.T) {
 					MinSeverity: "warning",
 				},
 			},
-			checkFunc: func(t *testing.T, cfg *cli.CLIConfig) {
+			checkFunc: func(t *testing.T, cfg *cli.Config) {
 				if cfg.Defaults.Deprecations == nil {
 					t.Fatal("Deprecations defaults should be initialized")
 				}
@@ -1091,7 +1091,7 @@ func TestApplyUserPreferences_InitializeNilDefaults(t *testing.T) {
 		},
 		{
 			name: "apply retry preference",
-			config: &cli.CLIConfig{
+			config: &cli.Config{
 				Defaults: &cli.Defaults{},
 			},
 			preferences: &cli.UserPreferences{
@@ -1099,7 +1099,7 @@ func TestApplyUserPreferences_InitializeNilDefaults(t *testing.T) {
 					MaxAttempts: 5,
 				},
 			},
-			checkFunc: func(t *testing.T, cfg *cli.CLIConfig) {
+			checkFunc: func(t *testing.T, cfg *cli.Config) {
 				if cfg.Defaults.Retry == nil {
 					t.Fatal("Retry defaults should be initialized")
 				}

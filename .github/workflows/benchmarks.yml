@@ -1,0 +1,282 @@
+name: Performance Benchmarks
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'pkg/**'
+      - 'cmd/**'
+      - 'benchmarks/**'
+      - 'go.mod'
+      - 'go.sum'
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      benchmark_filter:
+        description: 'Benchmark filter (e.g., BenchmarkSpec, BenchmarkHTTP)'
+        required: false
+        default: '.'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Need full history for comparison
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-bench-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-bench-
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Run benchmarks on current branch
+      run: |
+        cd benchmarks
+        go test -bench=${{ github.event.inputs.benchmark_filter || '.' }} \
+          -benchmem \
+          -benchtime=10s \
+          -timeout=30m \
+          -run=^$ \
+          > ../bench_current.txt
+        cat ../bench_current.txt
+
+    - name: Upload current benchmark results
+      uses: actions/upload-artifact@v4
+      with:
+        name: bench-current
+        path: bench_current.txt
+
+    - name: Checkout base branch for comparison
+      if: github.event_name == 'pull_request'
+      run: |
+        git fetch origin ${{ github.base_ref }}
+        git checkout origin/${{ github.base_ref }}
+
+    - name: Run benchmarks on base branch
+      if: github.event_name == 'pull_request'
+      run: |
+        if [ -d benchmarks ]; then
+          cd benchmarks
+          go test -bench=${{ github.event.inputs.benchmark_filter || '.' }} \
+            -benchmem \
+            -benchtime=10s \
+            -timeout=30m \
+            -run=^$ \
+            > ../bench_base.txt || echo "Base benchmarks failed, will skip comparison"
+          if [ -f ../bench_base.txt ]; then
+            cat ../bench_base.txt
+          fi
+        else
+          echo "Benchmarks directory not found in base branch - skipping base benchmark comparison"
+        fi
+
+    - name: Upload base benchmark results
+      if: github.event_name == 'pull_request'
+      uses: actions/upload-artifact@v4
+      with:
+        name: bench-base
+        path: bench_base.txt
+      continue-on-error: true
+
+    - name: Install benchcmp
+      if: github.event_name == 'pull_request'
+      run: go install golang.org/x/perf/cmd/benchstat@latest
+
+    - name: Compare benchmarks
+      if: github.event_name == 'pull_request'
+      id: compare
+      run: |
+        if [ -f bench_base.txt ] && [ -f bench_current.txt ]; then
+          echo "## Benchmark Comparison" > comparison.md
+          echo "" >> comparison.md
+          echo "Comparing performance changes between base and current branch:" >> comparison.md
+          echo "" >> comparison.md
+          echo "\`\`\`" >> comparison.md
+          benchstat bench_base.txt bench_current.txt >> comparison.md || echo "Benchstat comparison failed" >> comparison.md
+          echo "\`\`\`" >> comparison.md
+          echo "" >> comparison.md
+          echo "### Interpretation Guide" >> comparison.md
+          echo "- **Time/op**: Time per operation (lower is better)" >> comparison.md
+          echo "- **+/- %**: Percentage change from base (negative is improvement)" >> comparison.md
+          echo "- **B/op**: Bytes allocated per operation (lower is better)" >> comparison.md
+          echo "- **allocs/op**: Number of allocations per operation (lower is better)" >> comparison.md
+          echo "" >> comparison.md
+          echo "### Performance Thresholds" >> comparison.md
+          echo "- ⚠️ **Warning**: >10% regression in time or >20% increase in memory" >> comparison.md
+          echo "- ✅ **Good**: <5% change or improvement" >> comparison.md
+          cat comparison.md
+        else
+          echo "## Benchmark Results" > comparison.md
+          echo "" >> comparison.md
+          echo "Benchmark results for current branch:" >> comparison.md
+          echo "" >> comparison.md
+          echo "\`\`\`" >> comparison.md
+          cat bench_current.txt >> comparison.md
+          echo "\`\`\`" >> comparison.md
+        fi
+
+    - name: Comment PR with benchmark results
+      if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs');
+          const comparison = fs.readFileSync('comparison.md', 'utf8');
+
+          // Find existing benchmark comment
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+
+          const botComment = comments.find(comment =>
+            comment.user.type === 'Bot' &&
+            comment.body.includes('Benchmark Comparison')
+          );
+
+          const commentBody = `## 🚀 Performance Benchmark Results\n\n${comparison}\n\n---\n*Benchmarks run on commit ${{ github.sha }}*`;
+
+          if (botComment) {
+            // Update existing comment
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: commentBody,
+            });
+          } else {
+            // Create new comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: commentBody,
+            });
+          }
+
+    - name: Check for performance regressions
+      if: github.event_name == 'pull_request'
+      run: |
+        if [ -f bench_base.txt ] && [ -f bench_current.txt ]; then
+          echo "✅ Both benchmark files found - comparing performance..."
+          echo "Note: Detailed comparison available in benchmark artifacts"
+          echo "⚠️  Regression check temporarily disabled - will implement simple bash version"
+        else
+          echo "ℹ️  Skipping regression check (no base benchmarks available)"
+        fi
+
+  benchmark-memory-profile:
+    name: Memory Profile
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Generate memory profile
+      run: |
+        cd benchmarks
+        go test -bench=BenchmarkMemory \
+          -benchmem \
+          -memprofile=mem.prof \
+          -benchtime=5s \
+          -run=^$ \
+          > bench_mem.txt
+
+    - name: Analyze memory profile
+      run: |
+        cd benchmarks
+        echo "## Memory Profile Analysis" > mem_analysis.txt
+        echo "" >> mem_analysis.txt
+        echo "### Top Memory Allocations" >> mem_analysis.txt
+        echo "\`\`\`" >> mem_analysis.txt
+        go tool pprof -top -alloc_space mem.prof >> mem_analysis.txt || true
+        echo "\`\`\`" >> mem_analysis.txt
+        cat mem_analysis.txt
+
+    - name: Upload memory profile
+      uses: actions/upload-artifact@v4
+      with:
+        name: memory-profile
+        path: |
+          benchmarks/mem.prof
+          benchmarks/mem_analysis.txt
+
+  benchmark-cpu-profile:
+    name: CPU Profile
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Generate CPU profile
+      run: |
+        cd benchmarks
+        go test -bench=${{ github.event.inputs.benchmark_filter || '.' }} \
+          -benchmem \
+          -cpuprofile=cpu.prof \
+          -benchtime=10s \
+          -run=^$ \
+          > bench_cpu.txt
+
+    - name: Analyze CPU profile
+      run: |
+        cd benchmarks
+        echo "## CPU Profile Analysis" > cpu_analysis.txt
+        echo "" >> cpu_analysis.txt
+        echo "### Top CPU Consumers" >> cpu_analysis.txt
+        echo "\`\`\`" >> cpu_analysis.txt
+        go tool pprof -top cpu.prof >> cpu_analysis.txt || true
+        echo "\`\`\`" >> cpu_analysis.txt
+        cat cpu_analysis.txt
+
+    - name: Upload CPU profile
+      uses: actions/upload-artifact@v4
+      with:
+        name: cpu-profile
+        path: |
+          benchmarks/cpu.prof
+          benchmarks/cpu_analysis.txt

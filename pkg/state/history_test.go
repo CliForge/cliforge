@@ -8,8 +8,8 @@ import (
 
 func TestNewHistory(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	h, err := NewHistory("testcli", 100)
 	if err != nil {
@@ -27,11 +27,11 @@ func TestNewHistory(t *testing.T) {
 
 func TestHistoryAdd(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	h, _ := NewHistory("testcli", 100)
-	h.Clear() // Ensure clean state for test
+	_ = h.Clear() // Ensure clean state for test
 
 	entry := &HistoryEntry{
 		Command:  "mycli describe cluster",
@@ -60,7 +60,7 @@ func TestHistoryAdd(t *testing.T) {
 		ExitCode: 1,
 	}
 
-	h.Add(entry2)
+	_ = h.Add(entry2)
 
 	if entry2.ID != 2 {
 		t.Errorf("Expected ID to be 2, got %d", entry2.ID)
@@ -73,17 +73,17 @@ func TestHistoryAdd(t *testing.T) {
 
 func TestHistoryGet(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	h, _ := NewHistory("testcli", 100)
-	h.Clear() // Ensure clean state for test
+	_ = h.Clear() // Ensure clean state for test
 
 	entry := &HistoryEntry{
 		Command:  "test command",
 		ExitCode: 0,
 	}
-	h.Add(entry)
+	_ = h.Add(entry)
 
 	retrieved, err := h.Get(1)
 	if err != nil {
@@ -102,15 +102,15 @@ func TestHistoryGet(t *testing.T) {
 
 func TestHistoryGetAll(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	h, _ := NewHistory("testcli", 100)
-	h.Clear() // Ensure clean state for test
+	_ = h.Clear() // Ensure clean state for test
 
-	h.Add(&HistoryEntry{Command: "cmd1", ExitCode: 0})
-	h.Add(&HistoryEntry{Command: "cmd2", ExitCode: 0})
-	h.Add(&HistoryEntry{Command: "cmd3", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "cmd1", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "cmd2", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "cmd3", ExitCode: 0})
 
 	entries := h.GetAll()
 	if len(entries) != 3 {
@@ -127,14 +127,14 @@ func TestHistoryGetAll(t *testing.T) {
 
 func TestHistoryGetRecent(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	h, _ := NewHistory("testcli", 100)
-	h.Clear() // Ensure clean state for test
+	_ = h.Clear() // Ensure clean state for test
 
 	for i := 1; i <= 5; i++ {
-		h.Add(&HistoryEntry{Command: "cmd" + string(rune(i+'0')), ExitCode: 0})
+		_ = h.Add(&HistoryEntry{Command: "cmd" + string(rune(i+'0')), ExitCode: 0})
 	}
 
 	recent := h.GetRecent(3)
@@ -154,15 +154,15 @@ func TestHistoryGetRecent(t *testing.T) {
 
 func TestHistorySearch(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	h, _ := NewHistory("testcli", 100)
-	h.Clear() // Ensure clean state for test
+	_ = h.Clear() // Ensure clean state for test
 
-	h.Add(&HistoryEntry{Command: "mycli create cluster", ExitCode: 0})
-	h.Add(&HistoryEntry{Command: "mycli delete cluster", ExitCode: 0})
-	h.Add(&HistoryEntry{Command: "mycli list regions", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "mycli create cluster", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "mycli delete cluster", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "mycli list regions", ExitCode: 0})
 
 	results := h.Search("cluster")
 	if len(results) != 2 {
@@ -183,15 +183,15 @@ func TestHistorySearch(t *testing.T) {
 
 func TestHistoryFilter(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	h, _ := NewHistory("testcli", 100)
-	h.Clear() // Ensure clean state for test
+	_ = h.Clear() // Ensure clean state for test
 
-	h.Add(&HistoryEntry{Command: "cmd1", ExitCode: 0})
-	h.Add(&HistoryEntry{Command: "cmd2", ExitCode: 1})
-	h.Add(&HistoryEntry{Command: "cmd3", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "cmd1", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "cmd2", ExitCode: 1})
+	_ = h.Add(&HistoryEntry{Command: "cmd3", ExitCode: 0})
 
 	// Filter successful commands
 	successful := h.Filter(func(e *HistoryEntry) bool {
@@ -205,15 +205,15 @@ func TestHistoryFilter(t *testing.T) {
 
 func TestHistoryGetSuccessfulFailed(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	h, _ := NewHistory("testcli", 100)
-	h.Clear() // Ensure clean state for test
+	_ = h.Clear() // Ensure clean state for test
 
-	h.Add(&HistoryEntry{Command: "cmd1", ExitCode: 0})
-	h.Add(&HistoryEntry{Command: "cmd2", ExitCode: 1})
-	h.Add(&HistoryEntry{Command: "cmd3", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "cmd1", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "cmd2", ExitCode: 1})
+	_ = h.Add(&HistoryEntry{Command: "cmd3", ExitCode: 0})
 
 	successful := h.GetSuccessful()
 	if len(successful) != 2 {
@@ -228,15 +228,15 @@ func TestHistoryGetSuccessfulFailed(t *testing.T) {
 
 func TestHistoryGetByContext(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	h, _ := NewHistory("testcli", 100)
-	h.Clear() // Ensure clean state for test
+	_ = h.Clear() // Ensure clean state for test
 
-	h.Add(&HistoryEntry{Command: "cmd1", Context: "production", ExitCode: 0})
-	h.Add(&HistoryEntry{Command: "cmd2", Context: "staging", ExitCode: 0})
-	h.Add(&HistoryEntry{Command: "cmd3", Context: "production", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "cmd1", Context: "production", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "cmd2", Context: "staging", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "cmd3", Context: "production", ExitCode: 0})
 
 	prodEntries := h.GetByContext("production")
 	if len(prodEntries) != 2 {
@@ -246,18 +246,18 @@ func TestHistoryGetByContext(t *testing.T) {
 
 func TestHistoryGetSince(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	h, _ := NewHistory("testcli", 100)
-	h.Clear() // Ensure clean state for test
+	_ = h.Clear() // Ensure clean state for test
 
 	now := time.Now()
 	past := now.Add(-1 * time.Hour)
 
-	h.Add(&HistoryEntry{Command: "old", ExitCode: 0, Timestamp: past})
+	_ = h.Add(&HistoryEntry{Command: "old", ExitCode: 0, Timestamp: past})
 	time.Sleep(10 * time.Millisecond)
-	h.Add(&HistoryEntry{Command: "new", ExitCode: 0, Timestamp: now})
+	_ = h.Add(&HistoryEntry{Command: "new", ExitCode: 0, Timestamp: now})
 
 	since := now.Add(-30 * time.Minute)
 	recent := h.GetSince(since)
@@ -273,20 +273,20 @@ func TestHistoryGetSince(t *testing.T) {
 
 func TestHistoryClear(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	h, _ := NewHistory("testcli", 100)
-	h.Clear() // Ensure clean state for test
+	_ = h.Clear() // Ensure clean state for test
 
-	h.Add(&HistoryEntry{Command: "cmd1", ExitCode: 0})
-	h.Add(&HistoryEntry{Command: "cmd2", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "cmd1", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "cmd2", ExitCode: 0})
 
 	if h.Count() != 2 {
 		t.Error("Expected 2 entries before clear")
 	}
 
-	h.Clear()
+	_ = h.Clear()
 
 	if h.Count() != 0 {
 		t.Error("Expected 0 entries after clear")
@@ -295,15 +295,15 @@ func TestHistoryClear(t *testing.T) {
 
 func TestHistoryMaxEntries(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	// Use unique CLI name for this test
 	h, _ := NewHistory("testcli-maxentries", 5)
 
 	// Add more than max
 	for i := 1; i <= 10; i++ {
-		h.Add(&HistoryEntry{Command: "cmd" + string(rune(i+'0')), ExitCode: 0})
+		_ = h.Add(&HistoryEntry{Command: "cmd" + string(rune(i+'0')), ExitCode: 0})
 	}
 
 	if h.Count() != 5 {
@@ -319,15 +319,15 @@ func TestHistoryMaxEntries(t *testing.T) {
 
 func TestHistorySetMaxEntries(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	h, _ := NewHistory("testcli", 100)
-	h.Clear() // Ensure clean state for test
+	_ = h.Clear() // Ensure clean state for test
 
 	// Add 10 entries
 	for i := 1; i <= 10; i++ {
-		h.Add(&HistoryEntry{Command: "cmd", ExitCode: 0})
+		_ = h.Add(&HistoryEntry{Command: "cmd", ExitCode: 0})
 	}
 
 	// Reduce max
@@ -340,17 +340,17 @@ func TestHistorySetMaxEntries(t *testing.T) {
 
 func TestHistorySaveLoad(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	// Use unique CLI name for this test
 	uniqueCLI := "testcli-saveload"
 
 	// Create and save
 	h1, _ := NewHistory(uniqueCLI, 100)
-	h1.Clear() // Clear any previously loaded data
-	h1.Add(&HistoryEntry{Command: "cmd1", ExitCode: 0})
-	h1.Add(&HistoryEntry{Command: "cmd2", ExitCode: 1})
+	_ = h1.Clear() // Clear any previously loaded data
+	_ = h1.Add(&HistoryEntry{Command: "cmd1", ExitCode: 0})
+	_ = h1.Add(&HistoryEntry{Command: "cmd2", ExitCode: 1})
 
 	if err := h1.Save(); err != nil {
 		t.Fatalf("Failed to save: %v", err)
@@ -374,11 +374,11 @@ func TestHistorySaveLoad(t *testing.T) {
 
 func TestHistoryRecordCommand(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	h, _ := NewHistory("testcli", 100)
-	h.Clear() // Ensure clean state for test
+	_ = h.Clear() // Ensure clean state for test
 
 	duration := 500 * time.Millisecond
 	err := h.RecordCommand("mycli test", 0, duration, "production")
@@ -411,15 +411,15 @@ func TestHistoryRecordCommand(t *testing.T) {
 
 func TestHistoryGetStats(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	h, _ := NewHistory("testcli", 100)
-	h.Clear() // Ensure clean state for test
+	_ = h.Clear() // Ensure clean state for test
 
-	h.Add(&HistoryEntry{Command: "cmd1", ExitCode: 0, DurationMS: 100})
-	h.Add(&HistoryEntry{Command: "cmd2", ExitCode: 1, DurationMS: 200})
-	h.Add(&HistoryEntry{Command: "cmd3", ExitCode: 0, DurationMS: 300})
+	_ = h.Add(&HistoryEntry{Command: "cmd1", ExitCode: 0, DurationMS: 100})
+	_ = h.Add(&HistoryEntry{Command: "cmd2", ExitCode: 1, DurationMS: 200})
+	_ = h.Add(&HistoryEntry{Command: "cmd3", ExitCode: 0, DurationMS: 300})
 
 	stats := h.GetStats()
 
@@ -443,18 +443,18 @@ func TestHistoryGetStats(t *testing.T) {
 
 func TestHistoryGetMostUsedCommands(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("XDG_STATE_HOME", tmpDir)
-	defer os.Unsetenv("XDG_STATE_HOME")
+	_ = os.Setenv("XDG_STATE_HOME", tmpDir)
+	defer func() { _ = os.Unsetenv("XDG_STATE_HOME") }()
 
 	h, _ := NewHistory("testcli", 100)
-	h.Clear() // Ensure clean state for test
+	_ = h.Clear() // Ensure clean state for test
 
-	h.Add(&HistoryEntry{Command: "mycli describe cluster", ExitCode: 0})
-	h.Add(&HistoryEntry{Command: "mycli list clusters", ExitCode: 0})
-	h.Add(&HistoryEntry{Command: "mycli describe cluster", ExitCode: 0})
-	h.Add(&HistoryEntry{Command: "mycli list clusters", ExitCode: 0})
-	h.Add(&HistoryEntry{Command: "mycli describe cluster", ExitCode: 0})
-	h.Add(&HistoryEntry{Command: "mycli create cluster", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "mycli describe cluster", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "mycli list clusters", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "mycli describe cluster", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "mycli list clusters", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "mycli describe cluster", ExitCode: 0})
+	_ = h.Add(&HistoryEntry{Command: "mycli create cluster", ExitCode: 0})
 
 	freqs := h.GetMostUsedCommands(0)
 

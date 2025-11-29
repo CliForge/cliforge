@@ -49,8 +49,8 @@ func TestJSONFormatterFormat(t *testing.T) {
 		check  func(t *testing.T, output string)
 	}{
 		{
-			name: "simple map",
-			data: map[string]string{"key": "value"},
+			name:   "simple map",
+			data:   map[string]string{"key": "value"},
 			config: NewFormatConfig().WithPretty(true),
 			check: func(t *testing.T, output string) {
 				var result map[string]string
@@ -63,8 +63,8 @@ func TestJSONFormatterFormat(t *testing.T) {
 			},
 		},
 		{
-			name: "compact format",
-			data: map[string]string{"key": "value"},
+			name:   "compact format",
+			data:   map[string]string{"key": "value"},
 			config: NewFormatConfig().WithCompact(true),
 			check: func(t *testing.T, output string) {
 				if strings.Contains(output, "\n") {
@@ -73,8 +73,8 @@ func TestJSONFormatterFormat(t *testing.T) {
 			},
 		},
 		{
-			name: "nil data",
-			data: nil,
+			name:   "nil data",
+			data:   nil,
 			config: NewFormatConfig().WithPretty(true),
 			check: func(t *testing.T, output string) {
 				if !strings.Contains(output, "null") {
@@ -141,7 +141,7 @@ func TestJSONFormatterFormatResult(t *testing.T) {
 			},
 		},
 		{
-			name: "error result",
+			name:   "error result",
 			result: NewErrorResult(&testError{"operation failed"}),
 			check: func(t *testing.T, output string) {
 				var result map[string]interface{}

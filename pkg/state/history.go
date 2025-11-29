@@ -55,10 +55,7 @@ func NewHistory(cliName string, maxEntries int) (*History, error) {
 		maxEntries = DefaultMaxHistoryEntries
 	}
 
-	historyPath, err := getHistoryPath(cliName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get history path: %w", err)
-	}
+	historyPath := getHistoryPath(cliName)
 
 	h := &History{
 		cliName:     cliName,
@@ -135,7 +132,7 @@ func (h *History) Save() error {
 	}
 
 	if err := os.Rename(tmpPath, h.historyPath); err != nil {
-		os.Remove(tmpPath) // Clean up on error
+		_ = os.Remove(tmpPath) // Clean up on error
 		return fmt.Errorf("failed to save history file: %w", err)
 	}
 
@@ -305,11 +302,11 @@ func (h *History) GetPath() string {
 }
 
 // SetMaxEntries sets the maximum number of entries.
-func (h *History) SetMaxEntries(max int) {
+func (h *History) SetMaxEntries(maxEntries int) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	h.maxEntries = max
+	h.maxEntries = maxEntries
 
 	// Trim if needed
 	if len(h.entries) > h.maxEntries {
@@ -376,10 +373,10 @@ type HistoryStats struct {
 }
 
 // getHistoryPath returns the path to the history file.
-func getHistoryPath(cliName string) (string, error) {
+func getHistoryPath(cliName string) string {
 	// Use XDG state directory
 	stateDir := filepath.Join(xdg.StateHome, cliName)
-	return filepath.Join(stateDir, "history.json"), nil
+	return filepath.Join(stateDir, "history.json")
 }
 
 // RecordCommand is a helper function to record a command execution.
