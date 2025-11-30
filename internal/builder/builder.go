@@ -313,6 +313,14 @@ func (b *Builder) buildOperationCommand(op *openapi.Operation) (*cobra.Command, 
 	cmd.Annotations["method"] = op.Method
 	cmd.Annotations["path"] = op.Path
 
+	// Add parent resource flag if x-cli-parent-resource is present
+	if op.CLIParentRes != "" {
+		nestedHandler := NewNestedResourceHandler()
+		if err := nestedHandler.AddParentResourceFlag(cmd, op); err != nil {
+			return nil, fmt.Errorf("failed to add parent resource flag: %w", err)
+		}
+	}
+
 	// Set executor if provided
 	if b.config.DefaultExecutor != nil {
 		cmd.RunE = b.config.DefaultExecutor
