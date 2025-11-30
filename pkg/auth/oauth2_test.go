@@ -941,12 +941,13 @@ func TestOAuth2Auth_AuthCodeWithBrowserOpen(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Verify browser was opened
-	if len(mockOpener.OpenedURLs) != 1 {
-		t.Errorf("Expected browser to be opened once, got %d times", len(mockOpener.OpenedURLs))
+	openedURLs := mockOpener.GetOpenedURLs()
+	if len(openedURLs) != 1 {
+		t.Errorf("Expected browser to be opened once, got %d times", len(openedURLs))
 	}
 
-	if len(mockOpener.OpenedURLs) > 0 {
-		openedURL := mockOpener.OpenedURLs[0]
+	if len(openedURLs) > 0 {
+		openedURL := openedURLs[0]
 		if !strings.Contains(openedURL, "https://example.com/auth") {
 			t.Errorf("Expected auth URL to contain auth endpoint, got %s", openedURL)
 		}
@@ -1029,8 +1030,9 @@ func TestOAuth2Auth_AuthCodeWithoutBrowser(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Verify browser was NOT opened
-	if len(mockOpener.OpenedURLs) != 0 {
-		t.Errorf("Expected browser NOT to be opened, but it was opened %d times", len(mockOpener.OpenedURLs))
+	openedURLs := mockOpener.GetOpenedURLs()
+	if len(openedURLs) != 0 {
+		t.Errorf("Expected browser NOT to be opened, but it was opened %d times", len(openedURLs))
 	}
 
 	// Simulate callback
@@ -1109,8 +1111,9 @@ func TestOAuth2Auth_BrowserOpenError(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Verify browser open was attempted even though it failed
-	if len(mockOpener.OpenedURLs) != 1 {
-		t.Errorf("Expected browser open to be attempted once, got %d times", len(mockOpener.OpenedURLs))
+	openedURLs := mockOpener.GetOpenedURLs()
+	if len(openedURLs) != 1 {
+		t.Errorf("Expected browser open to be attempted once, got %d times", len(openedURLs))
 	}
 
 	// Simulate callback - authentication should still continue despite browser error

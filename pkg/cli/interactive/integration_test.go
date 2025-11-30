@@ -16,7 +16,7 @@ func TestIntegration_CompleteWorkflow(t *testing.T) {
 		switch r.URL.Path {
 		case "/api/v1/regions":
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`{
+			_, _ = w.Write([]byte(`{
 				"items": [
 					{"id": "us-east-1", "name": "US East (N. Virginia)"},
 					{"id": "us-west-2", "name": "US West (Oregon)"},
@@ -25,7 +25,7 @@ func TestIntegration_CompleteWorkflow(t *testing.T) {
 			}`))
 		case "/api/v1/instance-types":
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`["t3.micro", "t3.small", "t3.medium"]`))
+			_, _ = w.Write([]byte(`["t3.micro", "t3.small", "t3.medium"]`))
 		default:
 			http.NotFound(w, r)
 		}
@@ -268,7 +268,7 @@ func BenchmarkPromptExecution(b *testing.B) {
 func BenchmarkDynamicOptionLoading(b *testing.B) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`["option1", "option2", "option3"]`))
+		_, _ = w.Write([]byte(`["option1", "option2", "option3"]`))
 	}))
 	defer server.Close()
 

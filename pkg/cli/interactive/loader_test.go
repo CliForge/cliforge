@@ -53,12 +53,12 @@ func TestLoadOptions(t *testing.T) {
 		case "/regions":
 			// Simple array of strings
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`["us-east-1", "us-west-2", "eu-west-1"]`))
+			_, _ = w.Write([]byte(`["us-east-1", "us-west-2", "eu-west-1"]`))
 
 		case "/clusters":
 			// Array of objects with items wrapper
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`{
+			_, _ = w.Write([]byte(`{
 				"items": [
 					{"id": "cluster-1", "name": "Production"},
 					{"id": "cluster-2", "name": "Staging"},
@@ -69,7 +69,7 @@ func TestLoadOptions(t *testing.T) {
 		case "/environments":
 			// Direct array of objects
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`[
+			_, _ = w.Write([]byte(`[
 				{"value": "dev", "display": "Development"},
 				{"value": "staging", "display": "Staging"},
 				{"value": "prod", "display": "Production"}
@@ -175,7 +175,7 @@ func TestLoadOptions(t *testing.T) {
 func TestLoadOptions_AbsoluteURL(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`["option1", "option2"]`))
+		_, _ = w.Write([]byte(`["option1", "option2"]`))
 	}))
 	defer server.Close()
 
@@ -227,7 +227,7 @@ func TestPromptFromInteractive(t *testing.T) {
 	// Setup mock HTTP server for dynamic options
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`["option1", "option2", "option3"]`))
+		_, _ = w.Write([]byte(`["option1", "option2", "option3"]`))
 	}))
 	defer server.Close()
 
