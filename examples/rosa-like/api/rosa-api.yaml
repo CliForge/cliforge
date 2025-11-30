@@ -1,0 +1,1236 @@
+openapi: 3.0.3
+info:
+  title: ROSA-like API for Alpha-Omega CLI
+  version: 1.0.0
+  description: |
+    OpenAPI specification designed for the Alpha-Omega CLI system that replicates
+    the functionality of the Red Hat OpenShift Service on AWS (ROSA) CLI.
+
+    This specification demonstrates how the Alpha-Omega system can handle:
+    - Complex cluster lifecycle management
+    - Nested resource hierarchies
+    - Interactive command flows
+    - Async operations with status polling
+    - Pre-flight validation checks
+    - Multi-step workflows
+
+  contact:
+    name: API Support
+    email: support@example.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+
+servers:
+  - url: https://api.example.com
+    description: Production server
+  - url: https://api.stage.example.com
+    description: Staging server
+
+# Alpha-Omega CLI Configuration Extensions
+x-cli-config:
+  name: "rosa-like-cli"
+  version: "1.0.0"
+  description: "ROSA-like cluster management CLI"
+  branding:
+    ascii-art: "ROSA CLI"
+    colors:
+      primary: "#EE0000"
+      secondary: "#000000"
+  auth:
+    type: oauth2
+    storage: keyring
+    auto-refresh: true
+  output:
+    default-format: table
+    supported-formats:
+      - table
+      - json
+      - yaml
+  features:
+    interactive-mode: true
+    auto-complete: true
+    self-update: true
+    telemetry: false
+  cache:
+    enabled: true
+    ttl: 300
+    location: "~/.rosa-like/cache"
+
+# Security schemes
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      x-auth-config:
+        flows:
+          authorizationCode:
+            authorizationUrl: https://sso.example.com/auth
+            tokenUrl: https://sso.example.com/token
+            refreshUrl: https://sso.example.com/token
+            scopes:
+              openid: OpenID Connect scope
+              api:clusters:read: Read cluster information
+              api:clusters:write: Create and modify clusters
+              api:clusters:delete: Delete clusters
+        token-storage:
+          - type: file
+            path: "~/.rosa-like/config.json"
+          - type: keyring
+            service: "rosa-like-cli"
+            keyring-backends:
+              darwin: keychain
+              linux: secret-service
+              windows: wincred
+
+  # Reusable parameters
+  parameters:
+    ClusterId:
+      name: cluster_id
+      in: path
+      required: true
+      description: Unique identifier of the cluster
+      schema:
+        type: string
+      x-cli-flag: "--cluster"
+      x-cli-aliases: ["-c"]
+
+    MachinePoolId:
+      name: machinepool_id
+      in: path
+      required: true
+      description: Unique identifier of the machine pool
+      schema:
+        type: string
+      x-cli-flag: "--machinepool"
+
+    PageParameter:
+      name: page
+      in: query
+      description: Page number for pagination (1-indexed)
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 1
+
+    SizeParameter:
+      name: size
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 500
+        default: 100
+
+    SearchParameter:
+      name: search
+      in: query
+      description: |
+        SQL-like search criteria. Example: `name like 'prod%' and region = 'us-east-1'`
+      schema:
+        type: string
+
+    OrderParameter:
+      name: order
+      in: query
+      description: |
+        SQL-like ordering criteria. Example: `name desc, created_at asc`
+      schema:
+        type: string
+
+  # Reusable schemas
+  schemas:
+    # Error handling
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code
+          example: INVALID_CLUSTER_NAME
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Cluster name must be lowercase alphanumeric with hyphens"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              issue:
+                type: string
+        request_id:
+          type: string
+          description: Unique request identifier for support
+      x-cli-error-mapping:
+        INVALID_CLUSTER_NAME: "Invalid cluster name: {message}"
+        QUOTA_EXCEEDED: "AWS quota exceeded: {message}"
+        UNAUTHORIZED: "Authentication failed. Run 'rosa-like login' first."
+
+    # Metadata
+    Metadata:
+      type: object
+      properties:
+        version:
+          type: string
+          example: "v1"
+        server_version:
+          type: string
+          example: "1.0.0"
+
+    # Pagination
+    PaginationMetadata:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int32
+          description: Total number of items matching search criteria
+
+    # Cluster
+    Cluster:
+      type: object
+      required:
+        - name
+        - region
+      properties:
+        id:
+          type: string
+          readOnly: true
+          description: Unique cluster identifier
+        name:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{0,53}$'
+          description: Cluster name (lowercase alphanumeric with hyphens, 1-54 chars)
+          example: "my-production-cluster"
+        domain_prefix:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{0,14}$'
+          description: Domain prefix for cluster URL (1-15 chars)
+        region:
+          type: string
+          description: AWS region
+          example: "us-east-1"
+        multi_az:
+          type: boolean
+          default: false
+          description: Deploy across multiple availability zones
+        version:
+          type: string
+          description: OpenShift version
+          example: "4.14.5"
+        channel_group:
+          type: string
+          enum: [stable, fast, candidate]
+          default: stable
+          description: Update channel
+        state:
+          type: string
+          readOnly: true
+          enum: [pending, installing, ready, error, uninstalling, deleted]
+          description: Current cluster state
+        console_url:
+          type: string
+          readOnly: true
+          description: Web console URL
+        api_url:
+          type: string
+          readOnly: true
+          description: API server URL
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        # Network configuration
+        network:
+          $ref: '#/components/schemas/NetworkConfig'
+        # Compute configuration
+        compute:
+          $ref: '#/components/schemas/ComputeConfig'
+        # AWS configuration
+        aws:
+          $ref: '#/components/schemas/AWSConfig'
+        # Properties
+        properties:
+          type: object
+          additionalProperties: true
+          description: Custom key-value properties
+      x-cli-subresources:
+        machine_pools:
+          path: "/api/v1/clusters/{cluster_id}/machine_pools"
+          commands: [create, list, describe, delete, edit]
+        identity_providers:
+          path: "/api/v1/clusters/{cluster_id}/identity_providers"
+          commands: [create, list, delete]
+        addons:
+          path: "/api/v1/clusters/{cluster_id}/addon_installations"
+          commands: [create, list, describe, delete]
+        ingresses:
+          path: "/api/v1/clusters/{cluster_id}/ingresses"
+          commands: [list, describe, create, delete, edit]
+
+    NetworkConfig:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [OpenShiftSDN, OVNKubernetes]
+          default: OVNKubernetes
+        machine_cidr:
+          type: string
+          format: ipv4
+          example: "10.0.0.0/16"
+        service_cidr:
+          type: string
+          format: ipv4
+          example: "172.30.0.0/16"
+        pod_cidr:
+          type: string
+          format: ipv4
+          example: "10.128.0.0/14"
+        host_prefix:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 32
+          example: 23
+
+    ComputeConfig:
+      type: object
+      properties:
+        machine_type:
+          type: string
+          example: "m5.xlarge"
+        replicas:
+          type: integer
+          format: int32
+          minimum: 2
+          default: 2
+        autoscaling:
+          $ref: '#/components/schemas/AutoscalingConfig'
+        labels:
+          type: object
+          additionalProperties: true
+
+    AutoscalingConfig:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          default: false
+        min_replicas:
+          type: integer
+          format: int32
+          minimum: 1
+        max_replicas:
+          type: integer
+          format: int32
+          minimum: 1
+
+    AWSConfig:
+      type: object
+      properties:
+        account_id:
+          type: string
+          readOnly: true
+        sts:
+          $ref: '#/components/schemas/STSConfig'
+        tags:
+          type: object
+          additionalProperties: true
+          description: AWS resource tags
+
+    STSConfig:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          default: true
+        role_arn:
+          type: string
+          description: IAM role ARN for cluster creation
+        support_role_arn:
+          type: string
+          description: IAM role ARN for Red Hat support
+        operator_role_prefix:
+          type: string
+          description: Prefix for operator IAM roles
+        oidc_config_id:
+          type: string
+          description: OIDC configuration identifier
+
+    # Machine Pool
+    MachinePool:
+      type: object
+      required:
+        - name
+        - machine_type
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{0,14}$'
+        machine_type:
+          type: string
+          example: "m5.xlarge"
+        replicas:
+          type: integer
+          format: int32
+          minimum: 0
+        autoscaling:
+          $ref: '#/components/schemas/AutoscalingConfig'
+        availability_zones:
+          type: array
+          items:
+            type: string
+        labels:
+          type: object
+          additionalProperties: true
+        taints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Taint'
+        spot_instances:
+          $ref: '#/components/schemas/SpotInstanceConfig'
+
+    Taint:
+      type: object
+      required:
+        - key
+        - value
+        - effect
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+        effect:
+          type: string
+          enum: [NoSchedule, PreferNoSchedule, NoExecute]
+
+    SpotInstanceConfig:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          default: false
+        max_price:
+          type: string
+          description: Maximum spot price (on-demand for market price)
+
+    # Identity Provider
+    IdentityProvider:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+        type:
+          type: string
+          enum: [github, gitlab, google, htpasswd, ldap, openid]
+        mapping_method:
+          type: string
+          enum: [add, claim, generate, lookup]
+          default: claim
+        github:
+          $ref: '#/components/schemas/GitHubIdentityProvider'
+        google:
+          $ref: '#/components/schemas/GoogleIdentityProvider'
+        openid:
+          $ref: '#/components/schemas/OpenIDIdentityProvider'
+        htpasswd:
+          $ref: '#/components/schemas/HTPasswdIdentityProvider'
+
+    GitHubIdentityProvider:
+      type: object
+      required:
+        - client_id
+        - client_secret
+      properties:
+        client_id:
+          type: string
+        client_secret:
+          type: string
+          writeOnly: true
+        hostname:
+          type: string
+          description: GitHub Enterprise hostname (optional)
+        organizations:
+          type: array
+          items:
+            type: string
+
+    GoogleIdentityProvider:
+      type: object
+      required:
+        - client_id
+        - client_secret
+      properties:
+        client_id:
+          type: string
+        client_secret:
+          type: string
+          writeOnly: true
+        hosted_domain:
+          type: string
+
+    OpenIDIdentityProvider:
+      type: object
+      required:
+        - client_id
+        - client_secret
+        - issuer_url
+      properties:
+        client_id:
+          type: string
+        client_secret:
+          type: string
+          writeOnly: true
+        issuer_url:
+          type: string
+          format: uri
+        claims:
+          $ref: '#/components/schemas/OpenIDClaims'
+
+    OpenIDClaims:
+      type: object
+      properties:
+        email:
+          type: array
+          items:
+            type: string
+        name:
+          type: array
+          items:
+            type: string
+        username:
+          type: array
+          items:
+            type: string
+
+    HTPasswdIdentityProvider:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/HTPasswdUser'
+
+    HTPasswdUser:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          writeOnly: true
+
+    # Add-on
+    AddonInstallation:
+      type: object
+      required:
+        - addon_id
+      properties:
+        id:
+          type: string
+          readOnly: true
+        addon_id:
+          type: string
+        addon_version:
+          type: string
+        state:
+          type: string
+          readOnly: true
+          enum: [installing, ready, deleting]
+        parameters:
+          type: object
+          additionalProperties: true
+
+    # Version
+    Version:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "4.14.5"
+        channel_group:
+          type: string
+          enum: [stable, fast, candidate]
+        available:
+          type: boolean
+        default:
+          type: boolean
+
+    # Region
+    Region:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "us-east-1"
+        display_name:
+          type: string
+          example: "US East (N. Virginia)"
+        supports_multi_az:
+          type: boolean
+
+    # Upgrade Policy
+    UpgradePolicy:
+      type: object
+      required:
+        - version
+      properties:
+        id:
+          type: string
+          readOnly: true
+        version:
+          type: string
+        schedule_type:
+          type: string
+          enum: [automatic, manual]
+        next_run:
+          type: string
+          format: date-time
+        state:
+          type: string
+          readOnly: true
+          enum: [pending, scheduled, started, completed, cancelled]
+
+paths:
+  # Root metadata
+  /api/v1:
+    get:
+      operationId: getMetadata
+      summary: Get API metadata
+      description: Retrieves API version and server information
+      tags:
+        - Metadata
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Metadata'
+      x-cli-command: "version"
+      x-cli-hidden: true
+
+  # Clusters
+  /api/v1/clusters:
+    get:
+      operationId: listClusters
+      summary: List clusters
+      description: Retrieves a list of all clusters
+      tags:
+        - Clusters
+      parameters:
+        - $ref: '#/components/parameters/PageParameter'
+        - $ref: '#/components/parameters/SizeParameter'
+        - $ref: '#/components/parameters/SearchParameter'
+        - $ref: '#/components/parameters/OrderParameter'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Cluster'
+                  page:
+                    type: integer
+                  size:
+                    type: integer
+                  total:
+                    type: integer
+      x-cli-command: "list clusters"
+      x-cli-aliases: ["ls clusters"]
+      x-cli-output:
+        table:
+          columns:
+            - field: id
+              header: ID
+            - field: name
+              header: NAME
+            - field: state
+              header: STATE
+            - field: region
+              header: REGION
+            - field: version
+              header: VERSION
+
+    post:
+      operationId: createCluster
+      summary: Create cluster
+      description: Creates a new OpenShift cluster
+      tags:
+        - Clusters
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Cluster'
+      responses:
+        '201':
+          description: Cluster creation initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cluster'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-cli-command: "create cluster"
+      x-cli-flags:
+        - name: cluster-name
+          source: name
+          flag: "--cluster-name"
+          required: true
+          description: "Name of the cluster"
+        - name: region
+          source: region
+          flag: "--region"
+          required: true
+          description: "AWS region"
+        - name: multi-az
+          source: multi_az
+          flag: "--multi-az"
+          type: boolean
+          description: "Deploy to multiple availability zones"
+        - name: version
+          source: version
+          flag: "--version"
+          description: "OpenShift version"
+        - name: compute-machine-type
+          source: compute.machine_type
+          flag: "--compute-machine-type"
+          description: "Instance type for compute nodes"
+        - name: replicas
+          source: compute.replicas
+          flag: "--replicas"
+          type: integer
+          description: "Number of worker nodes"
+        - name: enable-autoscaling
+          source: compute.autoscaling.enabled
+          flag: "--enable-autoscaling"
+          type: boolean
+          description: "Enable autoscaling"
+        - name: min-replicas
+          source: compute.autoscaling.min_replicas
+          flag: "--min-replicas"
+          type: integer
+          description: "Minimum number of worker nodes"
+        - name: max-replicas
+          source: compute.autoscaling.max_replicas
+          flag: "--max-replicas"
+          type: integer
+          description: "Maximum number of worker nodes"
+      x-cli-interactive:
+        enabled: true
+        prompts:
+          - parameter: name
+            type: text
+            message: "Cluster name:"
+            validation: "^[a-z][a-z0-9-]{0,53}$"
+            validation-message: "Must be lowercase alphanumeric with hyphens, 1-54 characters"
+          - parameter: region
+            type: select
+            message: "Select AWS region:"
+            source:
+              endpoint: "/api/v1/regions"
+              value-field: "id"
+              display-field: "display_name"
+          - parameter: version
+            type: select
+            message: "Select OpenShift version:"
+            source:
+              endpoint: "/api/v1/versions"
+              value-field: "id"
+              display-field: "id"
+              filter: "available = true"
+          - parameter: multi_az
+            type: confirm
+            message: "Deploy to multiple availability zones?"
+            default: false
+          - parameter: compute.replicas
+            type: number
+            message: "Number of worker nodes:"
+            default: 2
+            validation: "value >= 2"
+      x-cli-preflight:
+        - name: verify-aws-credentials
+          description: "Verifying AWS credentials..."
+          endpoint: "/api/v1/aws/credentials/verify"
+          method: POST
+        - name: verify-quota
+          description: "Checking AWS service quotas..."
+          endpoint: "/api/v1/aws/quotas/verify"
+          method: POST
+      x-cli-output:
+        success-message: "Cluster '{name}' is being created"
+        watch-status: true
+        status-field: "state"
+        status-endpoint: "/api/v1/clusters/{id}"
+        terminal-states:
+          - ready
+          - error
+        polling:
+          interval: 30
+          timeout: 3600
+
+  /api/v1/clusters/{cluster_id}:
+    parameters:
+      - $ref: '#/components/parameters/ClusterId'
+
+    get:
+      operationId: getCluster
+      summary: Get cluster
+      description: Retrieves details of a specific cluster
+      tags:
+        - Clusters
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cluster'
+        '404':
+          description: Cluster not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-cli-command: "describe cluster"
+      x-cli-output:
+        format: yaml
+
+    patch:
+      operationId: updateCluster
+      summary: Update cluster
+      description: Updates cluster configuration
+      tags:
+        - Clusters
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Cluster'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cluster'
+      x-cli-command: "edit cluster"
+      x-cli-flags:
+        - name: cluster
+          source: cluster_id
+          flag: "--cluster"
+          required: true
+          description: "Cluster identifier"
+
+    delete:
+      operationId: deleteCluster
+      summary: Delete cluster
+      description: Deletes a cluster
+      tags:
+        - Clusters
+      responses:
+        '202':
+          description: Deletion initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cluster'
+        '404':
+          description: Cluster not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-cli-command: "delete cluster"
+      x-cli-confirmation:
+        enabled: true
+        message: "Are you sure you want to delete cluster '{cluster_id}'?"
+        flag: "--yes"
+      x-cli-async:
+        enabled: true
+        status-field: "state"
+        terminal-states:
+          - deleted
+          - error
+        polling:
+          interval: 30
+          timeout: 3600
+
+  # Machine Pools
+  /api/v1/clusters/{cluster_id}/machine_pools:
+    parameters:
+      - $ref: '#/components/parameters/ClusterId'
+
+    get:
+      operationId: listMachinePools
+      summary: List machine pools
+      description: Lists all machine pools for a cluster
+      tags:
+        - MachinePools
+      parameters:
+        - $ref: '#/components/parameters/PageParameter'
+        - $ref: '#/components/parameters/SizeParameter'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MachinePool'
+                  page:
+                    type: integer
+                  size:
+                    type: integer
+                  total:
+                    type: integer
+      x-cli-command: "list machinepools"
+      x-cli-parent-resource: "cluster"
+
+    post:
+      operationId: createMachinePool
+      summary: Create machine pool
+      description: Adds a machine pool to a cluster
+      tags:
+        - MachinePools
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MachinePool'
+      responses:
+        '201':
+          description: Machine pool created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MachinePool'
+      x-cli-command: "create machinepool"
+      x-cli-parent-resource: "cluster"
+      x-cli-flags:
+        - name: cluster
+          source: cluster_id
+          flag: "--cluster"
+          required: true
+        - name: name
+          source: name
+          flag: "--name"
+          required: true
+        - name: machine-type
+          source: machine_type
+          flag: "--machine-type"
+          required: true
+        - name: replicas
+          source: replicas
+          flag: "--replicas"
+          type: integer
+
+  /api/v1/clusters/{cluster_id}/machine_pools/{machinepool_id}:
+    parameters:
+      - $ref: '#/components/parameters/ClusterId'
+      - $ref: '#/components/parameters/MachinePoolId'
+
+    get:
+      operationId: getMachinePool
+      summary: Get machine pool
+      description: Retrieves machine pool details
+      tags:
+        - MachinePools
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MachinePool'
+      x-cli-command: "describe machinepool"
+      x-cli-parent-resource: "cluster"
+
+    delete:
+      operationId: deleteMachinePool
+      summary: Delete machine pool
+      description: Removes a machine pool from a cluster
+      tags:
+        - MachinePools
+      responses:
+        '204':
+          description: Machine pool deleted
+      x-cli-command: "delete machinepool"
+      x-cli-parent-resource: "cluster"
+
+  # Identity Providers
+  /api/v1/clusters/{cluster_id}/identity_providers:
+    parameters:
+      - $ref: '#/components/parameters/ClusterId'
+
+    get:
+      operationId: listIdentityProviders
+      summary: List identity providers
+      description: Lists all identity providers for a cluster
+      tags:
+        - IdentityProviders
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/IdentityProvider'
+      x-cli-command: "list idps"
+      x-cli-parent-resource: "cluster"
+
+    post:
+      operationId: createIdentityProvider
+      summary: Create identity provider
+      description: Adds an identity provider to a cluster
+      tags:
+        - IdentityProviders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentityProvider'
+      responses:
+        '201':
+          description: Identity provider created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityProvider'
+      x-cli-command: "create idp"
+      x-cli-parent-resource: "cluster"
+      x-cli-flags:
+        - name: cluster
+          source: cluster_id
+          flag: "--cluster"
+          required: true
+        - name: type
+          source: type
+          flag: "--type"
+          required: true
+          enum: [github, gitlab, google, htpasswd, ldap, openid]
+        - name: name
+          source: name
+          flag: "--name"
+          required: true
+
+  # Versions
+  /api/v1/versions:
+    get:
+      operationId: listVersions
+      summary: List OpenShift versions
+      description: Lists available OpenShift versions
+      tags:
+        - Versions
+      parameters:
+        - name: channel_group
+          in: query
+          schema:
+            type: string
+            enum: [stable, fast, candidate]
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Version'
+      x-cli-command: "list versions"
+
+  # Regions
+  /api/v1/regions:
+    get:
+      operationId: listRegions
+      summary: List AWS regions
+      description: Lists available AWS regions for cluster deployment
+      tags:
+        - Regions
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Region'
+      x-cli-command: "list regions"
+
+  # Upgrade Policies
+  /api/v1/clusters/{cluster_id}/upgrade_policies:
+    parameters:
+      - $ref: '#/components/parameters/ClusterId'
+
+    get:
+      operationId: listUpgradePolicies
+      summary: List upgrade policies
+      description: Lists cluster upgrade policies
+      tags:
+        - Upgrades
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UpgradePolicy'
+      x-cli-command: "list upgrades"
+      x-cli-parent-resource: "cluster"
+
+    post:
+      operationId: createUpgradePolicy
+      summary: Schedule cluster upgrade
+      description: Schedules a cluster upgrade
+      tags:
+        - Upgrades
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpgradePolicy'
+      responses:
+        '201':
+          description: Upgrade scheduled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpgradePolicy'
+      x-cli-command: "upgrade cluster"
+      x-cli-parent-resource: "cluster"
+      x-cli-flags:
+        - name: cluster
+          source: cluster_id
+          flag: "--cluster"
+          required: true
+        - name: version
+          source: version
+          flag: "--version"
+          required: true
+
+  # AWS Verification Endpoints (Preflight Checks)
+  /api/v1/aws/credentials/verify:
+    post:
+      operationId: verifyAwsCredentials
+      summary: Verify AWS credentials
+      description: Validates AWS credentials are properly configured
+      tags:
+        - AWS
+      responses:
+        '200':
+          description: Credentials valid
+        '401':
+          description: Invalid credentials
+      x-cli-hidden: true
+
+  /api/v1/aws/quotas/verify:
+    post:
+      operationId: verifyAwsQuotas
+      summary: Verify AWS quotas
+      description: Checks if AWS service quotas are sufficient
+      tags:
+        - AWS
+      responses:
+        '200':
+          description: Quotas sufficient
+        '400':
+          description: Insufficient quotas
+      x-cli-hidden: true
+
+tags:
+  - name: Metadata
+    description: API metadata and version information
+  - name: Clusters
+    description: Cluster lifecycle management
+  - name: MachinePools
+    description: Machine pool management
+  - name: IdentityProviders
+    description: Identity provider configuration
+  - name: Versions
+    description: OpenShift version management
+  - name: Regions
+    description: AWS region information
+  - name: Upgrades
+    description: Cluster upgrade management
+  - name: AWS
+    description: AWS integration and validation
