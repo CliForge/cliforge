@@ -20,10 +20,11 @@ import (
 
 // OAuth2Auth implements OAuth2 authentication with support for multiple flows.
 type OAuth2Auth struct {
-	config       *OAuth2Config
-	oauth2Config *oauth2.Config
-	ccConfig     *clientcredentials.Config
-	pkceVerifier string
+	config        *OAuth2Config
+	oauth2Config  *oauth2.Config
+	ccConfig      *clientcredentials.Config
+	pkceVerifier  string
+	browserOpener BrowserOpener
 }
 
 // NewOAuth2Auth creates a new OAuth2 authenticator.
@@ -33,7 +34,8 @@ func NewOAuth2Auth(config *OAuth2Config) (*OAuth2Auth, error) {
 	}
 
 	auth := &OAuth2Auth{
-		config: config,
+		config:        config,
+		browserOpener: &SystemBrowserOpener{},
 	}
 
 	if err := auth.Validate(); err != nil {
@@ -48,6 +50,12 @@ func NewOAuth2Auth(config *OAuth2Config) (*OAuth2Auth, error) {
 	return auth, nil
 }
 
+// WithBrowserOpener sets a custom browser opener (primarily for testing).
+func (o *OAuth2Auth) WithBrowserOpener(opener BrowserOpener) *OAuth2Auth {
+	o.browserOpener = opener
+	return o
+}
+
 // Type returns the authentication type.
 func (o *OAuth2Auth) Type() AuthType {
 	return AuthTypeOAuth2
@@ -55,6 +63,11 @@ func (o *OAuth2Auth) Type() AuthType {
 
 // Authenticate performs OAuth2 authentication based on the configured flow.
 func (o *OAuth2Auth) Authenticate(ctx context.Context) (*Token, error) {
+	// If token is provided directly, use token flow
+	if o.config.Token != "" {
+		return o.authenticateWithToken(ctx)
+	}
+
 	switch o.config.Flow {
 	case OAuth2FlowAuthorizationCode:
 		return o.authenticateAuthorizationCode(ctx)
@@ -64,6 +77,8 @@ func (o *OAuth2Auth) Authenticate(ctx context.Context) (*Token, error) {
 		return o.authenticatePassword(ctx)
 	case OAuth2FlowDeviceCode:
 		return o.authenticateDeviceCode(ctx)
+	case OAuth2FlowToken:
+		return o.authenticateWithToken(ctx)
 	default:
 		return nil, fmt.Errorf("unsupported OAuth2 flow: %s", o.config.Flow)
 	}
@@ -122,6 +137,10 @@ func (o *OAuth2Auth) Validate() error {
 
 	// Validate flow-specific requirements
 	switch o.config.Flow {
+	case OAuth2FlowToken:
+		if o.config.Token == "" {
+			return fmt.Errorf("token is required for token flow")
+		}
 	case OAuth2FlowAuthorizationCode:
 		if o.config.AuthURL == "" {
 			return fmt.Errorf("auth_url is required for authorization_code flow")
@@ -201,7 +220,17 @@ func (o *OAuth2Auth) authenticateAuthorizationCode(ctx context.Context) (*Token,
 	// Build authorization URL
 	authURL := o.buildAuthURL()
 
-	fmt.Printf("Please visit this URL to authorize:\n\n%s\n\n", authURL)
+	// Auto-open browser if configured
+	if o.config.AutoOpenBrowser && o.browserOpener != nil {
+		fmt.Println("Opening browser for authentication...")
+		if err := o.browserOpener.Open(authURL); err != nil {
+			fmt.Printf("Failed to open browser: %v\n", err)
+			fmt.Printf("Please visit this URL manually:\n\n%s\n\n", authURL)
+		}
+	} else {
+		fmt.Printf("Please visit this URL to authorize:\n\n%s\n\n", authURL)
+	}
+
 	fmt.Println("Waiting for authorization...")
 
 	// Wait for callback or timeout
@@ -481,6 +510,62 @@ func (o *OAuth2Auth) checkDeviceToken(ctx context.Context, deviceCode string) (*
 	}
 
 	return convertOAuth2Token(&oauth2Token), nil
+}
+
+// SetToken sets the token directly for token-based authentication
+func (o *OAuth2Auth) SetToken(token string) {
+	o.config.Token = token
+}
+
+// authenticateWithToken handles direct token injection.
+func (o *OAuth2Auth) authenticateWithToken(ctx context.Context) (*Token, error) {
+	token := o.config.Token
+	if token == "" {
+		return nil, fmt.Errorf("no token provided")
+	}
+
+	// Detect token type using JWT parser
+	tokenType, err := DetectTokenType(token)
+	if err != nil {
+		return nil, fmt.Errorf("invalid token format: %w", err)
+	}
+
+	switch tokenType {
+	case TokenTypeAccess, TokenTypeBearer:
+		// Access token - store directly
+		claims, err := ParseJWT(token)
+		if err != nil {
+			return nil, err
+		}
+
+		return &Token{
+			AccessToken: token,
+			TokenType:   "Bearer",
+			ExpiresAt:   claims.ExpiresAt,
+		}, nil
+
+	case TokenTypeRefresh, TokenTypeOffline:
+		// Refresh/offline token - exchange for access token
+		return o.exchangeRefreshToken(ctx, token)
+
+	default:
+		return nil, fmt.Errorf("unknown token type: %s", tokenType)
+	}
+}
+
+// exchangeRefreshToken exchanges a refresh/offline token for an access token.
+func (o *OAuth2Auth) exchangeRefreshToken(ctx context.Context, refreshToken string) (*Token, error) {
+	tok := &oauth2.Token{
+		RefreshToken: refreshToken,
+	}
+
+	tokenSource := o.oauth2Config.TokenSource(ctx, tok)
+	newToken, err := tokenSource.Token()
+	if err != nil {
+		return nil, fmt.Errorf("failed to exchange refresh token: %w", err)
+	}
+
+	return convertOAuth2Token(newToken), nil
 }
 
 // convertOAuth2Token converts an oauth2.Token to our Token type.
