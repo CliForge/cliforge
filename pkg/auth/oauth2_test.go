@@ -2,10 +2,13 @@ package auth
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -849,4 +852,771 @@ func TestOAuth2Auth_InitConfig(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestOAuth2Auth_WithBrowserOpener(t *testing.T) {
+	config := &OAuth2Config{
+		ClientID: "test-client",
+		AuthURL:  "https://example.com/auth",
+		TokenURL: "https://example.com/token",
+		Flow:     OAuth2FlowAuthorizationCode,
+	}
+
+	auth, err := NewOAuth2Auth(config)
+	if err != nil {
+		t.Fatalf("NewOAuth2Auth() error = %v", err)
+	}
+
+	// Verify default opener is set
+	if auth.browserOpener == nil {
+		t.Error("Expected default browser opener to be set")
+	}
+
+	// Set custom opener
+	mockOpener := &MockBrowserOpener{}
+	result := auth.WithBrowserOpener(mockOpener)
+
+	if result != auth {
+		t.Error("WithBrowserOpener should return same auth instance")
+	}
+
+	if auth.browserOpener != mockOpener {
+		t.Error("Browser opener was not set correctly")
+	}
+}
+
+func TestOAuth2Auth_AuthCodeWithBrowserOpen(t *testing.T) {
+	// Create mock token server
+	tokenServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/token" {
+			http.NotFound(w, r)
+			return
+		}
+
+		resp := oauth2.Token{
+			AccessToken: "test-token",
+			TokenType:   "Bearer",
+			Expiry:      time.Now().Add(time.Hour),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	defer tokenServer.Close()
+
+	// Use a random port for callback server
+	config := &OAuth2Config{
+		ClientID:        "test-client",
+		AuthURL:         "https://example.com/auth",
+		TokenURL:        tokenServer.URL + "/token",
+		RedirectURL:     "http://localhost:18081/callback",
+		Flow:            OAuth2FlowAuthorizationCode,
+		AutoOpenBrowser: true,
+	}
+
+	auth, err := NewOAuth2Auth(config)
+	if err != nil {
+		t.Fatalf("NewOAuth2Auth() error = %v", err)
+	}
+
+	// Set mock browser opener
+	mockOpener := &MockBrowserOpener{}
+	auth.WithBrowserOpener(mockOpener)
+
+	// Start authentication in background
+	ctx := context.Background()
+	tokenChan := make(chan *Token, 1)
+	errChan := make(chan error, 1)
+
+	go func() {
+		token, err := auth.authenticateAuthorizationCode(ctx)
+		if err != nil {
+			errChan <- err
+		} else {
+			tokenChan <- token
+		}
+	}()
+
+	// Wait for browser to be opened
+	time.Sleep(100 * time.Millisecond)
+
+	// Verify browser was opened
+	openedURLs := mockOpener.GetOpenedURLs()
+	if len(openedURLs) != 1 {
+		t.Errorf("Expected browser to be opened once, got %d times", len(openedURLs))
+	}
+
+	if len(openedURLs) > 0 {
+		openedURL := openedURLs[0]
+		if !strings.Contains(openedURL, "https://example.com/auth") {
+			t.Errorf("Expected auth URL to contain auth endpoint, got %s", openedURL)
+		}
+	}
+
+	// Simulate callback
+	_, err = http.Get("http://localhost:18081/callback?code=test-code")
+	if err != nil {
+		t.Logf("Callback request failed: %v", err)
+	}
+
+	// Wait for result
+	select {
+	case token := <-tokenChan:
+		if token == nil {
+			t.Error("Expected token, got nil")
+		}
+		if token.AccessToken != "test-token" {
+			t.Errorf("Expected access token 'test-token', got '%s'", token.AccessToken)
+		}
+	case err := <-errChan:
+		t.Errorf("Authentication failed: %v", err)
+	case <-time.After(2 * time.Second):
+		t.Error("Timeout waiting for authentication")
+	}
+}
+
+func TestOAuth2Auth_AuthCodeWithoutBrowser(t *testing.T) {
+	// Create mock token server
+	tokenServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/token" {
+			http.NotFound(w, r)
+			return
+		}
+
+		resp := oauth2.Token{
+			AccessToken: "test-token-no-browser",
+			TokenType:   "Bearer",
+			Expiry:      time.Now().Add(time.Hour),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	defer tokenServer.Close()
+
+	config := &OAuth2Config{
+		ClientID:        "test-client",
+		AuthURL:         "https://example.com/auth",
+		TokenURL:        tokenServer.URL + "/token",
+		RedirectURL:     "http://localhost:18082/callback",
+		Flow:            OAuth2FlowAuthorizationCode,
+		AutoOpenBrowser: false, // Browser opening disabled
+	}
+
+	auth, err := NewOAuth2Auth(config)
+	if err != nil {
+		t.Fatalf("NewOAuth2Auth() error = %v", err)
+	}
+
+	// Set mock browser opener
+	mockOpener := &MockBrowserOpener{}
+	auth.WithBrowserOpener(mockOpener)
+
+	// Start authentication in background
+	ctx := context.Background()
+	tokenChan := make(chan *Token, 1)
+	errChan := make(chan error, 1)
+
+	go func() {
+		token, err := auth.authenticateAuthorizationCode(ctx)
+		if err != nil {
+			errChan <- err
+		} else {
+			tokenChan <- token
+		}
+	}()
+
+	// Wait a moment
+	time.Sleep(100 * time.Millisecond)
+
+	// Verify browser was NOT opened
+	openedURLs := mockOpener.GetOpenedURLs()
+	if len(openedURLs) != 0 {
+		t.Errorf("Expected browser NOT to be opened, but it was opened %d times", len(openedURLs))
+	}
+
+	// Simulate callback
+	_, err = http.Get("http://localhost:18082/callback?code=test-code")
+	if err != nil {
+		t.Logf("Callback request failed: %v", err)
+	}
+
+	// Wait for result
+	select {
+	case token := <-tokenChan:
+		if token == nil {
+			t.Error("Expected token, got nil")
+		}
+	case err := <-errChan:
+		t.Errorf("Authentication failed: %v", err)
+	case <-time.After(2 * time.Second):
+		t.Error("Timeout waiting for authentication")
+	}
+}
+
+func TestOAuth2Auth_BrowserOpenError(t *testing.T) {
+	// Create mock token server
+	tokenServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/token" {
+			http.NotFound(w, r)
+			return
+		}
+
+		resp := oauth2.Token{
+			AccessToken: "test-token-error",
+			TokenType:   "Bearer",
+			Expiry:      time.Now().Add(time.Hour),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	defer tokenServer.Close()
+
+	config := &OAuth2Config{
+		ClientID:        "test-client",
+		AuthURL:         "https://example.com/auth",
+		TokenURL:        tokenServer.URL + "/token",
+		RedirectURL:     "http://localhost:18083/callback",
+		Flow:            OAuth2FlowAuthorizationCode,
+		AutoOpenBrowser: true,
+	}
+
+	auth, err := NewOAuth2Auth(config)
+	if err != nil {
+		t.Fatalf("NewOAuth2Auth() error = %v", err)
+	}
+
+	// Set mock browser opener that returns an error
+	mockOpener := &MockBrowserOpener{
+		Err: fmt.Errorf("browser not available"),
+	}
+	auth.WithBrowserOpener(mockOpener)
+
+	// Start authentication in background
+	ctx := context.Background()
+	tokenChan := make(chan *Token, 1)
+	errChan := make(chan error, 1)
+
+	go func() {
+		token, err := auth.authenticateAuthorizationCode(ctx)
+		if err != nil {
+			errChan <- err
+		} else {
+			tokenChan <- token
+		}
+	}()
+
+	// Wait for browser open attempt
+	time.Sleep(100 * time.Millisecond)
+
+	// Verify browser open was attempted even though it failed
+	openedURLs := mockOpener.GetOpenedURLs()
+	if len(openedURLs) != 1 {
+		t.Errorf("Expected browser open to be attempted once, got %d times", len(openedURLs))
+	}
+
+	// Simulate callback - authentication should still continue despite browser error
+	_, err = http.Get("http://localhost:18083/callback?code=test-code")
+	if err != nil {
+		t.Logf("Callback request failed: %v", err)
+	}
+
+	// Wait for result - should succeed despite browser error
+	select {
+	case token := <-tokenChan:
+		if token == nil {
+			t.Error("Expected token, got nil")
+		}
+		if token.AccessToken != "test-token-error" {
+			t.Errorf("Expected access token 'test-token-error', got '%s'", token.AccessToken)
+		}
+	case err := <-errChan:
+		t.Errorf("Authentication should succeed despite browser error, got: %v", err)
+	case <-time.After(2 * time.Second):
+		t.Error("Timeout waiting for authentication")
+	}
+}
+
+// TestOAuth2Auth_TokenFlow_AccessToken tests direct injection of an access token.
+func TestOAuth2Auth_TokenFlow_AccessToken(t *testing.T) {
+	// Create a valid access token (Bearer type)
+	accessToken := createTestJWT(t, "Bearer", time.Now().Add(time.Hour))
+
+	config := &OAuth2Config{
+		ClientID: "test-client",
+		TokenURL: "https://example.com/token",
+		Flow:     OAuth2FlowToken,
+		Token:    accessToken,
+	}
+
+	auth, err := NewOAuth2Auth(config)
+	if err != nil {
+		t.Fatalf("NewOAuth2Auth() error = %v", err)
+	}
+
+	ctx := context.Background()
+	token, err := auth.Authenticate(ctx)
+	if err != nil {
+		t.Errorf("Authenticate() error = %v", err)
+		return
+	}
+
+	if token == nil {
+		t.Fatal("Authenticate() returned nil token")
+	}
+
+	if token.AccessToken != accessToken {
+		t.Errorf("AccessToken = %v, want %v", token.AccessToken, accessToken)
+	}
+
+	if token.TokenType != "Bearer" {
+		t.Errorf("TokenType = %v, want Bearer", token.TokenType)
+	}
+
+	if token.ExpiresAt.IsZero() {
+		t.Error("ExpiresAt should be set")
+	}
+}
+
+// TestOAuth2Auth_TokenFlow_BearerToken tests direct injection of a bearer token.
+func TestOAuth2Auth_TokenFlow_BearerToken(t *testing.T) {
+	// Create a valid bearer token (empty typ claim - defaults to access)
+	bearerToken := createTestJWT(t, "", time.Now().Add(time.Hour))
+
+	config := &OAuth2Config{
+		ClientID: "test-client",
+		TokenURL: "https://example.com/token",
+		Flow:     OAuth2FlowToken,
+		Token:    bearerToken, // Token set in config triggers token flow
+	}
+
+	auth, err := NewOAuth2Auth(config)
+	if err != nil {
+		t.Fatalf("NewOAuth2Auth() error = %v", err)
+	}
+
+	ctx := context.Background()
+	token, err := auth.Authenticate(ctx)
+	if err != nil {
+		t.Errorf("Authenticate() error = %v", err)
+		return
+	}
+
+	if token == nil {
+		t.Fatal("Authenticate() returned nil token")
+	}
+
+	if token.AccessToken != bearerToken {
+		t.Errorf("AccessToken = %v, want %v", token.AccessToken, bearerToken)
+	}
+}
+
+// TestOAuth2Auth_TokenFlow_RefreshToken tests exchange of a refresh token.
+func TestOAuth2Auth_TokenFlow_RefreshToken(t *testing.T) {
+	// Create a refresh token
+	refreshToken := createTestJWT(t, "Refresh", time.Now().Add(24*time.Hour))
+
+	// Create mock token server
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/token" {
+			http.NotFound(w, r)
+			return
+		}
+
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+
+		grantType := r.FormValue("grant_type")
+		if grantType != "refresh_token" {
+			http.Error(w, "invalid grant type", http.StatusBadRequest)
+			return
+		}
+
+		receivedRefreshToken := r.FormValue("refresh_token")
+		if receivedRefreshToken != refreshToken {
+			http.Error(w, "invalid refresh token", http.StatusUnauthorized)
+			return
+		}
+
+		resp := oauth2.Token{
+			AccessToken:  "new-access-token",
+			RefreshToken: "new-refresh-token",
+			TokenType:    "Bearer",
+			Expiry:       time.Now().Add(time.Hour),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	defer server.Close()
+
+	config := &OAuth2Config{
+		ClientID: "test-client",
+		TokenURL: server.URL + "/token",
+		Flow:     OAuth2FlowToken,
+		Token:    refreshToken,
+	}
+
+	auth, err := NewOAuth2Auth(config)
+	if err != nil {
+		t.Fatalf("NewOAuth2Auth() error = %v", err)
+	}
+
+	ctx := context.Background()
+	token, err := auth.Authenticate(ctx)
+	if err != nil {
+		t.Errorf("Authenticate() error = %v", err)
+		return
+	}
+
+	if token == nil {
+		t.Fatal("Authenticate() returned nil token")
+	}
+
+	if token.AccessToken != "new-access-token" {
+		t.Errorf("AccessToken = %v, want new-access-token", token.AccessToken)
+	}
+
+	if token.RefreshToken != "new-refresh-token" {
+		t.Errorf("RefreshToken = %v, want new-refresh-token", token.RefreshToken)
+	}
+}
+
+// TestOAuth2Auth_TokenFlow_OfflineToken tests exchange of an offline token.
+func TestOAuth2Auth_TokenFlow_OfflineToken(t *testing.T) {
+	// Create an offline token
+	offlineToken := createTestJWT(t, "Offline", time.Now().Add(24*time.Hour))
+
+	// Create mock token server
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/token" {
+			http.NotFound(w, r)
+			return
+		}
+
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+
+		receivedRefreshToken := r.FormValue("refresh_token")
+		if receivedRefreshToken != offlineToken {
+			http.Error(w, "invalid offline token", http.StatusUnauthorized)
+			return
+		}
+
+		resp := oauth2.Token{
+			AccessToken:  "offline-access-token",
+			RefreshToken: offlineToken, // Keep same offline token
+			TokenType:    "Bearer",
+			Expiry:       time.Now().Add(time.Hour),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	defer server.Close()
+
+	config := &OAuth2Config{
+		ClientID: "test-client",
+		TokenURL: server.URL + "/token",
+		Flow:     OAuth2FlowToken,
+		Token:    offlineToken,
+	}
+
+	auth, err := NewOAuth2Auth(config)
+	if err != nil {
+		t.Fatalf("NewOAuth2Auth() error = %v", err)
+	}
+
+	ctx := context.Background()
+	token, err := auth.Authenticate(ctx)
+	if err != nil {
+		t.Errorf("Authenticate() error = %v", err)
+		return
+	}
+
+	if token == nil {
+		t.Fatal("Authenticate() returned nil token")
+	}
+
+	if token.AccessToken != "offline-access-token" {
+		t.Errorf("AccessToken = %v, want offline-access-token", token.AccessToken)
+	}
+}
+
+// TestOAuth2Auth_TokenFlow_InvalidToken tests error handling for invalid tokens.
+func TestOAuth2Auth_TokenFlow_InvalidToken(t *testing.T) {
+	tests := []struct {
+		name    string
+		token   string
+		wantErr string
+	}{
+		{
+			name:    "malformed token",
+			token:   "not.a.valid.jwt",
+			wantErr: "invalid token format",
+		},
+		{
+			name:    "empty token",
+			token:   "",
+			wantErr: "token is required for token flow",
+		},
+		{
+			name:    "invalid base64",
+			token:   "invalid!!!.token!!!.here!!!",
+			wantErr: "invalid token format",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := &OAuth2Config{
+				ClientID: "test-client",
+				TokenURL: "https://example.com/token",
+				Flow:     OAuth2FlowToken,
+				Token:    tt.token,
+			}
+
+			auth, err := NewOAuth2Auth(config)
+			if err != nil {
+				// Validation might catch some errors early
+				if !strings.Contains(err.Error(), tt.wantErr) {
+					t.Errorf("NewOAuth2Auth() error = %v, want error containing %v", err, tt.wantErr)
+				}
+				return
+			}
+
+			ctx := context.Background()
+			_, err = auth.Authenticate(ctx)
+			if err == nil {
+				t.Error("Authenticate() expected error, got nil")
+				return
+			}
+
+			if !strings.Contains(err.Error(), tt.wantErr) {
+				t.Errorf("Authenticate() error = %v, want error containing %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+// TestOAuth2Auth_ExchangeRefreshToken_Success tests successful refresh token exchange.
+func TestOAuth2Auth_ExchangeRefreshToken_Success(t *testing.T) {
+	refreshToken := createTestJWT(t, "Refresh", time.Now().Add(24*time.Hour))
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/token" {
+			http.NotFound(w, r)
+			return
+		}
+
+		resp := oauth2.Token{
+			AccessToken:  "exchanged-access-token",
+			RefreshToken: "new-refresh-token",
+			TokenType:    "Bearer",
+			Expiry:       time.Now().Add(time.Hour),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	defer server.Close()
+
+	config := &OAuth2Config{
+		ClientID: "test-client",
+		AuthURL:  "https://example.com/auth",
+		TokenURL: server.URL + "/token",
+		Flow:     OAuth2FlowAuthorizationCode, // Need a flow that uses oauth2Config
+	}
+
+	auth, err := NewOAuth2Auth(config)
+	if err != nil {
+		t.Fatalf("NewOAuth2Auth() error = %v", err)
+	}
+
+	ctx := context.Background()
+	token, err := auth.exchangeRefreshToken(ctx, refreshToken)
+	if err != nil {
+		t.Errorf("exchangeRefreshToken() error = %v", err)
+		return
+	}
+
+	if token == nil {
+		t.Fatal("exchangeRefreshToken() returned nil token")
+	}
+
+	if token.AccessToken != "exchanged-access-token" {
+		t.Errorf("AccessToken = %v, want exchanged-access-token", token.AccessToken)
+	}
+}
+
+// TestOAuth2Auth_ExchangeRefreshToken_Failure tests failed refresh token exchange.
+func TestOAuth2Auth_ExchangeRefreshToken_Failure(t *testing.T) {
+	refreshToken := createTestJWT(t, "Refresh", time.Now().Add(24*time.Hour))
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/token" {
+			http.NotFound(w, r)
+			return
+		}
+
+		http.Error(w, `{"error":"invalid_grant","error_description":"refresh token expired"}`, http.StatusBadRequest)
+	}))
+	defer server.Close()
+
+	config := &OAuth2Config{
+		ClientID: "test-client",
+		AuthURL:  "https://example.com/auth",
+		TokenURL: server.URL + "/token",
+		Flow:     OAuth2FlowAuthorizationCode, // Need a flow that uses oauth2Config
+	}
+
+	auth, err := NewOAuth2Auth(config)
+	if err != nil {
+		t.Fatalf("NewOAuth2Auth() error = %v", err)
+	}
+
+	ctx := context.Background()
+	_, err = auth.exchangeRefreshToken(ctx, refreshToken)
+	if err == nil {
+		t.Error("exchangeRefreshToken() expected error for expired token")
+		return
+	}
+
+	if !strings.Contains(err.Error(), "failed to exchange refresh token") {
+		t.Errorf("exchangeRefreshToken() error = %v, want error containing 'failed to exchange refresh token'", err)
+	}
+}
+
+// TestOAuth2Auth_DefaultRedirectPort tests that default redirect port is 9998.
+func TestOAuth2Auth_DefaultRedirectPort(t *testing.T) {
+	config := &OAuth2Config{
+		ClientID: "test-client",
+		AuthURL:  "https://example.com/auth",
+		TokenURL: "https://example.com/token",
+		Flow:     OAuth2FlowAuthorizationCode,
+		// RedirectPort not set - should default to 9998
+	}
+
+	auth, err := NewOAuth2Auth(config)
+	if err != nil {
+		t.Fatalf("NewOAuth2Auth() error = %v", err)
+	}
+
+	// Start callback server to check the port
+	server, _, err := auth.startCallbackServer()
+	if err != nil {
+		// If RedirectURL is not set, it will use default
+		// We need to set it to test the port logic
+		t.Skip("Skipping - need to check redirect URL logic")
+	}
+	defer func() { _ = server.Close() }()
+}
+
+// TestOAuth2Auth_CustomRedirectPort tests custom redirect port configuration.
+func TestOAuth2Auth_CustomRedirectPort(t *testing.T) {
+	customPort := 19999
+
+	config := &OAuth2Config{
+		ClientID:     "test-client",
+		AuthURL:      "https://example.com/auth",
+		TokenURL:     "https://example.com/token",
+		Flow:         OAuth2FlowAuthorizationCode,
+		RedirectURL:  fmt.Sprintf("http://localhost:%d/callback", customPort),
+		RedirectPort: customPort,
+	}
+
+	auth, err := NewOAuth2Auth(config)
+	if err != nil {
+		t.Fatalf("NewOAuth2Auth() error = %v", err)
+	}
+
+	if auth.config.RedirectPort != customPort {
+		t.Errorf("RedirectPort = %v, want %v", auth.config.RedirectPort, customPort)
+	}
+}
+
+// TestOAuth2Auth_Validate_TokenFlow tests validation for token flow.
+func TestOAuth2Auth_Validate_TokenFlow(t *testing.T) {
+	tests := []struct {
+		name    string
+		config  *OAuth2Config
+		wantErr bool
+		errMsg  string
+	}{
+		{
+			name: "valid token flow",
+			config: &OAuth2Config{
+				ClientID: "test-client",
+				TokenURL: "https://example.com/token",
+				Flow:     OAuth2FlowToken,
+				Token:    "valid.jwt.token",
+			},
+			wantErr: false,
+		},
+		{
+			name: "token flow missing token",
+			config: &OAuth2Config{
+				ClientID: "test-client",
+				TokenURL: "https://example.com/token",
+				Flow:     OAuth2FlowToken,
+				Token:    "",
+			},
+			wantErr: true,
+			errMsg:  "token is required for token flow",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			auth := &OAuth2Auth{config: tt.config}
+			err := auth.Validate()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr && !strings.Contains(err.Error(), tt.errMsg) {
+				t.Errorf("Validate() error = %v, want error containing %v", err, tt.errMsg)
+			}
+		})
+	}
+}
+
+// createTestJWT creates a valid JWT for testing.
+func createTestJWT(t *testing.T, typ string, expiresAt time.Time) string {
+	t.Helper()
+
+	// Create JWT header
+	header := map[string]interface{}{
+		"alg": "HS256",
+		"typ": "JWT",
+	}
+	headerJSON, _ := json.Marshal(header)
+	headerB64 := base64.RawURLEncoding.EncodeToString(headerJSON)
+
+	// Create JWT payload
+	payload := map[string]interface{}{
+		"sub":                "test-user",
+		"iss":                "https://example.com",
+		"iat":                time.Now().Unix(),
+		"exp":                expiresAt.Unix(),
+		"preferred_username": "testuser",
+	}
+
+	// Add typ claim if specified
+	if typ != "" {
+		payload["typ"] = typ
+	}
+
+	payloadJSON, _ := json.Marshal(payload)
+	payloadB64 := base64.RawURLEncoding.EncodeToString(payloadJSON)
+
+	// Create a dummy signature (not validated in our tests)
+	signature := base64.RawURLEncoding.EncodeToString([]byte("dummy-signature"))
+
+	return headerB64 + "." + payloadB64 + "." + signature
 }

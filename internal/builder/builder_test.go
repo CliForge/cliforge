@@ -503,3 +503,97 @@ func TestBuildOperationCommand_WithExecutor(t *testing.T) {
 		}
 	}
 }
+
+func TestBuildOperationCommand_WithParentResource(t *testing.T) {
+	builder := &Builder{
+		config: DefaultBuilderConfig(),
+	}
+
+	tests := []struct {
+		name        string
+		operation   *openapi.Operation
+		expectError bool
+		validateFn  func(*testing.T, *cobra.Command)
+	}{
+		{
+			name: "operation with parent resource",
+			operation: &openapi.Operation{
+				OperationID:  "createMachinePool",
+				Method:       "POST",
+				Path:         "/api/v1/clusters/{cluster_id}/machine_pools",
+				Summary:      "Create machine pool",
+				CLIParentRes: "cluster",
+			},
+			expectError: false,
+			validateFn: func(t *testing.T, cmd *cobra.Command) {
+				// Verify parent resource flag was added
+				flag := cmd.Flags().Lookup("cluster")
+				if flag == nil {
+					t.Error("Expected --cluster flag to be added")
+					return
+				}
+
+				// Verify it's required
+				annotations := flag.Annotations
+				if annotations == nil || annotations[cobra.BashCompOneRequiredFlag] == nil {
+					t.Error("Expected --cluster flag to be required")
+				}
+
+				// Verify annotations were set
+				if cmd.Annotations["parent-resource"] != "cluster" {
+					t.Errorf("Expected parent-resource annotation 'cluster', got '%s'", cmd.Annotations["parent-resource"])
+				}
+			},
+		},
+		{
+			name: "operation without parent resource",
+			operation: &openapi.Operation{
+				OperationID: "listClusters",
+				Method:      "GET",
+				Path:        "/api/v1/clusters",
+				Summary:     "List clusters",
+			},
+			expectError: false,
+			validateFn: func(t *testing.T, cmd *cobra.Command) {
+				// Verify no parent resource flag was added
+				flag := cmd.Flags().Lookup("cluster")
+				if flag != nil {
+					t.Error("Did not expect --cluster flag to be added")
+				}
+			},
+		},
+		{
+			name: "operation with invalid parent resource",
+			operation: &openapi.Operation{
+				OperationID:  "createMachinePool",
+				Method:       "POST",
+				Path:         "/api/v1/clusters/{cluster_id}/machine_pools",
+				Summary:      "Create machine pool",
+				CLIParentRes: "invalid",
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd, err := builder.buildOperationCommand(tt.operation)
+
+			if tt.expectError {
+				if err == nil {
+					t.Error("Expected error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("Unexpected error: %v", err)
+				return
+			}
+
+			if tt.validateFn != nil {
+				tt.validateFn(t, cmd)
+			}
+		})
+	}
+}

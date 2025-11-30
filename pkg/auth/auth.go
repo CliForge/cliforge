@@ -7,19 +7,51 @@
 // # Supported Authentication Types
 //
 //   - API Key: Header or query parameter based authentication
-//   - OAuth2: Authorization code, client credentials, password, device code flows
+//   - OAuth2: Authorization code, client credentials, password, device code, direct token flows
 //   - Basic: HTTP Basic authentication with username/password
 //   - None: No authentication (for public APIs)
+//
+// # OAuth2 Flows
+//
+//   - Authorization Code with PKCE: Browser-based flow with security enhancement
+//   - Client Credentials: Service-to-service authentication
+//   - Password (Resource Owner): Direct username/password exchange
+//   - Device Code: Headless/remote device authentication
+//   - Token Injection: Direct token with automatic type detection
+//
+// # Token Resolution
+//
+// The TokenResolver provides ROSA-compatible token lookup with automatic fallback:
+//
+//	resolver := auth.NewTokenResolver(
+//	    auth.WithFlagToken(flagValue),           // 1. --token flag
+//	    auth.WithEnvVars("ROSA_TOKEN", "OCM_TOKEN"), // 2-3. Environment variables
+//	    auth.WithStorage(storage),               // 4. Config file
+//	    auth.WithPromptFunc(promptFunc),         // 5. Interactive prompt
+//	)
+//	token, source, err := resolver.Resolve(ctx)
+//
+// # JWT Token Detection
+//
+// Automatic detection of JWT token types for proper routing:
+//
+//	tokenType, err := auth.DetectTokenType(tokenString)
+//	// Returns: TokenTypeAccess, TokenTypeRefresh, TokenTypeOffline, TokenTypeBearer
+//
+//	username, err := auth.ExtractUsername(tokenString)
+//	// Extracts preferred_username or username claim from JWT
+//
+//	isEncrypted := auth.IsEncryptedToken(tokenString)
+//	// Detects JWE (5-part encrypted) vs JWT (3-part) tokens
 //
 // # Storage Options
 //
 //   - File: Store tokens in XDG-compliant filesystem locations
-//   - Keyring: Store tokens in system keyring (macOS Keychain, etc.)
+//   - Keyring: Store tokens in system keyring (macOS Keychain, GNOME Keyring, Windows Credential Manager)
 //   - Memory: Store tokens in-memory only (not persisted)
 //
-// # Example Usage
+// # Example: API Key Authentication
 //
-//	// Create API key authenticator
 //	config := &auth.APIKeyConfig{
 //	    Key: "sk-...",
 //	    Location: auth.APIKeyLocationHeader,
@@ -27,19 +59,33 @@
 //	    Prefix: "Bearer ",
 //	}
 //	authenticator, _ := auth.NewAPIKeyAuth(config)
-//
-//	// Use with HTTP client
 //	client := auth.NewAuthenticatedClient(http.DefaultClient, authenticator, storage)
-//	resp, _ := client.Do(req)
 //
-// # OAuth2 Example
+// # Example: OAuth2 with Browser Flow
 //
 //	oauth2Config := &auth.OAuth2Config{
-//	    ClientID: "client-id",
-//	    TokenURL: "https://oauth.example.com/token",
-//	    Flow: auth.OAuth2FlowClientCredentials,
+//	    ClientID: "my-cli",
+//	    AuthURL: "https://sso.example.com/auth",
+//	    TokenURL: "https://sso.example.com/token",
+//	    Flow: auth.OAuth2FlowAuthorizationCode,
+//	    PKCE: true,
+//	    AutoOpenBrowser: true,
+//	    RedirectPort: 9998,
 //	}
 //	authenticator, _ := auth.NewOAuth2Auth(oauth2Config)
+//	token, _ := authenticator.Authenticate(ctx)
+//
+// # Example: Token Injection with Auto-Detection
+//
+//	oauth2Config := &auth.OAuth2Config{
+//	    ClientID: "my-cli",
+//	    TokenURL: "https://sso.example.com/token",
+//	    Token: "eyJhbGciOiJSUzI1NiIs...",  // Offline or access token
+//	    Flow: auth.OAuth2FlowToken,
+//	}
+//	authenticator, _ := auth.NewOAuth2Auth(oauth2Config)
+//	token, _ := authenticator.Authenticate(ctx)
+//	// Automatically detects token type and routes appropriately
 //
 // The package automatically handles token refresh when tokens expire and
 // stores credentials securely based on the configured storage backend.
@@ -145,7 +191,7 @@ type OAuth2Config struct {
 	Scopes []string `yaml:"scopes,omitempty" json:"scopes,omitempty"`
 	// Flow is the OAuth2 flow type.
 	Flow OAuth2Flow `yaml:"flow" json:"flow"`
-	// PKCE enables Proof Key for Code Exchange.
+	// PKCE enables Proof Key for Code Exchange (recommended for public clients).
 	PKCE bool `yaml:"pkce,omitempty" json:"pkce,omitempty"`
 	// Username for password flow.
 	Username string `yaml:"username,omitempty" json:"username,omitempty"`
@@ -155,6 +201,19 @@ type OAuth2Config struct {
 	DeviceCodeURL string `yaml:"device_code_url,omitempty" json:"device_code_url,omitempty"`
 	// EndpointParams are additional parameters for token requests.
 	EndpointParams map[string]string `yaml:"endpoint_params,omitempty" json:"endpoint_params,omitempty"`
+	// Token is a pre-provided access or refresh/offline token.
+	// When set, the token flow is used and the token type is auto-detected via JWT parsing.
+	// Supports both access tokens (Bearer, "") and refresh/offline tokens ("Refresh", "Offline").
+	// This enables ROSA-compatible token injection from console.redhat.com/openshift/token.
+	Token string `yaml:"token,omitempty" json:"token,omitempty"`
+	// AutoOpenBrowser enables automatic browser opening for authorization code flows.
+	// When true, the system browser is launched automatically. When false, only the URL is displayed.
+	// This is useful for headless environments or when the browser should not be opened automatically.
+	AutoOpenBrowser bool `yaml:"auto_open_browser,omitempty" json:"auto_open_browser,omitempty"`
+	// RedirectPort specifies the local port for OAuth callback server (default: 9998).
+	// Port 9998 is used for ROSA compatibility. The callback URL becomes http://localhost:{port}/callback.
+	// For authorization code flow, a local HTTP server listens on this port to receive the auth code.
+	RedirectPort int `yaml:"redirect_port,omitempty" json:"redirect_port,omitempty"`
 }
 
 // OAuth2Flow represents the OAuth2 flow type.
@@ -169,6 +228,8 @@ const (
 	OAuth2FlowPassword OAuth2Flow = "password"
 	// OAuth2FlowDeviceCode is the device authorization flow.
 	OAuth2FlowDeviceCode OAuth2Flow = "device_code"
+	// OAuth2FlowToken is the direct token injection flow.
+	OAuth2FlowToken OAuth2Flow = "token"
 )
 
 // BasicConfig represents Basic authentication configuration.

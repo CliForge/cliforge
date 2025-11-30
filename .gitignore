@@ -23,6 +23,11 @@ bin/
 dist/
 cliforge
 
+# Example binaries
+examples/**/mock-server
+examples/**/rosa
+examples/**/*.test
+
 # Local development and hacking
 hack/
 

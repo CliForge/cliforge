@@ -168,6 +168,20 @@ func (e *Executor) Execute(cmd *cobra.Command, args []string) error {
 
 // executeHTTPOperation executes a single HTTP operation.
 func (e *Executor) executeHTTPOperation(ctx context.Context, cmd *cobra.Command, op *openapi.Operation, args []string) error {
+	// Execute preflight checks if defined
+	if len(op.CLIPreflight) > 0 {
+		if _, err := e.executePreflightChecks(ctx, op.CLIPreflight); err != nil {
+			return fmt.Errorf("preflight checks failed: %w", err)
+		}
+	}
+
+	// Check for confirmation requirement before proceeding
+	if proceed, err := e.CheckConfirmation(cmd, op); err != nil {
+		return fmt.Errorf("confirmation check failed: %w", err)
+	} else if !proceed {
+		return fmt.Errorf("operation canceled by user")
+	}
+
 	// Start progress indicator
 	var prog progress.Progress
 	if e.progressMgr != nil {
