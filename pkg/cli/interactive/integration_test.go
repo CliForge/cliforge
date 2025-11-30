@@ -237,7 +237,7 @@ func TestIntegration_DisabledInteractive(t *testing.T) {
 	}
 
 	// Should return nil/empty when disabled
-	if specs != nil && len(specs) > 0 {
+	if len(specs) > 0 {
 		t.Errorf("expected nil/empty specs when disabled, got %d specs", len(specs))
 	}
 }

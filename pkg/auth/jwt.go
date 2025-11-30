@@ -180,24 +180,3 @@ func ExtractUsername(tokenString string) (string, error) {
 	// No username found
 	return "", fmt.Errorf("no username found in token claims")
 }
-
-// parseJWTHeader parses the JWT header without validation
-func parseJWTHeader(tokenString string) (map[string]interface{}, error) {
-	parts := strings.Split(tokenString, ".")
-	if len(parts) < 2 {
-		return nil, fmt.Errorf("invalid token format")
-	}
-
-	// Decode header
-	headerBytes, err := base64.RawURLEncoding.DecodeString(parts[0])
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode header: %w", err)
-	}
-
-	var header map[string]interface{}
-	if err := json.Unmarshal(headerBytes, &header); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal header: %w", err)
-	}
-
-	return header, nil
-}

@@ -198,34 +198,34 @@ func TestExecutor_SubstituteParameters(t *testing.T) {
 
 func TestCaseConversions(t *testing.T) {
 	tests := []struct {
-		name           string
-		input          string
-		expectedCamel  string
-		expectedSnake  string
+		name          string
+		input         string
+		expectedCamel string
+		expectedSnake string
 	}{
 		{
-			name:           "kebab-case",
-			input:          "cluster-id",
-			expectedCamel:  "clusterId",
-			expectedSnake:  "cluster_id",
+			name:          "kebab-case",
+			input:         "cluster-id",
+			expectedCamel: "clusterId",
+			expectedSnake: "cluster_id",
 		},
 		{
-			name:           "snake_case",
-			input:          "cluster_id",
-			expectedCamel:  "clusterId",
-			expectedSnake:  "cluster_id",
+			name:          "snake_case",
+			input:         "cluster_id",
+			expectedCamel: "clusterId",
+			expectedSnake: "cluster_id",
 		},
 		{
-			name:           "single word",
-			input:          "cluster",
-			expectedCamel:  "cluster",
-			expectedSnake:  "cluster",
+			name:          "single word",
+			input:         "cluster",
+			expectedCamel: "cluster",
+			expectedSnake: "cluster",
 		},
 		{
-			name:           "multiple words",
-			input:          "very-long-parameter-name",
-			expectedCamel:  "veryLongParameterName",
-			expectedSnake:  "very_long_parameter_name",
+			name:          "multiple words",
+			input:         "very-long-parameter-name",
+			expectedCamel: "veryLongParameterName",
+			expectedSnake: "very_long_parameter_name",
 		},
 	}
 

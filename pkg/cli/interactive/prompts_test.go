@@ -21,9 +21,9 @@ func TestNewPrompter(t *testing.T) {
 		{
 			name: "custom config",
 			config: &PrompterConfig{
-				Input:         strings.NewReader("test\n"),
-				Output:        &bytes.Buffer{},
-				DisableColor:  true,
+				Input:              strings.NewReader("test\n"),
+				Output:             &bytes.Buffer{},
+				DisableColor:       true,
 				DisableInteractive: true,
 			},
 			want: true,
@@ -849,11 +849,11 @@ func Example_promptFromSpec() {
 	// This mimics how prompts would be defined in OpenAPI x-cli-interactive extension
 	specs := []*PromptSpec{
 		{
-			Parameter: "cluster_name",
-			Type:      "text",
-			Message:   "Enter cluster name",
-			Default:   "my-cluster",
-			Validation: "^[a-z][a-z0-9-]*$",
+			Parameter:         "cluster_name",
+			Type:              "text",
+			Message:           "Enter cluster name",
+			Default:           "my-cluster",
+			Validation:        "^[a-z][a-z0-9-]*$",
 			ValidationMessage: "Name must start with letter and contain only lowercase letters, numbers, and hyphens",
 		},
 		{

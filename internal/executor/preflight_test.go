@@ -812,15 +812,6 @@ func BenchmarkExecutor_executePreflightCheck(b *testing.B) {
 	}
 }
 
-// Mock HTTP client for testing error scenarios
-type errorHTTPClient struct {
-	err error
-}
-
-func (c *errorHTTPClient) Do(req *http.Request) (*http.Response, error) {
-	return nil, c.err
-}
-
 func TestExecutor_preflightCheckNetworkError(t *testing.T) {
 	spec := &openapi.ParsedSpec{
 		Spec: &openapi3.T{},

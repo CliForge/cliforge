@@ -579,10 +579,10 @@ func Example_fullWorkflow() {
 		Enabled: true,
 		Prompts: []*openapi.InteractivePrompt{
 			{
-				Parameter: "cluster_name",
-				Type:      "text",
-				Message:   "Enter cluster name",
-				Validation: "^[a-z][a-z0-9-]*$",
+				Parameter:         "cluster_name",
+				Type:              "text",
+				Message:           "Enter cluster name",
+				Validation:        "^[a-z][a-z0-9-]*$",
 				ValidationMessage: "Name must start with letter and contain only lowercase letters, numbers, and hyphens",
 			},
 			{

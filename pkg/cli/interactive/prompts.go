@@ -428,7 +428,7 @@ func (p *Prompter) PromptFromSpec(spec *PromptSpec) (interface{}, error) {
 // This is designed to work with the x-cli-interactive OpenAPI extension.
 type PromptSpec struct {
 	Parameter         string
-	Type              string      // text, select, confirm, number, password
+	Type              string // text, select, confirm, number, password
 	Message           string
 	Default           interface{} // type varies by prompt type
 	Validation        string      // regex for text prompts
